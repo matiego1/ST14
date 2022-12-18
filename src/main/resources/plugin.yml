@@ -1,0 +1,6 @@
+name: ST14
+version: '${project.version}'
+main: me.matiego.st14.Main
+api-version: 1.19
+authors: [ Matiego ]
+description: A plugin for ST14 server
