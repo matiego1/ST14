@@ -42,9 +42,7 @@ public class PlayerTime {
                 current.addAfk(getTimeOfCurrentType());
                 fake.addAfk(getTimeOfCurrentType());
             }
-            case INCOGNITO -> {
-                current.addIncognito(getTimeOfCurrentType());
-            }
+            case INCOGNITO -> current.addIncognito(getTimeOfCurrentType());
         }
     }
 
@@ -112,12 +110,12 @@ public class PlayerTime {
         try (Connection conn = Main.getInstance().getConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_time(uuid, t_normal, t_afk, t_incognito, normal, afk, incognito, last_save) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE t_normal = ?, t_afk = ?, t_incognito = ?, normal = ?, afk = ?, incognito = ?, last_save = ?")) {
             stmt.setString(1, uuid.toString());
-            stmt.setInt(2, getTotal().getNormal());
-            stmt.setInt(3, getTotal().getAfk());
-            stmt.setInt(4, getTotal().getIncognito());
-            stmt.setInt(5, getDaily().getNormal());
-            stmt.setInt(6, getDaily().getAfk());
-            stmt.setInt(7, getDaily().getIncognito());
+            stmt.setInt(2, total.getNormal());
+            stmt.setInt(3, total.getAfk());
+            stmt.setInt(4, total.getIncognito());
+            stmt.setInt(5, daily.getNormal());
+            stmt.setInt(6, daily.getAfk());
+            stmt.setInt(7, daily.getIncognito());
             stmt.setLong(8, Utils.now());
             stmt.execute();
         } catch (SQLException e) {

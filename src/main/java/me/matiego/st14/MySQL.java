@@ -65,7 +65,8 @@ public class MySQL {
                 Economy.createTable(),
                 OfflinePlayers.createTable(),
                 IncognitoManager.createTable(),
-                TimeManager.createTable()
+                TimeManager.createTable(),
+                AccountsManager.createTable()
         );
         boolean result = true;
         for (Future<Boolean> future : futures) {

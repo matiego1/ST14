@@ -27,7 +27,7 @@ public class GameTime {
     public enum Type {
         NORMAL,
         AFK,
-        INCOGNITO;
+        INCOGNITO
     }
 
     public static @NotNull GameTime add(@NotNull GameTime... times) {

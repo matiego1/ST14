@@ -86,23 +86,21 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                         DiscordUtils.sendPrivateMessage(user, "Twoje konto zostało połączone z kontem minecraft! Niestety z powodu niespodziewanego błędu nie możemy dostarczyć Ci więcej informacji.");
                         return;
                     }
-                    user.openPrivateChannel().queue(chn -> {
-                        chn.sendMessageEmbeds(embed)
-                                .addActionRow(
-                                        Button.danger("unlink-accounts", "Rozłącz konta")
-                                                .withEmoji(Emoji.fromUnicode("U+1F4A3"))
-                                )
-                                .queue(
-                                        success -> {},
-                                        failure -> {
-                                            if (failure instanceof ErrorResponseException e && e.getErrorCode() == 50007) {
-                                                Logs.warning("User " + user.getAsTag() + " doesn't allow private messages.");
-                                            } else {
-                                                Logs.error("An error occurred while sending a private message.", failure);
-                                            }
+                    user.openPrivateChannel().queue(chn -> chn.sendMessageEmbeds(embed)
+                            .addActionRow(
+                                    Button.danger("unlink-accounts", "Rozłącz konta")
+                                            .withEmoji(Emoji.fromUnicode("U+1F4A3"))
+                            )
+                            .queue(
+                                    success -> {},
+                                    failure -> {
+                                        if (failure instanceof ErrorResponseException e && e.getErrorCode() == 50007) {
+                                            Logs.warning("User " + user.getAsTag() + " doesn't allow private messages.");
+                                        } else {
+                                            Logs.error("An error occurred while sending a private message.", failure);
                                         }
-                                );
-                    });
+                                    }
+                            ));
                 } else {
                     hook.sendMessage("Napotkano niespodziewany błąd. Spróbuj ponownie.").queue();
                 }

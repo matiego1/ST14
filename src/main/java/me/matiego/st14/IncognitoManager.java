@@ -73,6 +73,7 @@ public class IncognitoManager {
         return new ArrayList<>();
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public boolean addTrustedPlayer(@NotNull UUID uuid, @NotNull UUID trustedPlayer) {
         try (Connection conn = plugin.getConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_inc_trusted(uuid, trusted) VALUES (?, ?) ON DUPLICATE KEY UPDATE uuid = uuid, trusted = trusted")) {

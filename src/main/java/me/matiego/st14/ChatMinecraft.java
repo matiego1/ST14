@@ -1,6 +1,8 @@
 package me.matiego.st14;
 
 import me.matiego.st14.utils.DiscordUtils;
+import me.matiego.st14.utils.GameTime;
+import me.matiego.st14.utils.PlayerTime;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
@@ -91,6 +93,11 @@ public class ChatMinecraft extends ListenerAdapter {
     public void sendFakeQuitMessage(@NotNull Player player) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setAuthor("Gracz **" + player.getName() + "** opuścił grę", null, Utils.getSkinUrl(player.getUniqueId()));
+        PlayerTime playerTime = plugin.getTimeManager().getTime(player.getUniqueId());
+        if (playerTime != null) {
+            GameTime time = playerTime.getFakeCurrent();
+            eb.setFooter("Czas gry: " + Utils.parseMillisToString(time.getNormal() + time.getAfk(), false));
+        }
         eb.setColor(Color.YELLOW);
         TextChannel chn = DiscordUtils.getChatMinecraftChannel();
         if (chn != null) {
@@ -115,7 +122,8 @@ public class ChatMinecraft extends ListenerAdapter {
         if (plugin.getIncognitoManager().isIncognito(player.getUniqueId())) return;
         DiscordUtils.sendWebhook(
                 plugin.getConfig().getString("discord.webhook-urls.chat-minecraft", ""),
-                Utils.getSkinUrl(player.getUniqueId()), player.getName(),
+                Utils.getSkinUrl(player.getUniqueId()),
+                "[" + Utils.getWorldPrefix(player.getWorld()) + "] " + player.getName(),
                 DiscordUtils.escapeFormatting(DiscordUtils.checkLength(message, Message.MAX_CONTENT_LENGTH))
         );
     }

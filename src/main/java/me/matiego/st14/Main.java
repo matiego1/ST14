@@ -4,6 +4,8 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.neovisionaries.ws.client.DualStackMode;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import lombok.Getter;
+import me.matiego.st14.commands.AccountsCommand;
+import me.matiego.st14.commands.IncognitoCommand;
 import me.matiego.st14.commands.PingCommand;
 import me.matiego.st14.commands.St14Command;
 import me.matiego.st14.listeners.AfkListener;
@@ -20,6 +22,7 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.ServicePriority;
@@ -32,7 +35,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.concurrent.*;
 
-public final class Main extends JavaPlugin {
+public final class Main extends JavaPlugin implements Listener {
 
     public Main() {
         instance = this;
@@ -80,10 +83,12 @@ public final class Main extends JavaPlugin {
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
+        economy = new Economy(this);
         Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomy(), vault, ServicePriority.High);
 
         //Register managers
         incognitoManager = new IncognitoManager(this);
+        offlinePlayers = new OfflinePlayers(this);
         accountsManager = new AccountsManager(this);
         chatMinecraft = new ChatMinecraft(this);
         afkManager = new AfkManager(this);
@@ -91,6 +96,8 @@ public final class Main extends JavaPlugin {
 
         //Register commands
         commandManager = new CommandManager(Arrays.asList(
+                new IncognitoCommand(this),
+                new AccountsCommand(this),
                 //Minecraft commands
                 new St14Command(),
                 //Discord commands
@@ -104,6 +111,7 @@ public final class Main extends JavaPlugin {
         Bukkit.getMessenger().registerIncomingPluginChannel(this, "minecraft:brand", serverListener);
         Bukkit.getPluginManager().registerEvents(new AfkListener(this), this);
         Bukkit.getPluginManager().registerEvents(commandManager, this);
+        Bukkit.getPluginManager().registerEvents(this, this);
 
         //Enable the Discord bot
         Logs.info("Enabling the Discord bot...");

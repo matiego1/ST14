@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.UserSnowflake;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextReplacementConfig;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -164,6 +165,7 @@ public class PlayerListener implements Listener {
                 .append(Utils.getComponentByString("&f: "))
                 .append(message)
         );
+        plugin.getChatMinecraft().sendChatMessage(PlainTextComponentSerializer.plainText().serialize(message), player);
     }
 
     @EventHandler
