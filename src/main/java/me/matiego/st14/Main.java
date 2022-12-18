@@ -13,20 +13,27 @@ import me.matiego.st14.listeners.DiscordListener;
 import me.matiego.st14.listeners.PlayerListener;
 import me.matiego.st14.listeners.ServerListener;
 import me.matiego.st14.utils.DiscordUtils;
+import me.matiego.st14.utils.GUI;
 import me.matiego.st14.utils.Logs;
+import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.events.session.ShutdownEvent;
 import net.dv8tion.jda.api.exceptions.InvalidTokenException;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitWorker;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,10 +43,6 @@ import java.util.Arrays;
 import java.util.concurrent.*;
 
 public final class Main extends JavaPlugin implements Listener {
-
-    public Main() {
-        instance = this;
-    }
     @Getter private static Main instance;
     private MySQL mySQL;
     @Getter private OfflinePlayers offlinePlayers;
@@ -57,6 +60,7 @@ public final class Main extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
+        instance = this;
         //Save config file
         saveDefaultConfig();
 
@@ -169,7 +173,52 @@ public final class Main extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-        //TODO: Plugin shutdown logic
+        long time = Utils.now();
+        //disable commands
+        commandManager.setEnabled(false);
+        //close all plugin's inventories
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (player.getOpenInventory().getTopInventory().getHolder() instanceof GUI) player.closeInventory();
+        }
+        //unregister all events
+        HandlerList.unregisterAll((Plugin) this);
+        if (jda != null) {
+            jda.getEventManager().getRegisteredListeners().forEach(listener -> jda.getEventManager().unregister(listener));
+        }
+        //disable managers
+        getAfkManager().stop();
+        //disable Discord bot
+        CompletableFuture<Void> shutdownTask = new CompletableFuture<>();
+        jda.addEventListener(new ListenerAdapter() {
+            @Override
+            public void onShutdown(@NotNull ShutdownEvent event) {
+                shutdownTask.complete(null);
+            }
+        });
+        jda.shutdown();
+        try {
+            shutdownTask.get(5, TimeUnit.SECONDS);
+            Logs.info("Successfully shut down the Discord bot.");
+        } catch (Exception e) {
+            Logs.warning("Discord bot took too long to shut down, skipping. Ignore any errors from this point.");
+        }
+        jda = null;
+        if (callbackThreadPool != null) callbackThreadPool.shutdownNow();
+        callbackThreadPool = null;
+        //end all tasks
+        Bukkit.getScheduler().cancelTasks(this);
+        for (BukkitWorker task : Bukkit.getScheduler().getActiveWorkers()) {
+            if (task.getOwner().equals(this)) {
+                Logs.error("Task with id " + task.getTaskId() + " has not been canceled. Interrupting...");
+                try {
+                    task.getThread().interrupt();
+                }catch (Exception ignored) {}
+            }
+        }
+        //close MySQL connection
+        if (mySQL != null) mySQL.close();
+        Logs.info("Plugin disabled! Took " + (System.currentTimeMillis() - time) + " ms.");
+        instance = null;
     }
 
     public @NotNull Connection getConnection() throws SQLException {
