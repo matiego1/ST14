@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.neovisionaries.ws.client.DualStackMode;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import lombok.Getter;
+import lombok.Setter;
 import me.matiego.st14.commands.AccountsCommand;
 import me.matiego.st14.commands.IncognitoCommand;
 import me.matiego.st14.commands.PingCommand;
@@ -19,6 +20,7 @@ import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.events.session.ShutdownEvent;
 import net.dv8tion.jda.api.exceptions.InvalidTokenException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -48,7 +50,7 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private OfflinePlayers offlinePlayers;
     @Getter private Economy economy;
     @Getter private IncognitoManager incognitoManager;
-    private CommandManager commandManager;
+    @Setter private CommandManager commandManager;
     @Getter private AccountsManager accountsManager;
     @Getter private ChatMinecraft chatMinecraft;
     @Getter private AfkManager afkManager;
@@ -70,6 +72,14 @@ public final class Main extends JavaPlugin implements Listener {
             return;
         }
 
+        //Vault plugin
+        Plugin vault = Bukkit.getPluginManager().getPlugin("Vault");
+        if (vault == null) {
+            Logs.error("Vault plugin not found!");
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        }
+
         //Open the MySQL connection
         Logs.info("Opening the MySQL connection...");
         String username = getConfig().getString("database.username", "");
@@ -86,16 +96,6 @@ public final class Main extends JavaPlugin implements Listener {
             return;
         }
 
-        //Economy
-        Plugin vault = Bukkit.getPluginManager().getPlugin("Vault");
-        if (vault == null) {
-            Logs.error("Vault plugin not found!");
-            Bukkit.getPluginManager().disablePlugin(this);
-            return;
-        }
-        economy = new Economy(this);
-        Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomy(), vault, ServicePriority.High);
-
         //Register managers
         incognitoManager = new IncognitoManager(this);
         offlinePlayers = new OfflinePlayers(this);
@@ -103,16 +103,8 @@ public final class Main extends JavaPlugin implements Listener {
         chatMinecraft = new ChatMinecraft(this);
         afkManager = new AfkManager(this);
         timeManager = new TimeManager(this);
-
-        //Register commands
-        commandManager = new CommandManager(Arrays.asList(
-                new IncognitoCommand(this),
-                new AccountsCommand(this),
-                //Minecraft commands
-                new St14Command(),
-                //Discord commands
-                new PingCommand()
-        ));
+        economy = new Economy(this);
+        Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomy(), vault, ServicePriority.High);
 
         //Register listeners
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
@@ -120,7 +112,6 @@ public final class Main extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(serverListener, this);
         Bukkit.getMessenger().registerIncomingPluginChannel(this, "minecraft:brand", serverListener);
         Bukkit.getPluginManager().registerEvents(new AfkListener(this), this);
-        Bukkit.getPluginManager().registerEvents(commandManager, this);
         Bukkit.getPluginManager().registerEvents(this, this);
 
         //Enable the Discord bot
@@ -158,7 +149,23 @@ public final class Main extends JavaPlugin implements Listener {
                     .disableCache(DiscordUtils.getDisabledCacheFlag())
                     .setActivity(Activity.playing("Serwer ST14"))
                     .addEventListeners(
-                            new DiscordListener()
+                            new DiscordListener(),
+                            new ListenerAdapter() {
+                                @Override
+                                public void onReady(@NotNull ReadyEvent event) {
+                                    Main plugin = Main.getInstance();
+                                    commandManager = new CommandManager(Arrays.asList(
+                                            new IncognitoCommand(plugin),
+                                            new AccountsCommand(plugin),
+                                            //Minecraft commands
+                                            new St14Command(),
+                                            //Discord commands
+                                            new PingCommand()
+                                    ));
+                                    Bukkit.getPluginManager().registerEvents(commandManager, plugin);
+                                    event.getJDA().removeEventListener(this);
+                                }
+                            }
                     )
                     .build();
         } catch (Exception e) {
