@@ -18,6 +18,7 @@ world-prefix:
   world_the_end: E
 
 database:
+  database: minecraft
   username: root
   password: password
   host: localhost
