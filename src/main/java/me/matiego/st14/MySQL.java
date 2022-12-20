@@ -6,9 +6,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.Future;
 
 public class MySQL {
 
@@ -61,21 +58,10 @@ public class MySQL {
     }
 
     public boolean createTables() {
-        List<Future<Boolean>> futures = Arrays.asList(
-                Economy.createTable(),
-                OfflinePlayers.createTable(),
-                IncognitoManager.createTable(),
-                TimeManager.createTable(),
-                AccountsManager.createTable()
-        );
-        boolean result = true;
-        for (Future<Boolean> future : futures) {
-            try {
-                result = result && future.get();
-            } catch (Exception e) {
-                result = false;
-            }
-        }
-        return result;
+        if (!Economy.createTable()) return false;
+        if (!OfflinePlayers.createTable()) return false;
+        if (!IncognitoManager.createTable()) return false;
+        if (!TimeManager.createTable()) return false;
+        return AccountsManager.createTable();
     }
 }

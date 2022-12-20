@@ -1,7 +1,6 @@
 package me.matiego.st14;
 
 import me.matiego.st14.utils.Logs;
-import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -14,8 +13,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 
 public class OfflinePlayers {
     private final Main plugin;
@@ -67,19 +64,15 @@ public class OfflinePlayers {
         return cache;
     }
 
-    public static @NotNull Future<Boolean> createTable() {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
-        Utils.async(() -> {
-            try (Connection conn = Main.getInstance().getConnection();
-                 PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_offline_players(uuid VARCHAR(36) NOT NULL, name VARCHAR(36) NOT NULL, PRIMARY KEY (uuid))")) {
-                stmt.execute();
-                future.complete(true);
-            } catch (SQLException e) {
-                Logs.error("An error occurred while creating the database table \"st14_offline_players\"", e);
-                future.complete(false);
-            }
-        });
-        return future;
+    public static boolean createTable() {
+        try (Connection conn = Main.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_offline_players(uuid VARCHAR(36) NOT NULL, name VARCHAR(36) NOT NULL, PRIMARY KEY (uuid))")) {
+            stmt.execute();
+            return true;
+        } catch (SQLException e) {
+            Logs.error("An error occurred while creating the database table \"st14_offline_players\"", e);
+        }
+        return false;
     }
 
     public void refresh(@NotNull UUID uuid, @NotNull String name) {

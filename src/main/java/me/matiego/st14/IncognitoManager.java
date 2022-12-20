@@ -10,8 +10,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 
 public class IncognitoManager {
 
@@ -126,24 +124,20 @@ public class IncognitoManager {
         }
     }
 
-    public static @NotNull Future<Boolean> createTable() {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
-        Utils.async(() -> {
-            try (Connection conn = Main.getInstance().getConnection()) {
-                //trusted players
-                PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_inc_trusted (uuid VARCHAR(36) NOT NULL, trusted VARCHAR(36) NOT NULL, CONSTRAINT st14_inc_trusted_const UNIQUE (uuid, trusted))");
-                stmt.execute();
-                stmt.close();
-                //kicking mode
-                stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_inc_kicking (uuid VARCHAR(36) NOT NULL, kicking BOOL NOT NULL, PRIMARY KEY (uuid))");
-                stmt.execute();
-                stmt.close();
-                future.complete(true);
-            } catch (SQLException e) {
-                Logs.error("An error occurred while creating the database table \"st14_inc\"", e);
-                future.complete(false);
-            }
-        });
-        return future;
+    public static boolean createTable() {
+        try (Connection conn = Main.getInstance().getConnection()) {
+            //trusted players
+            PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_inc_trusted (uuid VARCHAR(36) NOT NULL, trusted VARCHAR(36) NOT NULL, CONSTRAINT st14_inc_trusted_const UNIQUE (uuid, trusted))");
+            stmt.execute();
+            stmt.close();
+            //kicking mode
+            stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_inc_kicking (uuid VARCHAR(36) NOT NULL, kicking BOOL NOT NULL, PRIMARY KEY (uuid))");
+            stmt.execute();
+            stmt.close();
+            return true;
+        } catch (SQLException e) {
+            Logs.error("An error occurred while creating the database table \"st14_inc\"", e);
+        }
+        return false;
     }
 }

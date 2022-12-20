@@ -17,8 +17,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 
 public class AccountsManager {
     private final Main plugin;
@@ -114,18 +112,14 @@ public class AccountsManager {
         return false;
     }
 
-    public static @NotNull Future<Boolean> createTable() {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
-        Utils.async(() -> {
-            try (Connection conn = Main.getInstance().getConnection();
-                 PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_accounts(uuid VARCHAR(36) NOT NULL, id BIGINT NOT NULL, PRIMARY KEY (uuid), UNIQUE KEY (id))")) {
-                stmt.execute();
-                future.complete(true);
-            } catch (SQLException e) {
-                Logs.error("An error occurred while creating the database table \"st14_offline_players\"", e);
-                future.complete(false);
-            }
-        });
-        return future;
+    public static boolean createTable() {
+        try (Connection conn = Main.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_accounts(uuid VARCHAR(36) NOT NULL, id BIGINT NOT NULL, PRIMARY KEY (uuid), UNIQUE KEY (id))")) {
+            stmt.execute();
+            return true;
+        } catch (SQLException e) {
+            Logs.error("An error occurred while creating the database table \"st14_offline_players\"", e);
+        }
+        return false;
     }
 }

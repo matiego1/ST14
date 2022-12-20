@@ -16,8 +16,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 
 public class Economy implements net.milkbowl.vault.economy.Economy {
 
@@ -555,18 +553,14 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
         return true;
     }
 
-    public static @NotNull Future<Boolean> createTable() {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
-        Utils.async(() -> {
-            try (Connection conn = Main.getInstance().getConnection();
-                 PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_economy(uuid VARCHAR(36) NOT NULL, money DECIMAL(12, 2) NOT NULL, PRIMARY KEY (uuid))")) {
-                stmt.execute();
-                future.complete(true);
-            } catch (SQLException e) {
-                Logs.error("An error occurred while creating the database table \"st14_economy\"", e);
-                future.complete(false);
-            }
-        });
-        return future;
+    public static boolean createTable() {
+        try (Connection conn = Main.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_economy(uuid VARCHAR(36) NOT NULL, money DECIMAL(12, 2) NOT NULL, PRIMARY KEY (uuid))")) {
+            stmt.execute();
+            return true;
+        } catch (SQLException e) {
+            Logs.error("An error occurred while creating the database table \"st14_economy\"", e);
+        }
+        return false;
     }
 }
