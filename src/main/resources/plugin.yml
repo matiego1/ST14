@@ -2,5 +2,19 @@ name: ST14
 version: '${project.version}'
 main: me.matiego.st14.Main
 api-version: 1.19
-authors: [ Matiego ]
+author: Matiego
 description: A plugin for ST14 server
+commands:
+  st14:
+    permission: st14.st14
+  incognito:
+    permission: st14.incognito
+  accounts:
+    permission: st14.accounts
+permissions:
+  st14.st14:
+    default: op
+  st14.incognito:
+    default: true
+  st14.accounts:
+    default: true
