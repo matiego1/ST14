@@ -85,7 +85,7 @@ public class Logs {
     private static void sendToDiscord(@NotNull MessageEmbed embed) {
         JDA jda = plugin.getJda();
         if (jda == null) return;
-        TextChannel chn = jda.getTextChannelById(plugin.getConfig().getLong("logs-channel-id"));
+        TextChannel chn = DiscordUtils.getConsoleChannel();
         if (chn == null) return;
         chn.sendMessageEmbeds(embed).queue();
     }

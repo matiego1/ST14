@@ -62,7 +62,13 @@ public final class Main extends JavaPlugin implements Listener {
     public void onEnable() {
         instance = this;
         //Save config file
-        saveDefaultConfig();
+        try {
+            saveDefaultConfig();
+        } catch (IllegalArgumentException e) {
+            Logs.error("An error occurred while loading the config file", e);
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        }
 
         //Open the MySQL connection
         Logs.info("Opening the MySQL connection...");
@@ -138,7 +144,7 @@ public final class Main extends JavaPlugin implements Listener {
                 return worker;
             }, null, true);
             jda = JDABuilder.create(DiscordUtils.getIntents())
-                    .setToken(getConfig().getString("bot-token", ""))
+                    .setToken(getConfig().getString("discord.bot-token", ""))
                     .setMemberCachePolicy(MemberCachePolicy.NONE)
                     .setCallbackPool(callbackThreadPool, false)
                     .setGatewayPool(Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("Counting - JDA Gateway").build()), true)
@@ -175,36 +181,37 @@ public final class Main extends JavaPlugin implements Listener {
     public void onDisable() {
         long time = Utils.now();
         //disable commands
-        commandManager.setEnabled(false);
+        if (commandManager != null) commandManager.setEnabled(false);
         //close all plugin's inventories
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (player.getOpenInventory().getTopInventory().getHolder() instanceof GUI) player.closeInventory();
         }
+        //disable managers
+        AfkManager manager = getAfkManager();
+        if (manager != null) manager.stop();
         //unregister all events
         HandlerList.unregisterAll((Plugin) this);
+        //disable Discord bot
         if (jda != null) {
             jda.getEventManager().getRegisteredListeners().forEach(listener -> jda.getEventManager().unregister(listener));
-        }
-        //disable managers
-        getAfkManager().stop();
-        //disable Discord bot
-        CompletableFuture<Void> shutdownTask = new CompletableFuture<>();
-        jda.addEventListener(new ListenerAdapter() {
-            @Override
-            public void onShutdown(@NotNull ShutdownEvent event) {
-                shutdownTask.complete(null);
+            CompletableFuture<Void> shutdownTask = new CompletableFuture<>();
+            jda.addEventListener(new ListenerAdapter() {
+                @Override
+                public void onShutdown(@NotNull ShutdownEvent event) {
+                    shutdownTask.complete(null);
+                }
+            });
+            jda.shutdown();
+            try {
+                shutdownTask.get(5, TimeUnit.SECONDS);
+                Logs.info("Successfully shut down the Discord bot.");
+            } catch (Exception e) {
+                Logs.warning("Discord bot took too long to shut down, skipping. Ignore any errors from this point.");
             }
-        });
-        jda.shutdown();
-        try {
-            shutdownTask.get(5, TimeUnit.SECONDS);
-            Logs.info("Successfully shut down the Discord bot.");
-        } catch (Exception e) {
-            Logs.warning("Discord bot took too long to shut down, skipping. Ignore any errors from this point.");
+            jda = null;
+            if (callbackThreadPool != null) callbackThreadPool.shutdownNow();
+            callbackThreadPool = null;
         }
-        jda = null;
-        if (callbackThreadPool != null) callbackThreadPool.shutdownNow();
-        callbackThreadPool = null;
         //end all tasks
         Bukkit.getScheduler().cancelTasks(this);
         for (BukkitWorker task : Bukkit.getScheduler().getActiveWorkers()) {
@@ -217,6 +224,7 @@ public final class Main extends JavaPlugin implements Listener {
         }
         //close MySQL connection
         if (mySQL != null) mySQL.close();
+
         Logs.info("Plugin disabled! Took " + (System.currentTimeMillis() - time) + " ms.");
         instance = null;
     }

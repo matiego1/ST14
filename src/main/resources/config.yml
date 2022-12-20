@@ -1,0 +1,25 @@
+discord:
+  bot-token: X
+  linking-required: true
+  linking-required-bypass: []
+  channel-ids:
+    chat-minecraft: 0
+    console: 0
+
+allowed-brands: []
+allowed-commands: []
+world-name:
+  world: World
+  world_nether: Nether
+  world_the_end: The end
+world-prefix:
+  world: W
+  world_nether: N
+  world_the_end: E
+
+database:
+  username: root
+  password: password
+  host: localhost
+  port: 3306
+
