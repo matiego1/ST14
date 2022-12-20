@@ -85,8 +85,9 @@ public class AfkManager {
     }
 
     public synchronized void stop() {
-        task.cancel();
-        task = null;
+        if (task != null) {
+            task.cancel();
+            task = null;
+        }
     }
-
 }

@@ -47,7 +47,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
         return Commands.slash("accounts", "Połącz twoje konta minecraft i Discord")
                 .addOptions(
                         new OptionData(OptionType.STRING, "code", "twój kod weryfikacyjny", false)
-                                .setRequiredRange(6, 6)
+                                .setRequiredLength(6, 6)
                 );
     }
 
