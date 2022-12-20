@@ -4,7 +4,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.neovisionaries.ws.client.DualStackMode;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import lombok.Getter;
-import lombok.Setter;
 import me.matiego.st14.commands.AccountsCommand;
 import me.matiego.st14.commands.IncognitoCommand;
 import me.matiego.st14.commands.PingCommand;
@@ -20,7 +19,6 @@ import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.events.session.ShutdownEvent;
 import net.dv8tion.jda.api.exceptions.InvalidTokenException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -50,11 +48,11 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private OfflinePlayers offlinePlayers;
     @Getter private Economy economy;
     @Getter private IncognitoManager incognitoManager;
-    @Setter private CommandManager commandManager;
     @Getter private AccountsManager accountsManager;
     @Getter private ChatMinecraft chatMinecraft;
     @Getter private AfkManager afkManager;
     @Getter private TimeManager timeManager;
+    private CommandManager commandManager;
 
     @Getter (onMethod_ = {@Nullable}) private JDA jda;
     private ExecutorService callbackThreadPool;
@@ -63,6 +61,7 @@ public final class Main extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         instance = this;
+        long time = Utils.now();
         //Save config file
         try {
             saveDefaultConfig();
@@ -149,36 +148,32 @@ public final class Main extends JavaPlugin implements Listener {
                     .disableCache(DiscordUtils.getDisabledCacheFlag())
                     .setActivity(Activity.playing("Serwer ST14"))
                     .addEventListeners(
-                            new DiscordListener(),
-                            new ListenerAdapter() {
-                                @Override
-                                public void onReady(@NotNull ReadyEvent event) {
-                                    Main plugin = Main.getInstance();
-                                    commandManager = new CommandManager(Arrays.asList(
-                                            new IncognitoCommand(plugin),
-                                            new AccountsCommand(plugin),
-                                            //Minecraft commands
-                                            new St14Command(),
-                                            //Discord commands
-                                            new PingCommand()
-                                    ));
-                                    Bukkit.getPluginManager().registerEvents(commandManager, plugin);
-                                    event.getJDA().removeEventListener(this);
-                                }
-                            }
+                            new DiscordListener()
                     )
                     .build();
+            jda.awaitReady();
         } catch (Exception e) {
             Logs.error("An error occurred while enabling the Discord bot." + (e instanceof InvalidTokenException ? " Is the provided bot token correct?" : ""), e);
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
 
-        Logs.info("Plugin enabled successfully!");
+        //register commands
+        commandManager = new CommandManager(Arrays.asList(
+                new IncognitoCommand(this),
+                new AccountsCommand(this),
+                //Minecraft commands
+                new St14Command(),
+                //Discord commands
+                new PingCommand()
+        ));
+        Bukkit.getPluginManager().registerEvents(commandManager, this);
+
+        Logs.info("Plugin enabled! Took " + (Utils.now() - time) + " ms.");
     }
 
     @EventHandler
-    public void onReady(@NotNull ServerLoadEvent event) {
+    public void onServerLoad(@NotNull ServerLoadEvent event) {
         if (event.getType() != ServerLoadEvent.LoadType.STARTUP) return;
         commandManager.setEnabled(true);
         getAfkManager().start();
@@ -232,7 +227,7 @@ public final class Main extends JavaPlugin implements Listener {
         //close MySQL connection
         if (mySQL != null) mySQL.close();
 
-        Logs.info("Plugin disabled! Took " + (System.currentTimeMillis() - time) + " ms.");
+        Logs.info("Plugin disabled! Took " + (Utils.now() - time) + " ms.");
         instance = null;
     }
 
