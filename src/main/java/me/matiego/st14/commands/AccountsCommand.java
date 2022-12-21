@@ -19,16 +19,19 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class AccountsCommand implements CommandHandler.Discord, CommandHandler.Minecraft {
@@ -107,6 +110,10 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                 return;
             }
 
+            if (!manager.isLinked(user)) {
+                hook.sendMessage("Twoje konto nie jest jeszcze połączone z kontem minecraft! Aby je połączyć, użyj komendy `/accounts` w grze.").queue();
+                return;
+            }
             MessageEmbed embed = getEmbed(user);
             if (embed == null) {
                 hook.sendMessage("Twoje konto jest połączone z kontem minecraft! Niestety z powodu niespodziewanego błędu nie możemy dostarczyć Ci więcej informacji. Spróbuj później.").queue();
@@ -167,55 +174,102 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
             sender.sendMessage(Utils.getComponentByString(Prefixes.DISCORD + "&cTej komendy może użyć tylko gracz."));
             return true;
         }
-
-        UUID uuid = player.getUniqueId();
-        AccountsManager manager = plugin.getAccountsManager();
-
-        if (args.length == 1 && args[0].equalsIgnoreCase("unlink")) {
-            Utils.async(() -> {
-                if (!manager.isLinked(uuid)) {
-                    player.sendMessage(Utils.getComponentByString(Prefixes.DISCORD + "Twoje konto nie jest połączone z kontem Discord. Aby je połączyć, poproś administratora."));
-                    return;
-                }
-                if (!manager.unlink(uuid)) {
-                    player.sendMessage(Utils.getComponentByString(Prefixes.DISCORD + "Napotkano niespodziewany błąd. Spróbuj później."));
-                }
-            });
-            return true;
-        }
         if (args.length != 0) return false;
+        AccountsManager manager = plugin.getAccountsManager();
+        UUID uuid = player.getUniqueId();
 
         Utils.async(() -> {
-            if (!manager.isLinked(uuid)) {
-                player.sendMessage(Utils.getComponentByString(Prefixes.DISCORD + "Twoje konto nie jest połączone z kontem Discord. Aby je połączyć, poproś administratora."));
-                return;
-            }
-            UserSnowflake id = manager.getUserByPlayer(uuid);
-            if (id == null) {
-                player.sendMessage(Utils.getComponentByString(Prefixes.DISCORD + "Napotkano niespodziewany błąd. Spróbuj później."));
-                return;
-            }
+            Inventory inv = GUI.createInventory(9, Prefixes.DISCORD + "Twoje konta");
             JDA jda = plugin.getJda();
-            if (jda == null) {
-                player.sendMessage(Utils.getComponentByString(Prefixes.DISCORD + "Bot jest offline. Spróbuj później."));
-                return;
-            }
-            jda.retrieveUserById(id.getId()).queue(user -> {
-                if (user == null) {
-                    player.sendMessage(Utils.getComponentByString(Prefixes.DISCORD + "Napotkano niespodziewany błąd. Spróbuj później."));
-                    return;
+            if (manager.isLinked(uuid)) {
+                UserSnowflake id = manager.getUserByPlayer(uuid);
+                if (id == null) {
+                    //noinspection SpellCheckingInspection
+                    inv.setItem(1, GUI.createGuiItem(
+                            Material.LEAD,
+                            "&9Konto Discord",
+                            "&aTwoje konto jest połączone z kontem Discord!",
+                            "",
+                            "&cNapotkano niespodziewany błąd przy",
+                            "&cwczytywaniu informacji o twoim koncie",
+                            "",
+                            "&9Kliknij, aby rozłączyć twoje konta"
+
+                    ));
+                } else {
+                    String user = jda == null ? "&cBRAK" : jda.retrieveUserById(id.getId()).complete().getAsTag();
+                    inv.setItem(1, GUI.createGuiItem(
+                            Material.LEAD,
+                            "&9Konto Discord",
+                            "&aTwoje konto jest połączone z kontem Discord!",
+                            "&bNick: " + user,
+                            "&bID: " + id.getId(),
+                            "",
+                            "&9Kliknij, aby rozłączyć twoje konta"
+
+                    ));
                 }
-                player.sendMessage(Utils.getComponentByString(Prefixes.DISCORD + "Twoje konto jest połączone z kontem Discord.\nNick: &9" + user.getAsTag() + "&b; ID: &9" + user.getId()));
-            });
+            } else {
+                inv.setItem(1, GUI.createGuiItem(Material.LEAD, "&9Konto Discord", "&bKliknij, aby połączyć twoje konta"));
+            }
+            if (jda == null) {
+                inv.setItem(4, GUI.createGuiItem(Material.REDSTONE, "&9Bot Discord", "&bAktualny status: &cOFFLINE"));
+            } else {
+                inv.setItem(4, GUI.createGuiItem(
+                        Material.REDSTONE,
+                        "&9Bot Discord",
+                        "&bAktualny status: &aONLINE",
+                        "",
+                        "&bNick: &9" + jda.getSelfUser().getAsTag()
+                ));
+            }
+            inv.setItem(7, GUI.createGuiItem(Material.PAPER, "&9Serwer Discord", "&bKliknij, aby wyświetlić zaproszenie!"));
+            Utils.sync(() -> player.openInventory(inv));
         });
         return true;
     }
 
     @Override
-    public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args) {
-        if (args.length == 1) {
-            return List.of("unlink");
+    public void onInventoryClick(@NotNull InventoryClickEvent event) {
+        if (!GUI.checkInventory(event, Prefixes.DISCORD + "Twoje konta")) return;
+
+        Player player = (Player) event.getWhoClicked();
+        UUID uuid = player.getUniqueId();
+        int slot = event.getSlot();
+        ItemStack item = event.getCurrentItem();
+        AccountsManager manager = plugin.getAccountsManager();
+        Objects.requireNonNull(item); //already checked in GUI#checkInventory()
+
+        if (slot == 7) {
+            player.sendMessage(Utils.getComponentByString(Prefixes.DISCORD + "Link z zaproszeniem na nasz serwer Discord: " + plugin.getConfig().getString("discord.invite-link", "&cBRAK")));
+        } else if (slot == 1) {
+            player.closeInventory();
+            Utils.async(() -> {
+                if (manager.isLinked(uuid)) {
+                    UserSnowflake id = manager.getUserByPlayer(uuid);
+                    boolean success = manager.unlink(uuid);
+                    player.sendMessage(Utils.getComponentByString(Prefixes.DISCORD + (success ?
+                            "Pomyślnie rozłączono twoje konto z kontem Discord" :
+                            "Napotkano niespodziewany błąd. Spróbuj później"
+                    )));
+                    JDA jda = plugin.getJda();
+                    if (jda == null || id == null) return;
+                    if (!success) return;
+                    User user = jda.retrieveUserById(id.getId()).complete();
+                    if (user == null) return;
+                    DiscordUtils.sendPrivateMessage(user, "Twoje konto zostało rozłączone z kontem minecraft!");
+                } else {
+                    String code = plugin.getAccountsManager().getNewVerificationCode(uuid);
+                    player.sendMessage(Utils.getComponentByString(
+                            Prefixes.DISCORD + "=================================\n" +
+                            Prefixes.DISCORD + "Aby dokończyć proces łączenia kont,\n" +
+                            Prefixes.DISCORD + "użyj komendy &9/accounts&b\n" +
+                            Prefixes.DISCORD + "na Discord z kodem: &9" + code + "&b.\n" +
+                            Prefixes.DISCORD + "UWAGA! Kod będzie ważny tylko 5 minut.\n" +
+                            Prefixes.DISCORD + "=================================\n"
+                    ));
+                }
+            });
         }
-        return new ArrayList<>();
     }
 }
