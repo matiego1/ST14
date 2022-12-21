@@ -168,6 +168,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new PingCommand()
         ));
         Bukkit.getPluginManager().registerEvents(commandManager, this);
+        jda.addEventListener(commandManager);
 
         Logs.info("Plugin enabled! Took " + (Utils.now() - time) + " ms.");
     }

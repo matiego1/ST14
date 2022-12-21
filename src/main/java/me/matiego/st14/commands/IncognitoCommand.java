@@ -110,6 +110,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
         ItemStack item = event.getCurrentItem();
         IncognitoManager manager = plugin.getIncognitoManager();
         Objects.requireNonNull(item); //already checked in GUI#checkInventory()
+
         if (slot == 4) {
             if (manager.isIncognito(uuid)) {
                 manager.setIncognito(uuid, false);
@@ -170,7 +171,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
         User user = event.getUser();
         Utils.async(() -> {
             if (!accounts.isLinked(user)) {
-                hook.sendMessage("Twoje konto nie jest jeszcze połączone z kontem minecraft! Aby je połączyć, dołącz do serwera").queue();
+                hook.sendMessage("Twoje konto nie jest jeszcze połączone z kontem minecraft! Aby je połączyć, użyj komendy `/accounts` w grze.").queue();
                 return;
             }
             UUID uuid = accounts.getPlayerByUser(user);
@@ -188,7 +189,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
             eb.setTitle("__**Ustawienia**__");
             eb.setColor(Color.LIGHT_GRAY);
             eb.setDescription("**Gracz:** `" + plugin.getOfflinePlayers().getEffectiveNameById(uuid) + "`");
-            eb.addField("**Status incognito:**", manager.isIncognito(uuid) ? ":green_circle: Włączone" : ":red_circle: Wyłączone", false);
+            eb.addField("**Status incognito:**", manager.isIncognito(uuid) ? "`Włączone` :green_circle:" : "`Wyłączone` :red_circle:", false);
             eb.setFooter(DiscordUtils.getName(user, event.getMember()), DiscordUtils.getAvatar(user, event.getMember()));
             eb.setTimestamp(Instant.now());
             hook.sendMessageEmbeds(eb.build()).addActionRow(Button.secondary("change-inc-status", "Zmień status incognito")).queue();
@@ -208,7 +209,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
 
         Utils.async(() -> {
             if (!accounts.isLinked(user)) {
-                hook.sendMessage("Twoje konto nie jest jeszcze połączone z kontem minecraft! Aby je połączyć, dołącz do serwera").queue();
+                hook.sendMessage("Twoje konto nie jest jeszcze połączone z kontem minecraft! Aby je połączyć, użyj komendy `/accounts` w grze.").queue();
                 return;
             }
             UUID uuid = accounts.getPlayerByUser(user);
@@ -222,7 +223,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
                 return;
             }
             manager.setIncognito(uuid, !manager.isIncognito(uuid));
-            hook.sendMessage(Prefixes.INCOGNITO.getDiscord() + "Successfully changed your incognito status! **Current status:** " + (manager.isIncognito(uuid) ? "`Enabled` :green_circle:" : "`Disabled` :red_circle:")).queue();
+            hook.sendMessage("Pomyślnie zmieniono twój status incognito! **Aktualny status incognito:** " + (manager.isIncognito(uuid) ? "`Włączone` :green_circle:" : "`Wyłączone` :red_circle:")).queue();
         });
     }
 }

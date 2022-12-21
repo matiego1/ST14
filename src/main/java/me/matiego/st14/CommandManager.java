@@ -105,7 +105,7 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
             return;
         }
 
-        Logs.info(user.getAsTag() + "[" + user.getId() + "]: /" + command);
+        Logs.info(user.getAsTag() + " [" + user.getId() + "]: /" + command);
 
         //check permissions
         if (!DiscordUtils.hasRequiredPermissions(event.getChannel())) {
