@@ -101,7 +101,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
 
     @Override
     public void onInventoryClick(@NotNull InventoryClickEvent event) {
-        if (!GUI.checkInventory(event, Prefixes.INCOGNITO + "Settings")) return;
+        if (!GUI.checkInventory(event, Prefixes.INCOGNITO + "Ustawienia")) return;
 
         Player player = (Player) event.getWhoClicked();
         UUID uuid = player.getUniqueId();
