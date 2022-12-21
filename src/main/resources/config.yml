@@ -1,5 +1,6 @@
 discord:
   bot-token: X
+  guild-invite: https://discord.gg/
   linking-required: true
   linking-required-bypass: []
   channel-ids:
