@@ -10,6 +10,7 @@ commands:
     permission: st14.st14
     usage: 'Poprawne użycie: /st14 [reload]'
   incognito:
+    aliases: inc
     permission: st14.incognito
     usage: 'Poprawne użycie: /incognito'
   accounts:
@@ -23,7 +24,21 @@ commands:
     usage: 'Poprawne użycie: /say <wiadomość>'
   time:
     permission: st14.time
-    usage: 'Poprawne użycie: /time (player)'
+    usage: 'Poprawne użycie: /time (gracz)'
+  tell:
+    permission: st14.tell
+    usage: 'Poprawne użycie: /tell <gracz> <wiadomość>'
+  reply:
+    permission: st14.reply
+    usage: 'Poprawne użycie: /reply <wiadomość'
+  difficulty:
+    aliases: d
+    permission: st14.difficulty
+    usage: 'Poprawne użycie: /difficulty'
+  gamemode:
+    aliases: gm
+    permission: st14.gamemode
+    usage: 'Poprawne użycie: /gamemode'
 permissions:
   st14.st14:
     default: op
@@ -36,4 +51,12 @@ permissions:
   st14.say:
     default: op
   st14.time:
+    default: true
+  st14.tell:
+    default: true
+  st14.reply:
+    default: true
+  st14.difficulty:
+    default: true
+  st14.gamemode:
     default: true
