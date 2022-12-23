@@ -39,7 +39,7 @@ public class Logs {
         eb.setColor(Color.YELLOW);
         eb.setTimestamp(Instant.now());
         eb.setFooter("Warning");
-        sendToDiscord(eb.build());
+        discord(eb.build());
     }
 
     /**
@@ -54,7 +54,7 @@ public class Logs {
         eb.setColor(Color.RED);
         eb.setTimestamp(Instant.now());
         eb.setFooter("Error");
-        sendToDiscord(eb.build());
+        discord(eb.build());
     }
 
     /**
@@ -75,14 +75,14 @@ public class Logs {
         eb.setColor(Color.RED);
         eb.setTimestamp(Instant.now());
         eb.setFooter("Error");
-        sendToDiscord(eb.build());
+        discord(eb.build());
     }
 
     /**
      * Sends an embed to Discord logs channel if possible.
      * @param embed the embed to send
      */
-    private static void sendToDiscord(@NotNull MessageEmbed embed) {
+    public static void discord(@NotNull MessageEmbed embed) {
         JDA jda = plugin.getJda();
         if (jda == null) return;
         TextChannel chn = DiscordUtils.getConsoleChannel();

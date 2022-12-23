@@ -4,10 +4,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.neovisionaries.ws.client.DualStackMode;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import lombok.Getter;
-import me.matiego.st14.commands.AccountsCommand;
-import me.matiego.st14.commands.IncognitoCommand;
-import me.matiego.st14.commands.PingCommand;
-import me.matiego.st14.commands.St14Command;
+import me.matiego.st14.commands.*;
 import me.matiego.st14.listeners.AfkListener;
 import me.matiego.st14.listeners.DiscordListener;
 import me.matiego.st14.listeners.PlayerListener;
@@ -52,7 +49,10 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private ChatMinecraft chatMinecraft;
     @Getter private AfkManager afkManager;
     @Getter private TimeManager timeManager;
+    @Getter private PremiumManager premiumManager;
     private CommandManager commandManager;
+
+    @Getter TellCommand tellCommand;
 
     @Getter (onMethod_ = {@Nullable}) private JDA jda;
     private ExecutorService callbackThreadPool;
@@ -103,6 +103,8 @@ public final class Main extends JavaPlugin implements Listener {
         afkManager = new AfkManager(this);
         timeManager = new TimeManager(this);
         economy = new Economy(this);
+        premiumManager = new PremiumManager(this);
+
         Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomy(), vault, ServicePriority.High);
 
         //Register listeners
@@ -148,7 +150,8 @@ public final class Main extends JavaPlugin implements Listener {
                     .disableCache(DiscordUtils.getDisabledCacheFlag())
                     .setActivity(Activity.playing("Serwer ST14"))
                     .addEventListeners(
-                            new DiscordListener()
+                            new DiscordListener(),
+                            getChatMinecraft()
                     )
                     .build();
             jda.awaitReady();
@@ -158,14 +161,23 @@ public final class Main extends JavaPlugin implements Listener {
             return;
         }
 
+        tellCommand = new TellCommand();
         //register commands
         commandManager = new CommandManager(Arrays.asList(
                 new IncognitoCommand(this),
                 new AccountsCommand(this),
+                new VersionCommand(),
+                new TimeCommand(this),
                 //Minecraft commands
+                new SayCommand(),
                 new St14Command(),
+                new DifficultyCommand(),
+                new GameModeCommand(),
+                tellCommand,
+                new ReplyCommand(),
                 //Discord commands
-                new PingCommand()
+                new PingCommand(),
+                new ListCommand()
         ));
         Bukkit.getPluginManager().registerEvents(commandManager, this);
         jda.addEventListener(commandManager);

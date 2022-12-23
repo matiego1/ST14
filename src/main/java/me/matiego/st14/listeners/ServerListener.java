@@ -6,9 +6,11 @@ import me.matiego.st14.Main;
 import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.server.ServerListPingEvent;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.jetbrains.annotations.NotNull;
@@ -35,7 +37,7 @@ public class ServerListener implements Listener, PluginMessageListener {
             if (brand.toLowerCase().startsWith(allowedBrand.toLowerCase())) return;
         }
         player.kick(Utils.getComponentByString(
-                "&4Używasz niedozwolonego klienta minecraft!\n" +
+                "&cUżywasz niedozwolonego klienta minecraft!\n" +
                 "&c(" + brand + ")\n\n" +
                 "&7Przepraszamy"
         ));
@@ -61,6 +63,13 @@ public class ServerListener implements Listener, PluginMessageListener {
         IncognitoManager manager = plugin.getIncognitoManager();
         while (iterator.hasNext()) {
             if (manager.isIncognito(iterator.next().getUniqueId())) iterator.remove();
+        }
+    }
+
+    @EventHandler
+    public void onEntityChangeBlock(@NotNull EntityChangeBlockEvent event) {
+        if (event.getEntityType() == EntityType.ENDERMAN) {
+            event.setCancelled(true);
         }
     }
 }

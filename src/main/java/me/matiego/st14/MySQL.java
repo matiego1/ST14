@@ -62,6 +62,7 @@ public class MySQL {
         if (!OfflinePlayers.createTable()) return false;
         if (!IncognitoManager.createTable()) return false;
         if (!TimeManager.createTable()) return false;
+        if (!PremiumManager.createTable()) return false;
         return AccountsManager.createTable();
     }
 }

@@ -20,6 +20,7 @@ import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -32,7 +33,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandler.Discord {
+public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandler.Discord, Listener {
     private final Main plugin;
     private final PluginCommand command;
     public IncognitoCommand(@NotNull Main plugin) {
@@ -45,6 +46,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
 
     private final Material BLOCK_ON = Material.LIME_WOOL;
     private final Material BLOCK_OFF = Material.RED_WOOL;
+    private final FixedSizeMap<UUID, Pair<Long, Integer>> cooldown = new FixedSizeMap<>(100);
 
     @Override
     public @NotNull CommandData getDiscordCommand() {
@@ -53,13 +55,13 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
 
     @Override
     public @Nullable PluginCommand getMinecraftCommand() {
-        return null;
+        return command;
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(Utils.getComponentByString(Prefixes.INCOGNITO + "&cThis command can only be used by the player."));
+            sender.sendMessage(Utils.getComponentByString(Prefixes.INCOGNITO + "&cTej komendy może użyć tylko gracz."));
             return true;
         }
         if (args.length != 0) return false;
@@ -111,6 +113,18 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
         IncognitoManager manager = plugin.getIncognitoManager();
         Objects.requireNonNull(item); //already checked in GUI#checkInventory()
 
+        long now = Utils.now();
+        Pair<Long, Integer> pair = cooldown.getOrDefault(uuid, new Pair<>(now, 0));
+        if (now - pair.getFirst() >= 5000) {
+            cooldown.put(uuid, new Pair<>(now, 1));
+        } else if (pair.getSecond() < 3) {
+            cooldown.put(uuid, new Pair<>(now, pair.getSecond() + 1));
+        } else {
+            //TODO: ban for 15 seconds
+            player.kick(Utils.getComponentByString("&cNie klikaj tak szybko!"));
+            return;
+        }
+
         if (slot == 4) {
             if (manager.isIncognito(uuid)) {
                 manager.setIncognito(uuid, false);
@@ -135,6 +149,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
                     .text("Podaj nick...")
                     .itemLeft(GUI.createGuiItem(Material.PAPER, "&8Wprowadź nick gracza...", "&7Kliknij &8ESC&7, aby wyjść", "&7Kliknij przedmiot po prawej, aby zaakceptować"))
                     .plugin(plugin)
+                    .interactableSlots(AnvilGUI.Slot.INPUT_RIGHT)
                     .onComplete(completion -> {
                         UUID trustedUuid = plugin.getOfflinePlayers().getIdByName(completion.getText());
                         if (trustedUuid == null) {
@@ -185,7 +200,6 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
                 return;
             }
             EmbedBuilder eb = new EmbedBuilder();
-            eb.setAuthor(Prefixes.INCOGNITO.getDiscord(), null, DiscordUtils.getBotIcon());
             eb.setTitle("__**Ustawienia**__");
             eb.setColor(Color.LIGHT_GRAY);
             eb.setDescription("**Gracz:** `" + plugin.getOfflinePlayers().getEffectiveNameById(uuid) + "`");

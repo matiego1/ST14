@@ -77,7 +77,7 @@ public class Utils {
         if (h != 0) result += h + "h ";
         //minutes
         int m = (int) time / (60 * x);
-        time -= (long) m * 3600 * x;
+        time -= (long) m * 60 * x;
         if (m != 0) result += m + "m ";
         //seconds
         int s = (int) time / x;

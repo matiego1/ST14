@@ -8,14 +8,32 @@ depend: [Vault]
 commands:
   st14:
     permission: st14.st14
+    usage: 'Poprawne użycie: /st14 [reload]'
   incognito:
     permission: st14.incognito
+    usage: 'Poprawne użycie: /incognito'
   accounts:
     permission: st14.accounts
+    usage: 'Poprawne użycie: /accounts'
+  version:
+    permission: st14.version
+    usage: 'Poprawne użycie: /version'
+  say:
+    permission: st14.say
+    usage: 'Poprawne użycie: /say <wiadomość>'
+  time:
+    permission: st14.time
+    usage: 'Poprawne użycie: /time (player)'
 permissions:
   st14.st14:
     default: op
   st14.incognito:
     default: true
   st14.accounts:
+    default: true
+  st14.version:
+    default: true
+  st14.say:
+    default: op
+  st14.time:
     default: true

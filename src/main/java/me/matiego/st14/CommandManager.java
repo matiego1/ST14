@@ -47,14 +47,14 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
                 String pref = data.getType() == Command.Type.SLASH ? "" : "#";
                 discordCommands.put(pref + data.getName(), discord);
                 dc.add(data);
-            } else if (handler instanceof CommandHandler.Minecraft minecraft) {
+            }
+            if (handler instanceof CommandHandler.Minecraft minecraft) {
                 PluginCommand cmd = minecraft.getMinecraftCommand();
                 if (cmd == null) return;
                 cmd.setExecutor(this);
                 cmd.setTabCompleter(this);
                 minecraftCommands.put(cmd.getName(), minecraft);
             }
-
         });
         JDA jda = Main.getInstance().getJda();
         if (jda == null) throw new NullPointerException("JDA is null");

@@ -83,7 +83,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                     return;
                 }
                 if (manager.link(uuid, user)) {
-                    hook.sendMessage("Pomyślnie połączone twoje konta!").queue();
+                    hook.sendMessage("Pomyślnie połączono twoje konta!").queue();
                     MessageEmbed embed = getEmbed(user);
                     if (embed == null) {
                         DiscordUtils.sendPrivateMessage(user, "Twoje konto zostało połączone z kontem minecraft! Niestety z powodu niespodziewanego błędu nie możemy dostarczyć Ci więcej informacji.");
@@ -133,7 +133,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
         if (uuid == null) return null;
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("Twoje konto minecraft:");
-        eb.setDescription("**Nick:** `" + plugin.getOfflinePlayers().getEffectiveNameById(uuid) + "\n**UUID:** `" + uuid);
+        eb.setDescription("**Nick:** `" + plugin.getOfflinePlayers().getEffectiveNameById(uuid) + "`\n**UUID:** `" + uuid);
         eb.setColor(Color.BLUE);
         eb.setTimestamp(Instant.now());
         eb.setThumbnail(Utils.getSkinUrl(uuid));
@@ -189,10 +189,8 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                             Material.LEAD,
                             "&9Konto Discord",
                             "&aTwoje konto jest połączone z kontem Discord!",
-                            "",
                             "&cNapotkano niespodziewany błąd przy",
                             "&cwczytywaniu informacji o twoim koncie",
-                            "",
                             "&9Kliknij, aby rozłączyć twoje konta"
 
                     ));
@@ -204,7 +202,6 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                             "&aTwoje konto jest połączone z kontem Discord!",
                             "&bNick: " + user,
                             "&bID: " + id.getId(),
-                            "",
                             "&9Kliknij, aby rozłączyć twoje konta"
 
                     ));
@@ -219,7 +216,6 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                         Material.REDSTONE,
                         "&9Bot Discord",
                         "&bAktualny status: &aONLINE",
-                        "",
                         "&bNick: &9" + jda.getSelfUser().getAsTag()
                 ));
             }

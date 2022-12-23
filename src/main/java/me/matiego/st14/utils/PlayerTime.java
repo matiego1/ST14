@@ -1,6 +1,7 @@
 package me.matiego.st14.utils;
 
 import lombok.Getter;
+import lombok.Synchronized;
 import me.matiego.st14.Main;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,41 +28,42 @@ public class PlayerTime {
     private GameTime fake = new GameTime(0, 0, 0);
 
     private long startOfCurrentType = 0;
-    @Getter private GameTime.Type type = null;
+    @Getter(onMethod_ = {@Synchronized}) private GameTime.Type type = null;
 
-    public int getTimeOfCurrentType() {
-        return startOfCurrentType == 0 ? 0 : (int) (Utils.now() - startOfCurrentType);
+    private int getTimeOfCurrentType() {
+        return startOfCurrentType == 0 ? 0 : (int) (Utils.now() - startOfCurrentType) / 1000;
     }
     private void updateCurrent() {
+        if (type == null) return;
         switch (type) {
             case NORMAL -> {
-                current.addNormal(getTimeOfCurrentType());
-                fake.addNormal(getTimeOfCurrentType());
+                current.setNormal(getTimeOfCurrentType());
+                fake.setNormal(getTimeOfCurrentType());
             }
             case AFK -> {
-                current.addAfk(getTimeOfCurrentType());
-                fake.addAfk(getTimeOfCurrentType());
+                current.setAfk(getTimeOfCurrentType());
+                fake.setAfk(getTimeOfCurrentType());
             }
-            case INCOGNITO -> current.addIncognito(getTimeOfCurrentType());
+            case INCOGNITO -> current.setIncognito(getTimeOfCurrentType());
         }
     }
 
-    public @NotNull GameTime getTotal() {
-        return GameTime.add(total, getDaily());
+    public synchronized @NotNull GameTime getTotal() {
+        return GameTime.add(total, getCurrent());
     }
-    public @NotNull GameTime getDaily() {
+    public synchronized @NotNull GameTime getDaily() {
         return GameTime.add(daily, getCurrent());
     }
-    public @NotNull GameTime getCurrent() {
+    public synchronized @NotNull GameTime getCurrent() {
         updateCurrent();
         return current;
     }
-    public @NotNull GameTime getFakeCurrent() {
+    public synchronized @NotNull GameTime getFakeCurrent() {
         updateCurrent();
         return fake;
     }
 
-    public void setType(@NotNull GameTime.Type newType) {
+    public synchronized void setType(@NotNull GameTime.Type newType) {
         if (type == newType) return;
         if (type == GameTime.Type.INCOGNITO) {
             fake = new GameTime(0, 0, 0);
@@ -92,13 +94,18 @@ public class PlayerTime {
                         daily
                 );
             }
+            return new PlayerTime(
+                    uuid,
+                    new GameTime(0, 0, 0),
+                    new GameTime(0, 0, 0)
+            );
         } catch (SQLException e) {
             Logs.error("An error occurred while modifying values in \"st14_time\" table in the database.", e);
         }
         return null;
     }
 
-    public void save() {
+    public synchronized void save() {
         updateCurrent();
         type = null;
         startOfCurrentType = 0;
@@ -110,6 +117,7 @@ public class PlayerTime {
         try (Connection conn = Main.getInstance().getConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_time(uuid, t_normal, t_afk, t_incognito, normal, afk, incognito, last_save) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE t_normal = ?, t_afk = ?, t_incognito = ?, normal = ?, afk = ?, incognito = ?, last_save = ?")) {
             stmt.setString(1, uuid.toString());
+
             stmt.setInt(2, total.getNormal());
             stmt.setInt(3, total.getAfk());
             stmt.setInt(4, total.getIncognito());
@@ -117,6 +125,15 @@ public class PlayerTime {
             stmt.setInt(6, daily.getAfk());
             stmt.setInt(7, daily.getIncognito());
             stmt.setLong(8, Utils.now());
+
+            stmt.setInt(9, total.getNormal());
+            stmt.setInt(10, total.getAfk());
+            stmt.setInt(11, total.getIncognito());
+            stmt.setInt(12, daily.getNormal());
+            stmt.setInt(13, daily.getAfk());
+            stmt.setInt(14, daily.getIncognito());
+            stmt.setLong(15, Utils.now());
+
             stmt.execute();
         } catch (SQLException e) {
             Logs.error("An error occurred while modifying values in \"st14_time\" table in the database.", e);

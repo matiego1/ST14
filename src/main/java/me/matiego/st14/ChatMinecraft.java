@@ -59,7 +59,7 @@ public class ChatMinecraft extends ListenerAdapter {
             if (DiscordUtils.sendWebhook(
                     plugin.getConfig().getString("discord.webhook-urls.chat-minecraft", ""),
                     DiscordUtils.getAvatar(user, event.getMember()),
-                    DiscordUtils.getName(user, event.getMember()),
+                    "[DC]" + DiscordUtils.getName(user, event.getMember()),
                     DiscordUtils.escapeFormatting(msgContent))) {
                 for (String line : msgContent.split("\n")) {
                     Bukkit.broadcast(Utils.getComponentByString("&a[DC] &7" + user.getName() + "&f: " + line));
@@ -77,7 +77,7 @@ public class ChatMinecraft extends ListenerAdapter {
 
     public void sendFakeJoinMessage(@NotNull Player player) {
         EmbedBuilder eb = new EmbedBuilder();
-        eb.setAuthor("Gracz **" + player.getName() + "** dołączył do gry", null, Utils.getSkinUrl(player.getUniqueId()));
+        eb.setAuthor("Gracz " + player.getName() + " dołączył do gry", null, Utils.getSkinUrl(player.getUniqueId()));
         eb.setColor(Color.YELLOW);
         TextChannel chn = DiscordUtils.getChatMinecraftChannel();
         if (chn != null) {
@@ -92,11 +92,11 @@ public class ChatMinecraft extends ListenerAdapter {
 
     public void sendFakeQuitMessage(@NotNull Player player) {
         EmbedBuilder eb = new EmbedBuilder();
-        eb.setAuthor("Gracz **" + player.getName() + "** opuścił grę", null, Utils.getSkinUrl(player.getUniqueId()));
+        eb.setAuthor("Gracz " + player.getName() + " opuścił grę", null, Utils.getSkinUrl(player.getUniqueId()));
         PlayerTime playerTime = plugin.getTimeManager().getTime(player.getUniqueId());
         if (playerTime != null) {
             GameTime time = playerTime.getFakeCurrent();
-            eb.setFooter("Czas gry: " + Utils.parseMillisToString(time.getNormal() + time.getAfk(), false));
+            eb.setFooter("Czas gry: " + Utils.parseMillisToString((time.getNormal() + time.getAfk()) * 1000L, false));
         }
         eb.setColor(Color.YELLOW);
         TextChannel chn = DiscordUtils.getChatMinecraftChannel();
@@ -133,7 +133,7 @@ public class ChatMinecraft extends ListenerAdapter {
                 plugin.getConfig().getString("discord.webhook-urls.chat-minecraft", ""),
                 DiscordUtils.getBotIcon(),
                 name,
-                DiscordUtils.escapeFormatting(DiscordUtils.checkLength(message, Message.MAX_CONTENT_LENGTH))
+                DiscordUtils.checkLength(message, Message.MAX_CONTENT_LENGTH)
         );
     }
 

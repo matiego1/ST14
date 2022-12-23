@@ -1,6 +1,7 @@
 package me.matiego.st14.utils;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 public class GameTime {
@@ -10,9 +11,9 @@ public class GameTime {
         this.incognito = incognito;
     }
 
-    @Getter private int normal;
-    @Getter private int afk;
-    @Getter private int incognito;
+    @Getter @Setter private int normal;
+    @Getter @Setter private int afk;
+    @Getter @Setter private int incognito;
 
     public void addNormal(int time) {
         normal += time;
@@ -38,5 +39,15 @@ public class GameTime {
             result.addIncognito(time.getIncognito());
         }
         return result;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        if (!(o instanceof GameTime time)) return false;
+        return getNormal() == time.getNormal() &&
+                getAfk() == time.getAfk() &&
+                getIncognito() == time.getIncognito();
     }
 }

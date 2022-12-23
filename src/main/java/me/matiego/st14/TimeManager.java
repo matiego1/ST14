@@ -21,12 +21,13 @@ public class TimeManager {
 
     private final HashMap<UUID, PlayerTime> cache = new HashMap<>();
 
-    public void join(@NotNull Player player) {
+    public boolean join(@NotNull Player player) {
         UUID uuid = player.getUniqueId();
         PlayerTime time = PlayerTime.load(uuid);
-        if (time == null) return;
+        if (time == null) return false;
         time.setType(plugin.getIncognitoManager().isIncognito(uuid) ? GameTime.Type.INCOGNITO : GameTime.Type.NORMAL);
         cache.put(uuid, time);
+        return true;
     }
 
     public void quit(@NotNull Player player) {
