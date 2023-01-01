@@ -48,7 +48,7 @@ public class PlayerListener implements Listener {
         UUID uuid = event.getUniqueId();
         //check if login is successfully
         if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) return;
-        if (Bukkit.getWhitelistedPlayers().stream()
+        if (Bukkit.hasWhitelist() && Bukkit.getWhitelistedPlayers().stream()
                 .map(OfflinePlayer::getUniqueId)
                 .noneMatch(u -> u.equals(uuid))) {
             return;

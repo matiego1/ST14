@@ -43,7 +43,7 @@ public class MoneyForPlaying implements Listener {
                 lastTime.put(uuid, time);
 
                 if (time == 0) continue;
-                if (time % 300 != 0) continue;
+                if (time % 300_000 != 0) continue;
 
                 int amount = limit.getOrDefault(uuid, 0);
                 if (amount >= 10) {
