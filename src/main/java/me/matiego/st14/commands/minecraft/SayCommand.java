@@ -1,4 +1,4 @@
-package me.matiego.st14.commands;
+package me.matiego.st14.commands.minecraft;
 
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.CommandHandler;
@@ -32,14 +32,14 @@ public class SayCommand implements CommandHandler.Minecraft {
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
-        if (args.length == 0) return false;
+    public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
+        if (args.length == 0) return -1;
 
         String message = String.join(" ", args);
 
         if (!(sender instanceof Player)) {
             try {
-                if (Pattern.compile(Main.getInstance().getConfig().getString("say-command-disallowed-regex", "[^\\s\\S]*")).matcher(message).matches()) return true;
+                if (Pattern.compile(Main.getInstance().getConfig().getString("say-command-disallowed-regex", "[^\\s\\S]*")).matcher(message).matches()) return 0;
             } catch (Exception e) {
                 Logs.warning("An error occurred while matching the /say message to the regex. Is the regex valid?");
                 e.printStackTrace();
@@ -52,6 +52,6 @@ public class SayCommand implements CommandHandler.Minecraft {
         eb.setDescription(DiscordUtils.checkLength(message, MessageEmbed.DESCRIPTION_MAX_LENGTH));
         eb.setColor(Color.GREEN);
         Main.getInstance().getChatMinecraft().sendMessageEmbed(eb.build());
-        return true;
+        return 0;
     }
 }

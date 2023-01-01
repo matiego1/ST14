@@ -1,10 +1,8 @@
 package me.matiego.st14;
 
-import me.matiego.st14.utils.DiscordUtils;
-import me.matiego.st14.utils.GameTime;
-import me.matiego.st14.utils.PlayerTime;
-import me.matiego.st14.utils.Utils;
+import me.matiego.st14.utils.*;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
@@ -18,6 +16,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
+import java.util.UUID;
 
 public class ChatMinecraft extends ListenerAdapter {
     private final Main plugin;
@@ -27,6 +26,37 @@ public class ChatMinecraft extends ListenerAdapter {
 
     @SuppressWarnings("FieldCanBeLocal")
     private final String DISALLOWED_CHARS = "[^\\p{L}\\p{M}\\p{N}\\p{P}\\p{Z}\\p{Cf}\\p{Cs}\\s]";
+    private final FixedSizeMap<UUID, Pair<Long, Integer>> joinCooldown = new FixedSizeMap<>(100);
+
+    public void block() {
+        TextChannel chn = DiscordUtils.getChatMinecraftChannel();
+        if (chn == null) {
+            Logs.error("An error occurred while blocking the chat-minecraft channel.");
+            return;
+        }
+        try {
+            chn.upsertPermissionOverride(chn.getGuild().getSelfMember()).grant(Permission.MESSAGE_SEND).complete();
+            chn.upsertPermissionOverride(chn.getGuild().getPublicRole()).deny(Permission.MESSAGE_SEND).complete();
+        } catch (Exception e) {
+            Logs.error("An error occurred while blocking the chat-minecraft channel.", e);
+        }
+    }
+    public void unblock() {
+        TextChannel chn = DiscordUtils.getChatMinecraftChannel();
+        if (chn == null) {
+            Logs.error("An error occurred while unblocking the chat-minecraft channel.");
+            return;
+        }
+        try {
+            try {
+                chn.getManager().sync().queue();
+            } catch (IllegalStateException e) {
+                chn.upsertPermissionOverride(chn.getGuild().getPublicRole()).clear(Permission.MESSAGE_SEND).queue();
+            }
+        } catch (Exception e) {
+            Logs.error("An error occurred while unblocking the chat-minecraft channel.", e);
+        }
+    }
 
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
@@ -76,12 +106,25 @@ public class ChatMinecraft extends ListenerAdapter {
     }
 
     public void sendFakeJoinMessage(@NotNull Player player) {
+        UUID uuid = player.getUniqueId();
+
         EmbedBuilder eb = new EmbedBuilder();
-        eb.setAuthor("Gracz " + player.getName() + " dołączył do gry", null, Utils.getSkinUrl(player.getUniqueId()));
+        eb.setAuthor("Gracz " + player.getName() + " dołączył do gry", null, Utils.getSkinUrl(uuid));
         eb.setColor(Color.YELLOW);
         TextChannel chn = DiscordUtils.getChatMinecraftChannel();
         if (chn != null) {
             chn.sendMessageEmbeds(eb.build()).queue();
+        }
+
+        long now = Utils.now();
+        Pair<Long, Integer> pair = joinCooldown.getOrDefault(uuid, new Pair<>(now, 0));
+        if (now - pair.getFirst() >= 10_000) {
+            joinCooldown.put(uuid, new Pair<>(now, 1));
+        } else if (pair.getSecond() < 2) {
+            joinCooldown.put(uuid, new Pair<>(now, pair.getSecond() + 1));
+        } else {
+            //TODO: ban for 15 seconds
+            player.kick(Utils.getComponentByString("&cNie możesz dołączać do serwera tak często."));
         }
     }
 
@@ -96,7 +139,7 @@ public class ChatMinecraft extends ListenerAdapter {
         PlayerTime playerTime = plugin.getTimeManager().getTime(player.getUniqueId());
         if (playerTime != null) {
             GameTime time = playerTime.getFakeCurrent();
-            eb.setFooter("Czas gry: " + Utils.parseMillisToString((time.getNormal() + time.getAfk()) * 1000L, false));
+            eb.setFooter("Czas gry: " + Utils.parseMillisToString(time.getNormal() + time.getAfk(), false));
         }
         eb.setColor(Color.YELLOW);
         TextChannel chn = DiscordUtils.getChatMinecraftChannel();

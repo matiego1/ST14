@@ -1,4 +1,4 @@
-package me.matiego.st14.commands;
+package me.matiego.st14.commands.minecraft;
 
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.CommandHandler;
@@ -31,22 +31,22 @@ public class DifficultyCommand implements CommandHandler.Minecraft {
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
+    public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage(Utils.getComponentByString("&cTej komendy może użyć tylko gracz."));
-            return true;
+            return 0;
         }
-        if (args.length != 0) return false;
+        if (args.length != 0) return -1;
         if (!Main.getInstance().getConfig().getStringList("difficulty-worlds").contains(player.getWorld().getName())) {
             sender.sendMessage(Utils.getComponentByString("&cNie możesz zmienić poziomu trudności w tym świecie."));
-            return true;
+            return 3;
         }
         Inventory inv = GUI.createInventory(9, "&6Ustaw poziom trudności");
         inv.setItem(2, GUI.createGuiItem(Material.LIME_WOOL, "&aŁatwy", "Kliknij, aby ustawić"));
         inv.setItem(4, GUI.createGuiItem(Material.YELLOW_WOOL, "&eNormalny", "Kliknij, aby ustawić"));
         inv.setItem(6, GUI.createGuiItem(Material.RED_WOOL, "&cTrudny", "Kliknij, aby ustawić"));
         player.openInventory(inv);
-        return true;
+        return 3;
     }
 
     @Override
@@ -55,6 +55,7 @@ public class DifficultyCommand implements CommandHandler.Minecraft {
 
         Player player = (Player) event.getWhoClicked();
         int slot = event.getSlot();
+        event.getInventory().close();
         switch (slot) {
             case 2 -> change(player, Difficulty.EASY, "łatwy");
             case 4 -> change(player, Difficulty.NORMAL, "normalny");
@@ -75,7 +76,7 @@ public class DifficultyCommand implements CommandHandler.Minecraft {
                 .filter(p -> p.getWorld().equals(world))
                 .forEach(p -> p.sendMessage(Utils.getComponentByString("&aGracz &2" + player.getName() + "&a zmienił poziom trudności na &2" + name + "&a.")));
         if (!Main.getInstance().getIncognitoManager().isIncognito(player.getUniqueId())) {
-            Main.getInstance().getChatMinecraft().sendMessage("Poziom trudności", "[" + Utils.getWorldName(world) + "] Gracz **" + player + "** zmienił poziom trudności na **" + name + "**.");
+            Main.getInstance().getChatMinecraft().sendMessage("**[" + Utils.getWorldName(world) + "]** Gracz **" + player.getName() + "** zmienił poziom trudności na **" + name + "**.", "Poziom trudności");
         }
     }
 }

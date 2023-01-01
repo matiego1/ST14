@@ -79,7 +79,7 @@ public class AfkManager {
                 () -> Bukkit.getOnlinePlayers().stream()
                         .filter(player -> Utils.now() - getLastMove(player) >= AFK_TIME_SECOND * 1000L)
                         .forEach(player -> setAfk(player, true)),
-                100,
+                1000,
                 100
         );
     }

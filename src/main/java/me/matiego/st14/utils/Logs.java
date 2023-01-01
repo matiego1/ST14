@@ -82,7 +82,7 @@ public class Logs {
      * Sends an embed to Discord logs channel if possible.
      * @param embed the embed to send
      */
-    public static void discord(@NotNull MessageEmbed embed) {
+    public synchronized static void discord(@NotNull MessageEmbed embed) {
         JDA jda = plugin.getJda();
         if (jda == null) return;
         TextChannel chn = DiscordUtils.getConsoleChannel();

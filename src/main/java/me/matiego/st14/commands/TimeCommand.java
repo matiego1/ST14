@@ -1,5 +1,6 @@
 package me.matiego.st14.commands;
 
+import lombok.ToString;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.*;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -20,9 +21,10 @@ import java.awt.*;
 import java.time.Instant;
 import java.util.UUID;
 
+@ToString
 public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minecraft {
     private final Main plugin;
-    private final org.bukkit.command.PluginCommand command;
+    private final PluginCommand command;
     public TimeCommand(@NotNull Main plugin) {
         this.plugin = plugin;
         command = Main.getInstance().getCommand("time");
@@ -36,15 +38,15 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
+    public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         if (args.length == 0 && sender instanceof Player player) {
             sendSelfTimes(player);
-            return true;
+            return 5;
         }
         if (args.length == 1) {
             if (sender instanceof Player player && args[0].equalsIgnoreCase(player.getName())) {
                 sendSelfTimes(player);
-                return true;
+                return 5;
             }
             Utils.async(() -> {
                 UUID uuid = plugin.getOfflinePlayers().getIdByName(args[0]);
@@ -66,9 +68,9 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
                         Prefixes.TIME + "&6=============================="
                 ));
             });
-            return true;
+            return 5;
         }
-        return false;
+        return -1;
     }
 
     private void sendSelfTimes(@NotNull Player player) {
@@ -101,9 +103,9 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
     }
 
     @Override
-    public void onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
-        boolean isEphemeral = event.getOption("incognito", "False", OptionMapping::getAsString).equals("True");
-        event.deferReply(isEphemeral).queue();
+    public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
+        boolean ephemeral = event.getOption("incognito", "False", OptionMapping::getAsString).equals("True");
+        event.deferReply(ephemeral).queue();
         String name = event.getOption("gracz", "", OptionMapping::getAsString);
         InteractionHook hook = event.getHook();
         Utils.async(() -> {
@@ -113,7 +115,7 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
                 return;
             }
             UUID linkedAccount = plugin.getAccountsManager().getPlayerByUser(event.getUser());
-            boolean isOwnAccount = linkedAccount != null && linkedAccount.equals(uuid) && isEphemeral;
+            boolean self = linkedAccount != null && linkedAccount.equals(uuid) && ephemeral;
 
             PlayerTime time = plugin.getTimeManager().retrieveTime(uuid);
             if (time == null) {
@@ -122,33 +124,38 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
             }
 
             EmbedBuilder eb = new EmbedBuilder();
-            eb.setTitle(isOwnAccount ? "Twoje czasy gry" : "Czasy gry " + name);
-            eb.addField("Aktualny czas", time.getCurrent().equals(new GameTime(0, 0, 0)) ? "Gracz jest offline" : formatDiscord(time.getCurrent(), isOwnAccount), false);
-            eb.addField("Czas dzienny", formatDiscord(time.getDaily(), isOwnAccount), false);
-            eb.addField("Łączny czas", formatDiscord(time.getTotal(), isOwnAccount), false);
+            eb.setTitle(self ? "Twoje czasy gry" : "Czasy gry " + name);
+            if (self) {
+                eb.addField("Aktualny czas", time.getCurrent().equals(new GameTime(0, 0, 0)) ? "Gracz jest offline" : formatDiscord(time.getCurrent(), true), false);
+            } else {
+                eb.addField("Aktualny czas", time.getFakeCurrent().equals(new GameTime(0, 0, 0)) ? "Gracz jest offline" : formatDiscord(time.getCurrent(), false), false);
+            }
+            eb.addField("Czas dzienny", formatDiscord(time.getDaily(), self), false);
+            eb.addField("Łączny czas", formatDiscord(time.getTotal(), self), false);
             eb.setColor(Color.YELLOW);
             eb.setTimestamp(Instant.now());
             hook.sendMessageEmbeds(eb.build()).queue();
         });
+        return 5;
     }
 
     private @NotNull String formatDiscord(@NotNull GameTime time, boolean showIncognito) {
-        String result = "Razem: `" + Utils.parseMillisToString((time.getNormal() + time.getAfk() + (showIncognito ? time.getIncognito() : 0)) * 1000L, false) + "` w tym:\n" +
-                " - Czas zwykły: `" + Utils.parseMillisToString(time.getNormal() * 1000L, false) + "`\n" +
-                " - Czas AFK: `" + Utils.parseMillisToString(time.getAfk() * 1000L, false) + "`";
+        String result = "Razem: `" + Utils.parseMillisToString(time.getNormal() + time.getAfk() + (showIncognito ? time.getIncognito() : 0), false) + "` w tym:\n" +
+                " - Czas zwykły: `" + Utils.parseMillisToString(time.getNormal(), false) + "`\n" +
+                " - Czas AFK: `" + Utils.parseMillisToString(time.getAfk(), false) + "`";
         if (showIncognito) {
-            result += "\n - Czas incognito: `" + Utils.parseMillisToString(time.getIncognito() * 1000L, false) + "`";
+            result += "\n - Czas incognito: `" + Utils.parseMillisToString(time.getIncognito(), false) + "`";
         }
         return result;
     }
 
     private @NotNull String formatMinecraft(@NotNull GameTime time, boolean showIncognito) {
-        String result = Utils.parseMillisToString((time.getNormal() + time.getAfk() + (showIncognito ? time.getIncognito() : 0)) * 1000L, false) +
+        String result = Utils.parseMillisToString(time.getNormal() + time.getAfk() + (showIncognito ? time.getIncognito() : 0), false) +
                 " &6[&e" +
-                Utils.parseMillisToString(time.getNormal() * 1000L, false) + " &6|&e " +
-                Utils.parseMillisToString(time.getAfk() * 1000L, false);
+                Utils.parseMillisToString(time.getNormal(), false) + " &6|&e " +
+                Utils.parseMillisToString(time.getAfk(), false);
         if (showIncognito) {
-            result += " &6|&e " + Utils.parseMillisToString(time.getIncognito() * 1000L, false);
+            result += " &6|&e " + Utils.parseMillisToString(time.getIncognito(), false);
         }
         return result + "&6]";
     }

@@ -20,11 +20,12 @@ import java.util.UUID;
 public class Economy implements net.milkbowl.vault.economy.Economy {
 
     private final Main plugin;
-    public Economy(@NotNull Main plugin) {
+    public Economy(@NotNull Main plugin, boolean enabled) {
         this.plugin = plugin;
+        this.enabled = enabled;
     }
 
-    @Getter @Setter private boolean isEnabled = false;
+    @Getter @Setter private boolean enabled;
 
     /**
      * Gets name of economy method
@@ -98,7 +99,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      */
     @Deprecated
     @Override
-    public boolean hasAccount(String playerName) {
+    public boolean hasAccount(@NotNull String playerName) {
         return true;
     }
 
@@ -122,7 +123,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      */
     @Deprecated
     @Override
-    public boolean hasAccount(String playerName, String worldName) {
+    public boolean hasAccount(@NotNull String playerName, @NotNull String worldName) {
         return true;
     }
 
@@ -136,7 +137,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      * @return if the player has an account
      */
     @Override
-    public boolean hasAccount(OfflinePlayer player, String worldName) {
+    public boolean hasAccount(@NotNull OfflinePlayer player, @NotNull String worldName) {
         return true;
     }
 
@@ -146,7 +147,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      */
     @Deprecated
     @Override
-    public double getBalance(String playerName) {
+    public double getBalance(@NotNull String playerName) {
         UUID uuid = plugin.getOfflinePlayers().getIdByName(playerName);
         if (uuid == null) return 0;
         return getBalance(Bukkit.getOfflinePlayer(uuid));
@@ -164,7 +165,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
              PreparedStatement stmt = conn.prepareStatement("SELECT money FROM st14_economy WHERE uuid = ?")) {
             stmt.setString(1, player.getUniqueId().toString());
             ResultSet resultSet = stmt.executeQuery();
-            if (resultSet.next()) return 0;
+            if (!resultSet.next()) return 0;
             return resultSet.getDouble("money");
         } catch (SQLException e) {
             Logs.error("Could not retrieve player money.", e);
@@ -179,7 +180,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      */
     @Deprecated
     @Override
-    public double getBalance(String playerName, String world) {
+    public double getBalance(@NotNull String playerName, @NotNull String world) {
         return getBalance(playerName);
     }
 
@@ -192,8 +193,24 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      * @return Amount currently held in players account
      */
     @Override
-    public double getBalance(OfflinePlayer player, String world) {
+    public double getBalance(@NotNull OfflinePlayer player, @NotNull String world) {
         return getBalance(player);
+    }
+
+    public @NotNull EconomyResponse setBalance(@NotNull OfflinePlayer player, double amount) {
+        try (Connection conn = plugin.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_economy(uuid, money) VALUES(?, ?) ON DUPLICATE KEY UPDATE money = ?")) {
+            stmt.setString(1, player.getUniqueId().toString());
+            stmt.setDouble(2, amount);
+            stmt.setDouble(3, amount);
+            if (stmt.executeUpdate() == 0) {
+                return new EconomyResponse(0d, getBalance(player), EconomyResponse.ResponseType.FAILURE, "No funds on the account");
+            }
+            return new EconomyResponse(amount, getBalance(player), EconomyResponse.ResponseType.SUCCESS, null);
+        } catch (SQLException e) {
+            Logs.error("Could not retrieve player money.", e);
+        }
+        return new EconomyResponse(0, getBalance(player), EconomyResponse.ResponseType.FAILURE, null);
     }
 
     /**
@@ -203,7 +220,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      */
     @Deprecated
     @Override
-    public boolean has(String playerName, double amount) {
+    public boolean has(@NotNull String playerName, double amount) {
         UUID uuid = plugin.getOfflinePlayers().getIdByName(playerName);
         if (uuid == null) return false;
         return has(Bukkit.getOfflinePlayer(uuid), amount);
@@ -229,7 +246,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      */
     @Deprecated
     @Override
-    public boolean has(String playerName, String worldName, double amount) {
+    public boolean has(@NotNull String playerName, @NotNull String worldName, double amount) {
         return has(playerName, amount);
     }
 
@@ -243,7 +260,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      * @return True if <b>player</b> has <b>amount</b>, False else wise
      */
     @Override
-    public boolean has(OfflinePlayer player, String worldName, double amount) {
+    public boolean has(@NotNull OfflinePlayer player, @NotNull String worldName, double amount) {
         return has(player, amount);
     }
 
@@ -254,7 +271,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      */
     @Deprecated
     @Override
-    public @NotNull EconomyResponse withdrawPlayer(String playerName, double amount) {
+    public @NotNull EconomyResponse withdrawPlayer(@NotNull String playerName, double amount) {
         UUID uuid = plugin.getOfflinePlayers().getIdByName(playerName);
         if (uuid == null) return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, null);
         return withdrawPlayer(Bukkit.getOfflinePlayer(uuid), amount);
@@ -292,7 +309,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      */
     @Deprecated
     @Override
-    public @NotNull EconomyResponse withdrawPlayer(String playerName, String worldName, double amount) {
+    public @NotNull EconomyResponse withdrawPlayer(@NotNull String playerName, @NotNull String worldName, double amount) {
         return withdrawPlayer(playerName, amount);
     }
 
@@ -306,7 +323,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      * @return Detailed response of transaction
      */
     @Override
-    public @NotNull EconomyResponse withdrawPlayer(OfflinePlayer player, String worldName, double amount) {
+    public @NotNull EconomyResponse withdrawPlayer(@NotNull OfflinePlayer player, @NotNull String worldName, double amount) {
         return withdrawPlayer(player, amount);
     }
 
@@ -317,7 +334,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      */
     @Deprecated
     @Override
-    public @NotNull EconomyResponse depositPlayer(String playerName, double amount) {
+    public @NotNull EconomyResponse depositPlayer(@NotNull String playerName, double amount) {
         UUID uuid = plugin.getOfflinePlayers().getIdByName(playerName);
         if (uuid == null) return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, null);
         return depositPlayer(Bukkit.getOfflinePlayer(uuid), amount);
@@ -353,7 +370,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      */
     @Deprecated
     @Override
-    public @NotNull EconomyResponse depositPlayer(String playerName, String worldName, double amount) {
+    public @NotNull EconomyResponse depositPlayer(@NotNull String playerName, @NotNull String worldName, double amount) {
         return depositPlayer(playerName, amount);
     }
 
@@ -367,7 +384,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      * @return Detailed response of transaction
      */
     @Override
-    public @NotNull EconomyResponse depositPlayer(OfflinePlayer player, String worldName, double amount) {
+    public @NotNull EconomyResponse depositPlayer(@NotNull OfflinePlayer player, @NotNull String worldName, double amount) {
         return depositPlayer(player, amount);
     }
 
@@ -378,7 +395,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      */
     @Deprecated
     @Override
-    public @NotNull EconomyResponse createBank(String name, String player) {
+    public @NotNull EconomyResponse createBank(@NotNull String name, @NotNull String player) {
         return new EconomyResponse(0, 0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, null);
     }
 
@@ -390,7 +407,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      * @return EconomyResponse Object
      */
     @Override
-    public @NotNull EconomyResponse createBank(String name, OfflinePlayer player) {
+    public @NotNull EconomyResponse createBank(@NotNull String name, @NotNull OfflinePlayer player) {
         return new EconomyResponse(0, 0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, null);
     }
 
@@ -401,7 +418,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      * @return if the operation completed successfully
      */
     @Override
-    public @NotNull EconomyResponse deleteBank(String name) {
+    public @NotNull EconomyResponse deleteBank(@NotNull String name) {
         return new EconomyResponse(0, 0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, null);
     }
 
@@ -412,7 +429,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      * @return EconomyResponse Object
      */
     @Override
-    public @NotNull EconomyResponse bankBalance(String name) {
+    public @NotNull EconomyResponse bankBalance(@NotNull String name) {
         return new EconomyResponse(0, 0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, null);
     }
 
@@ -424,7 +441,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      * @return EconomyResponse Object
      */
     @Override
-    public @NotNull EconomyResponse bankHas(String name, double amount) {
+    public @NotNull EconomyResponse bankHas(@NotNull String name, double amount) {
         return new EconomyResponse(0, 0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, null);
     }
 
@@ -436,7 +453,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      * @return EconomyResponse Object
      */
     @Override
-    public @NotNull EconomyResponse bankWithdraw(String name, double amount) {
+    public @NotNull EconomyResponse bankWithdraw(@NotNull String name, double amount) {
         return new EconomyResponse(0, 0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, null);
     }
 
@@ -448,7 +465,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      * @return EconomyResponse Object
      */
     @Override
-    public @NotNull EconomyResponse bankDeposit(String name, double amount) {
+    public @NotNull EconomyResponse bankDeposit(@NotNull String name, double amount) {
         return new EconomyResponse(0, 0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, null);
     }
 
@@ -459,7 +476,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      */
     @Deprecated
     @Override
-    public @NotNull EconomyResponse isBankOwner(String name, String playerName) {
+    public @NotNull EconomyResponse isBankOwner(@NotNull String name, @NotNull String playerName) {
         return new EconomyResponse(0, 0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, null);
     }
 
@@ -471,7 +488,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      * @return EconomyResponse Object
      */
     @Override
-    public @NotNull EconomyResponse isBankOwner(String name, OfflinePlayer player) {
+    public @NotNull EconomyResponse isBankOwner(@NotNull String name, @NotNull OfflinePlayer player) {
         return new EconomyResponse(0, 0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, null);
     }
 
@@ -482,7 +499,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      */
     @Deprecated
     @Override
-    public @NotNull EconomyResponse isBankMember(String name, String playerName) {
+    public @NotNull EconomyResponse isBankMember(@NotNull String name, @NotNull String playerName) {
         return new EconomyResponse(0, 0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, null);
     }
 
@@ -494,7 +511,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      * @return EconomyResponse Object
      */
     @Override
-    public @NotNull EconomyResponse isBankMember(String name, OfflinePlayer player) {
+    public @NotNull EconomyResponse isBankMember(@NotNull String name, @NotNull OfflinePlayer player) {
         return new EconomyResponse(0, 0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, null);
     }
 
@@ -514,7 +531,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      */
     @Deprecated
     @Override
-    public boolean createPlayerAccount(String playerName) {
+    public boolean createPlayerAccount(@NotNull String playerName) {
         return true;
     }
 
@@ -525,7 +542,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      * @return if the account creation was successful
      */
     @Override
-    public boolean createPlayerAccount(OfflinePlayer player) {
+    public boolean createPlayerAccount(@NotNull OfflinePlayer player) {
         return true;
     }
 
@@ -536,7 +553,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      */
     @Deprecated
     @Override
-    public boolean createPlayerAccount(String playerName, String worldName) {
+    public boolean createPlayerAccount(@NotNull String playerName, @NotNull String worldName) {
         return true;
     }
 
@@ -549,7 +566,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      * @return if the account creation was successful
      */
     @Override
-    public boolean createPlayerAccount(OfflinePlayer player, String worldName) {
+    public boolean createPlayerAccount(@NotNull OfflinePlayer player, @NotNull String worldName) {
         return true;
     }
 

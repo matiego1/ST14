@@ -8,7 +8,16 @@ import org.bukkit.World;
 import org.bukkit.plugin.IllegalPluginAccessException;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 public class Utils {
 
@@ -90,4 +99,46 @@ public class Utils {
         if (result.isEmpty()) return useMilliseconds ? "0ms" : "0s";
         return result.substring(0, result.length() - 1);
     }
+
+    public static double getTps() {
+        return Math.min(20, Bukkit.getTPS()[0]);
+    }
+
+    public static void deleteOldLogFiles() {
+        Utils.async(() -> {
+            Logs.info("Starting cleaning up old server logs...");
+            List<File> files = new ArrayList<>();
+
+            try {
+                File logsDir = new File(Bukkit.getPluginsFolder().getAbsolutePath().replaceAll("plugins" + Pattern.quote(File.pathSeparator) + "*$", "") + "logs");
+                if (!logsDir.isDirectory()) return;
+                for (File file : Objects.requireNonNull(logsDir.listFiles())) {
+                    if (!file.isDirectory()) files.add(file);
+                }
+            } catch (Exception e) {
+                Logs.error("An error occurred while cleaning up old server logs", e);
+                return;
+            }
+
+            int deletedFiles = 0;
+            for (File file : files) {
+                try {
+                    //adds 21 days to date from file's name.
+                    Instant date = LocalDateTime.ofInstant(new SimpleDateFormat("yyyy-MM-dd").parse(file.getName().substring(0, 10)).toInstant(), ZoneId.systemDefault()).plusDays(21).atZone(ZoneId.systemDefault()).toInstant();
+                    if (date.isBefore(Instant.now())) {
+                        if (file.delete()) {
+                            deletedFiles++;
+                        }
+                    }
+                } catch (Exception ignored) {}
+            }
+            if (deletedFiles == 0) {
+                Logs.info("No log file has been deleted.");
+            } else {
+                Logs.info("Successfully deleted " + deletedFiles + " log file(s)!");
+            }
+        });
+    }
+
+
 }

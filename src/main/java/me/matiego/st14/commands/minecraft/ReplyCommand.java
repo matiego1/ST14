@@ -1,4 +1,4 @@
-package me.matiego.st14.commands;
+package me.matiego.st14.commands.minecraft;
 
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.CommandHandler;
@@ -25,12 +25,12 @@ public class ReplyCommand implements CommandHandler.Minecraft {
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
+    public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage(Utils.getComponentByString("&cTej komendy może użyć tylko gracz"));
-            return true;
+            return 0;
         }
-        if (args.length == 0) return false;
+        if (args.length == 0) return -1;
 
         Block block = player.getLocation().getBlock();
         String msg = String.join(" ", args)
@@ -41,13 +41,13 @@ public class ReplyCommand implements CommandHandler.Minecraft {
         Player receiver = manager.getReply(player.getUniqueId());
         if (receiver == null) {
             player.sendMessage(Utils.getComponentByString("&cNie pisałeś ostatnio do nikogo."));
-            return true;
+            return 0;
         }
 
         manager.putReply(player.getUniqueId(), receiver.getUniqueId());
         player.sendMessage(Utils.getComponentByString("&6[&cJa &6->&c " + receiver.getName() + "&6]:&r " + msg));
         receiver.sendMessage(Utils.getComponentByString("&6[&c" + player.getName() + " &6->&c Ja&6]:&r " + msg));
         manager.log(msg, "Wiadomość prywatna - od " + player.getName() + " do " + receiver.getName());
-        return true;
+        return 0;
     }
 }

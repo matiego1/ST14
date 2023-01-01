@@ -3,23 +3,17 @@ package me.matiego.st14;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.Synchronized;
-import me.matiego.st14.utils.CommandHandler;
-import me.matiego.st14.utils.DiscordUtils;
-import me.matiego.st14.utils.Logs;
-import me.matiego.st14.utils.Utils;
+import me.matiego.st14.utils.*;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.UserSnowflake;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import net.dv8tion.jda.api.interactions.commands.context.MessageContextInteraction;
-import net.dv8tion.jda.api.interactions.commands.context.UserContextInteraction;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
 import net.dv8tion.jda.api.interactions.components.selections.StringSelectInteraction;
 import net.dv8tion.jda.api.interactions.modals.ModalInteraction;
@@ -37,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 public class CommandManager extends ListenerAdapter implements CommandExecutor, TabCompleter, Listener {
     public CommandManager(@NotNull List<CommandHandler> handlers) {
@@ -44,8 +39,7 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
         handlers.forEach(handler -> {
             if (handler instanceof CommandHandler.Discord discord) {
                 CommandData data = discord.getDiscordCommand();
-                String pref = data.getType() == Command.Type.SLASH ? "" : "#";
-                discordCommands.put(pref + data.getName(), discord);
+                discordCommands.put(getCommandName(data), discord);
                 dc.add(data);
             }
             if (handler instanceof CommandHandler.Minecraft minecraft) {
@@ -53,7 +47,7 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
                 if (cmd == null) return;
                 cmd.setExecutor(this);
                 cmd.setTabCompleter(this);
-                minecraftCommands.put(cmd.getName(), minecraft);
+                minecraftCommands.put(cmd.getName().toLowerCase(), minecraft);
             }
         });
         JDA jda = Main.getInstance().getJda();
@@ -63,6 +57,8 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
 
     private final HashMap<String, CommandHandler.Discord> discordCommands = new HashMap<>();
     private final HashMap<String, CommandHandler.Minecraft> minecraftCommands = new HashMap<>();
+    private final FixedSizeMap<String, Long> minecraftCooldown = new FixedSizeMap<>(100);
+    private final FixedSizeMap<String, Long> discordCooldown = new FixedSizeMap<>(100);
 
     @Getter (onMethod_ = {@Synchronized})
     @Setter (onMethod_ = {@Synchronized})
@@ -75,14 +71,27 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
             return true;
         }
         //get handler
-        CommandHandler.Minecraft handler = minecraftCommands.get(command.getName());
+        CommandHandler.Minecraft handler = minecraftCommands.get(command.getName().toLowerCase());
         if (handler == null) {
             sender.sendMessage(Utils.getComponentByString("&cNieznana komenda."));
             return true;
         }
+        //check cooldown
+        if (sender instanceof Player player) {
+            long time = getRemainingCooldown(command.getName(), player.getUniqueId());
+            if (time > 0) {
+                player.sendMessage(Utils.getComponentByString("&cTej komendy możesz użyć za " + Utils.parseMillisToString(time, false) + "."));
+                return true;
+            }
+        }
         //execute command
         try {
-            return handler.onCommand(sender, args);
+            int cooldown = handler.onCommand(sender, args);
+            if (cooldown < 0) return false;
+            if (sender instanceof Player player && cooldown > 0) {
+                putCooldown(command.getName(), player.getUniqueId(), cooldown);
+            }
+            return true;
         } catch (Exception e) {
             sender.sendMessage(Utils.getComponentByString("&cNapotkano niespodziewany błąd. Spróbuj później."));
             Logs.error("An error occurred while executing a command.", e);
@@ -118,9 +127,16 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
             event.reply("Nieznana komenda.").setEphemeral(true).queue();
             return;
         }
+        //check cooldown
+        long time = getRemainingCooldown(getCommandName(handler.getDiscordCommand()), user);
+        if (time > 0) {
+            event.reply("Tej komendy możesz użyć za " + Utils.parseMillisToString(time, true) + ".").setEphemeral(true).queue();
+            return;
+        }
         //execute command
         try {
-            handler.onSlashCommandInteraction(event.getInteraction());
+            int cooldown = handler.onSlashCommandInteraction(event.getInteraction());
+            if (cooldown > 0) putCooldown(getCommandName(handler.getDiscordCommand()), user, cooldown);
         } catch (Exception e) {
             event.reply("Napotkano niespodziewany błąd. Spróbuj później.").setEphemeral(true).queue(success -> {}, failure -> {});
             Logs.error("An error occurred while executing a command.", e);
@@ -130,11 +146,15 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
     @Override
     public void onStringSelectInteraction(@NotNull StringSelectInteractionEvent event) {
         StringSelectInteraction interaction = event.getInteraction();
+        int cooldown = -1;
         for (CommandHandler.Discord handler : discordCommands.values()) {
             try {
-                handler.onStringSelectInteraction(interaction);
+                cooldown = handler.onStringSelectInteraction(interaction);
             } catch (Exception ignored) {}
-            if (interaction.isAcknowledged()) return;
+            if (interaction.isAcknowledged()) {
+                if (cooldown > 0) putCooldown(getCommandName(handler.getDiscordCommand()), event.getUser(), cooldown);
+                return;
+            }
         }
         event.reply("Nieznana komenda.").setEphemeral(true).queue();
     }
@@ -142,35 +162,15 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
     @Override
     public void onModalInteraction(@NotNull ModalInteractionEvent event) {
         ModalInteraction interaction = event.getInteraction();
+        int cooldown = -1;
         for (CommandHandler.Discord handler : discordCommands.values()) {
             try {
-                handler.onModalInteraction(interaction);
+                cooldown = handler.onModalInteraction(interaction);
             } catch (Exception ignored) {}
-            if (interaction.isAcknowledged()) return;
-        }
-        event.reply("Nieznana komenda.").setEphemeral(true).queue();
-    }
-
-    @Override
-    public void onMessageContextInteraction(@NotNull MessageContextInteractionEvent event) {
-        MessageContextInteraction interaction = event.getInteraction();
-        for (CommandHandler.Discord handler : discordCommands.values()) {
-            try {
-                handler.onMessageContextInteraction(interaction);
-            } catch (Exception ignored) {}
-            if (interaction.isAcknowledged()) return;
-        }
-        event.reply("Nieznana komenda.").setEphemeral(true).queue();
-    }
-
-    @Override
-    public void onUserContextInteraction(@NotNull UserContextInteractionEvent event) {
-        UserContextInteraction interaction = event.getInteraction();
-        for (CommandHandler.Discord handler : discordCommands.values()) {
-            try {
-                handler.onUserContextInteraction(interaction);
-            } catch (Exception ignored) {}
-            if (interaction.isAcknowledged()) return;
+            if (interaction.isAcknowledged()) {
+                if (cooldown > 0) putCooldown(getCommandName(handler.getDiscordCommand()), event.getUser(), cooldown);
+                return;
+            }
         }
         event.reply("Nieznana komenda.").setEphemeral(true).queue();
     }
@@ -178,11 +178,15 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
     @Override
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
         ButtonInteraction interaction = event.getInteraction();
+        int cooldown = -1;
         for (CommandHandler.Discord handler : discordCommands.values()) {
             try {
-                handler.onButtonInteraction(interaction);
+                cooldown = handler.onButtonInteraction(interaction);
             } catch (Exception ignored) {}
-            if (interaction.isAcknowledged()) return;
+            if (interaction.isAcknowledged()) {
+                if (cooldown > 0) putCooldown(getCommandName(handler.getDiscordCommand()), event.getUser(), cooldown);
+                return;
+            }
         }
         event.reply("Nieznana komenda.").setEphemeral(true).queue();
     }
@@ -190,5 +194,24 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
     @EventHandler
     public void onInventoryClick(@NotNull InventoryClickEvent event) {
         minecraftCommands.values().forEach(value -> value.onInventoryClick(event));
+    }
+
+    private long getRemainingCooldown(@NotNull String command, @NotNull UserSnowflake id) {
+        long now = Utils.now();
+        return Math.max(0, discordCooldown.getOrDefault(command + "#" + id, now) - now);
+    }
+    private long getRemainingCooldown(@NotNull String command, @NotNull UUID uuid) {
+        long now = Utils.now();
+        return Math.max(0, minecraftCooldown.getOrDefault(command + "#" + uuid, now) - now);
+    }
+
+    private void putCooldown(@NotNull String command, @NotNull UserSnowflake id, int seconds) {
+        discordCooldown.put(command + "#" + id, seconds * 1000L + Utils.now());
+    }
+    public void putCooldown(@NotNull String command, @NotNull UUID uuid, int seconds) {
+        minecraftCooldown.put(command + "#" + uuid, seconds * 1000L + Utils.now());
+    }
+    private @NotNull String getCommandName(@NotNull CommandData data) {
+        return (data.getType() == Command.Type.SLASH ? "" : data.getType().name()) + data.getName();
     }
 }

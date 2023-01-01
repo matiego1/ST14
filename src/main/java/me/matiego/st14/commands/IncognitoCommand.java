@@ -46,7 +46,6 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
 
     private final Material BLOCK_ON = Material.LIME_WOOL;
     private final Material BLOCK_OFF = Material.RED_WOOL;
-    private final FixedSizeMap<UUID, Pair<Long, Integer>> cooldown = new FixedSizeMap<>(100);
 
     @Override
     public @NotNull CommandData getDiscordCommand() {
@@ -59,12 +58,12 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
+    public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage(Utils.getComponentByString(Prefixes.INCOGNITO + "&cTej komendy może użyć tylko gracz."));
-            return true;
+            return 0;
         }
-        if (args.length != 0) return false;
+        if (args.length != 0) return -1;
         IncognitoManager manager = plugin.getIncognitoManager();
         Inventory inv = GUI.createInventory(18, Prefixes.INCOGNITO + "Ustawienia");
         inv.setItem(2, GUI.createGuiItem(Material.NAME_TAG, "&8Zaufaj graczowi", "&7Kliknij, aby zaufać nowemu graczowi!"));
@@ -82,7 +81,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
         });
         Utils.async(() -> updateTrustedPlayers(manager.getTrustedPlayers(player.getUniqueId()), inv));
         player.openInventory(inv);
-        return true;
+        return 5;
     }
 
     private void updateTrustedPlayers(@NotNull List<UUID> trusted, @NotNull Inventory inv) {
@@ -112,18 +111,6 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
         ItemStack item = event.getCurrentItem();
         IncognitoManager manager = plugin.getIncognitoManager();
         Objects.requireNonNull(item); //already checked in GUI#checkInventory()
-
-        long now = Utils.now();
-        Pair<Long, Integer> pair = cooldown.getOrDefault(uuid, new Pair<>(now, 0));
-        if (now - pair.getFirst() >= 5000) {
-            cooldown.put(uuid, new Pair<>(now, 1));
-        } else if (pair.getSecond() < 3) {
-            cooldown.put(uuid, new Pair<>(now, pair.getSecond() + 1));
-        } else {
-            //TODO: ban for 15 seconds
-            player.kick(Utils.getComponentByString("&cNie klikaj tak szybko!"));
-            return;
-        }
 
         if (slot == 4) {
             if (manager.isIncognito(uuid)) {
@@ -178,7 +165,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
     }
 
     @Override
-    public void onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
+    public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
         event.deferReply(true).queue();
         InteractionHook hook = event.getHook();
         AccountsManager accounts = plugin.getAccountsManager();
@@ -208,11 +195,12 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
             eb.setTimestamp(Instant.now());
             hook.sendMessageEmbeds(eb.build()).addActionRow(Button.secondary("change-inc-status", "Zmień status incognito")).queue();
         });
+        return 5;
     }
 
     @Override
-    public void onButtonInteraction(@NotNull ButtonInteraction event) {
-        if (!event.getComponentId().equals("change-inc-status")) return;
+    public int onButtonInteraction(@NotNull ButtonInteraction event) {
+        if (!event.getComponentId().equals("change-inc-status")) return 0;
 
         event.deferReply(true).queue();
         AccountsManager accounts = plugin.getAccountsManager();
@@ -239,5 +227,6 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
             manager.setIncognito(uuid, !manager.isIncognito(uuid));
             hook.sendMessage("Pomyślnie zmieniono twój status incognito! **Aktualny status incognito:** " + (manager.isIncognito(uuid) ? "`Włączone` :green_circle:" : "`Wyłączone` :red_circle:")).queue();
         });
+        return 0;
     }
 }

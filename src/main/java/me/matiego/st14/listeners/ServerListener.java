@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
+import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.event.server.ServerListPingEvent;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.jetbrains.annotations.NotNull;
@@ -66,10 +67,20 @@ public class ServerListener implements Listener, PluginMessageListener {
         }
     }
 
-    @EventHandler
+    @EventHandler (ignoreCancelled = true)
     public void onEntityChangeBlock(@NotNull EntityChangeBlockEvent event) {
         if (event.getEntityType() == EntityType.ENDERMAN) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler (ignoreCancelled = true)
+    public void onServerCommand(@NotNull ServerCommandEvent event) {
+        String command = event.getCommand();
+        if (command.equalsIgnoreCase("minecraft:stop")) {
+            event.setCommand("st14:stop");
+        } else if (command.equalsIgnoreCase("/minecraft:stop")) {
+            event.setCommand("/st14:stop");
         }
     }
 }

@@ -1,4 +1,4 @@
-package me.matiego.st14.commands;
+package me.matiego.st14.commands.discord;
 
 import me.matiego.st14.utils.CommandHandler;
 import me.matiego.st14.utils.Utils;
@@ -22,12 +22,12 @@ public class PingCommand implements CommandHandler.Discord {
     }
 
     @Override
-    public void onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
-
+    public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
         long time = Utils.now();
         event.reply("Pong!")
                 .setEphemeral(event.getOption("incognito", "False", OptionMapping::getAsString).equals("True"))
                 .flatMap(v -> event.getHook().editOriginalFormat("Pong: %d ms", Utils.now() - time))
                 .queue();
+        return 0;
     }
 }

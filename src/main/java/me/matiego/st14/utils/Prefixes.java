@@ -6,8 +6,11 @@ import org.jetbrains.annotations.NotNull;
 public enum Prefixes{
     AFK("&5[&dAFK&5]&d ", "AFK"),
     INCOGNITO("&8[&7INC&8]&f ", ""),
-    TIME("&6[&eCZAS&6]&e ", ""),
-    PREMIUM("&6[&dPREMIUM&6]&d ", "Premium"),
+    TIME("&6[&eCzas&6]&e ", ""),
+    PREMIUM("&6[&dPremium&6]&d ", "Premium"),
+    WORLDS("&1[&3Światy&1]&3 ", "Światy"),
+    TPA("&2[&6TPA&2]&e ", "TPA"),
+    ECONOMY("&9[&b$&9]&b ", "**[$]** "),
     DISCORD("&1[&9DC&1]&b ", "");
 
     @Getter private final String minecraft;

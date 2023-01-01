@@ -1,29 +1,31 @@
 package me.matiego.st14.utils;
 
-@SuppressWarnings("unused")
-public class Pair<FIRST, SECOND> {
+import java.util.Objects;
 
-    public Pair(FIRST first, SECOND second) {
+@SuppressWarnings("unused")
+public class Pair<F, S> {
+
+    public Pair(F first, S second) {
         this.first = first;
         this.second = second;
     }
 
-    private FIRST first;
-    private SECOND second;
+    private F first;
+    private S second;
 
-    public FIRST getFirst() {
+    public F getFirst() {
         return first;
     }
 
-    public void setFirst(FIRST first) {
+    public void setFirst(F first) {
         this.first = first;
     }
 
-    public SECOND getSecond() {
+    public S getSecond() {
         return second;
     }
 
-    public void setSecond(SECOND second) {
+    public void setSecond(S second) {
         this.second = second;
     }
 
@@ -33,9 +35,10 @@ public class Pair<FIRST, SECOND> {
     }
 
     @Override
-    public boolean equals(Object other) {
-        if (other == this) return true;
-        if (!(other instanceof Pair<?, ?> pair)) return false;
-        return getFirst().equals(pair.getFirst()) && getSecond().equals(pair.getSecond());
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Pair<?, ?> pair = (Pair<?, ?>) o;
+        return Objects.equals(first, pair.first) && Objects.equals(second, pair.second);
     }
 }

@@ -23,14 +23,17 @@ commands:
     permission: st14.say
     usage: 'Poprawne użycie: /say <wiadomość>'
   time:
+    aliases: t
     permission: st14.time
     usage: 'Poprawne użycie: /time (gracz)'
   tell:
+    aliases: msg
     permission: st14.tell
     usage: 'Poprawne użycie: /tell <gracz> <wiadomość>'
   reply:
+    aliases: r
     permission: st14.reply
-    usage: 'Poprawne użycie: /reply <wiadomość'
+    usage: 'Poprawne użycie: /reply <wiadomość>'
   difficulty:
     aliases: d
     permission: st14.difficulty
@@ -39,6 +42,26 @@ commands:
     aliases: gm
     permission: st14.gamemode
     usage: 'Poprawne użycie: /gamemode'
+  mcreload:
+    aliases: mcr
+    permission: st14.mcreload
+    usage: 'Poprawne użycie: /mcreload'
+  worlds:
+    aliases: w
+    permission: st14.worlds
+    usage: 'Poprawne użycie: /worlds'
+  tpa:
+    permission: st14.tpa
+    usage: 'Poprawne użycie: /tpa (gracz)'
+  economy:
+    permission: st14.economy
+    usage: 'Poprawne użycie: /economy'
+  stop:
+    permission: st14.stop
+    usage: 'Poprawne użycie: /stop'
+  backpack:
+    permission: st14.backpack
+    usage: 'Poprawne użycie: /backpack'
 permissions:
   st14.st14:
     default: op
@@ -59,4 +82,16 @@ permissions:
   st14.difficulty:
     default: true
   st14.gamemode:
+    default: true
+  st14.mcreload:
+    default: op
+  st14.worlds:
+    default: true
+  st14.tpa:
+    default: true
+  st14.economy:
+    default: true
+  st14.stop:
+    default: op
+  st14.backpack:
     default: true

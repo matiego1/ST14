@@ -5,17 +5,20 @@ import com.neovisionaries.ws.client.DualStackMode;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import lombok.Getter;
 import me.matiego.st14.commands.*;
-import me.matiego.st14.listeners.AfkListener;
-import me.matiego.st14.listeners.DiscordListener;
-import me.matiego.st14.listeners.PlayerListener;
-import me.matiego.st14.listeners.ServerListener;
+import me.matiego.st14.commands.discord.FeedbackCommand;
+import me.matiego.st14.commands.discord.ListCommand;
+import me.matiego.st14.commands.discord.PingCommand;
+import me.matiego.st14.commands.minecraft.*;
+import me.matiego.st14.listeners.*;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.GUI;
 import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Utils;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.session.ShutdownEvent;
 import net.dv8tion.jda.api.exceptions.InvalidTokenException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -23,10 +26,8 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -34,10 +35,16 @@ import org.bukkit.scheduler.BukkitWorker;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 public final class Main extends JavaPlugin implements Listener {
     @Getter private static Main instance;
@@ -50,11 +57,18 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private AfkManager afkManager;
     @Getter private TimeManager timeManager;
     @Getter private PremiumManager premiumManager;
-    private CommandManager commandManager;
+    @Getter private TeleportsManager teleportsManager;
+    @Getter private CommandManager commandManager;
+    @Getter private BackpackManager backpackManager;
+    private TabListManager tabListManager;
+    private MoneyForPlaying moneyForPlaying;
 
-    @Getter TellCommand tellCommand;
+    @Getter private TellCommand tellCommand;
+    @Getter private TpaCommand tpaCommand;
 
-    @Getter (onMethod_ = {@Nullable}) private JDA jda;
+
+    private JDA jda;
+    private boolean isJdaEnabled = false;
     private ExecutorService callbackThreadPool;
 
 
@@ -102,8 +116,12 @@ public final class Main extends JavaPlugin implements Listener {
         chatMinecraft = new ChatMinecraft(this);
         afkManager = new AfkManager(this);
         timeManager = new TimeManager(this);
-        economy = new Economy(this);
+        economy = new Economy(this, true);
         premiumManager = new PremiumManager(this);
+        tabListManager = new TabListManager(this);
+        teleportsManager = new TeleportsManager();
+        moneyForPlaying = new MoneyForPlaying(this);
+        backpackManager = new BackpackManager(this);
 
         Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomy(), vault, ServicePriority.High);
 
@@ -111,8 +129,11 @@ public final class Main extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
         final ServerListener serverListener = new ServerListener(this);
         Bukkit.getPluginManager().registerEvents(serverListener, this);
-        Bukkit.getMessenger().registerIncomingPluginChannel(this, "minecraft:brand", serverListener);
         Bukkit.getPluginManager().registerEvents(new AfkListener(this), this);
+        Bukkit.getPluginManager().registerEvents(getTeleportsManager(), this);
+        Bukkit.getPluginManager().registerEvents(moneyForPlaying, this);
+
+        Bukkit.getMessenger().registerIncomingPluginChannel(this, "minecraft:brand", serverListener);
         Bukkit.getPluginManager().registerEvents(this, this);
 
         //Enable the Discord bot
@@ -155,41 +176,79 @@ public final class Main extends JavaPlugin implements Listener {
                     )
                     .build();
             jda.awaitReady();
+            isJdaEnabled = true;
+            onDiscordBotEnable();
         } catch (Exception e) {
             Logs.error("An error occurred while enabling the Discord bot." + (e instanceof InvalidTokenException ? " Is the provided bot token correct?" : ""), e);
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
 
-        tellCommand = new TellCommand();
+        Logs.info("Plugin enabled! Took " + (Utils.now() - time) + " ms.");
+    }
+
+    private void onDiscordBotEnable() {
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setDescription("Bot has been enabled!");
+        eb.setTimestamp(Instant.now());
+        eb.setColor(Color.GREEN);
+        Logs.discord(eb.build());
+
         //register commands
+        tellCommand = new TellCommand();
+        tpaCommand = new TpaCommand(this);
         commandManager = new CommandManager(Arrays.asList(
                 new IncognitoCommand(this),
                 new AccountsCommand(this),
                 new VersionCommand(),
                 new TimeCommand(this),
+                new EconomyCommand(this),
                 //Minecraft commands
                 new SayCommand(),
                 new St14Command(),
                 new DifficultyCommand(),
                 new GameModeCommand(),
-                tellCommand,
                 new ReplyCommand(),
+                new McreloadCommand(),
+                new WorldsCommand(this),
+                new StopCommand(),
+                new BackpackCommand(this),
+                tellCommand,
+                tpaCommand,
                 //Discord commands
                 new PingCommand(),
-                new ListCommand()
+                new ListCommand(),
+                new FeedbackCommand()
         ));
         Bukkit.getPluginManager().registerEvents(commandManager, this);
         jda.addEventListener(commandManager);
 
-        Logs.info("Plugin enabled! Took " + (Utils.now() - time) + " ms.");
-    }
-
-    @EventHandler
-    public void onServerLoad(@NotNull ServerLoadEvent event) {
-        if (event.getType() != ServerLoadEvent.LoadType.STARTUP) return;
         commandManager.setEnabled(true);
         getAfkManager().start();
+        tabListManager.start();
+        moneyForPlaying.start();
+        getChatMinecraft().unblock();
+
+        Utils.async(() -> {
+            Utils.deleteOldLogFiles();
+
+            Updates updates = new Updates();
+            HashMap<Plugin, Updates.Response> versions = new Updates().checkSpigotMc(
+                    Arrays.stream(Bukkit.getPluginManager().getPlugins())
+                            .filter(Plugin::isEnabled)
+                            .filter(p -> !p.equals(this))
+                            .collect(Collectors.toList())
+            );
+            Iterator<Map.Entry<Plugin, Updates.Response>> it = versions.entrySet().iterator();
+            while (it.hasNext()) {
+                Updates.Response response = it.next().getValue();
+                if (response == Updates.Response.UNKNOWN_ID) it.remove();
+                else if (response == Updates.Response.UP_TO_DATE) it.remove();
+                else if (response == Updates.Response.NEWER) it.remove();
+            }
+            updates.log(versions);
+            updates.logDiscord(versions);
+        });
     }
 
     @Override
@@ -202,12 +261,26 @@ public final class Main extends JavaPlugin implements Listener {
             if (player.getOpenInventory().getTopInventory().getHolder() instanceof GUI) player.closeInventory();
         }
         //disable managers
-        AfkManager manager = getAfkManager();
-        if (manager != null) manager.stop();
+        if (afkManager != null) afkManager.stop();
+        if (tabListManager != null) tabListManager.stop();
+        if (moneyForPlaying != null) moneyForPlaying.stop();
+        if (chatMinecraft != null) chatMinecraft.block();
+        if (teleportsManager != null) teleportsManager.cancelAll();
+        if (economy != null) economy.setEnabled(false);
         //unregister all events
         HandlerList.unregisterAll((Plugin) this);
         //disable Discord bot
         if (jda != null) {
+            EmbedBuilder eb = new EmbedBuilder();
+            eb.setDescription("Bot has been disabled!");
+            eb.setTimestamp(Instant.now());
+            eb.setColor(Color.RED);
+            TextChannel chn = DiscordUtils.getConsoleChannel();
+            if (chn != null) {
+                chn.sendMessageEmbeds(eb.build()).complete();
+            }
+
+            isJdaEnabled = false;
             jda.getEventManager().getRegisteredListeners().forEach(listener -> jda.getEventManager().unregister(listener));
             CompletableFuture<Void> shutdownTask = new CompletableFuture<>();
             jda.addEventListener(new ListenerAdapter() {
@@ -246,5 +319,9 @@ public final class Main extends JavaPlugin implements Listener {
 
     public @NotNull Connection getConnection() throws SQLException {
         return mySQL.getConnection();
+    }
+
+    public @Nullable JDA getJda() {
+        return jda != null && isJdaEnabled ? jda : null;
     }
 }

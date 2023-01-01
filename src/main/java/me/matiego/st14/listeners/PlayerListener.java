@@ -17,6 +17,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextReplacementConfig;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -27,7 +28,6 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -43,67 +43,66 @@ public class PlayerListener implements Listener {
     private final HashMap<UUID, Player> sleepingPlayers = new HashMap<>();
     private final HashMap<UUID, BossBar> positionBossBars = new HashMap<>();
 
-    @EventHandler (priority = EventPriority.LOWEST)
+    @EventHandler
     public void onAsyncPlayerPreLogin(@NotNull AsyncPlayerPreLoginEvent event) {
         UUID uuid = event.getUniqueId();
-        AsyncPlayerPreLoginEvent.Result result = event.getLoginResult();
-        if (result == AsyncPlayerPreLoginEvent.Result.ALLOWED) {
-            String msg = check(event, uuid);
-            if (msg == null) return;
-            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Utils.getComponentByString(msg));
+        //check if login is successfully
+        if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) return;
+        if (Bukkit.getWhitelistedPlayers().stream()
+                .map(OfflinePlayer::getUniqueId)
+                .noneMatch(u -> u.equals(uuid))) {
             return;
         }
-        if (result == AsyncPlayerPreLoginEvent.Result.KICK_FULL) {
-            String msg = check(event, uuid);
-            if (msg != null) return;
-            PremiumManager manager = plugin.getPremiumManager();
-            if (manager.isPremium(uuid) && manager.makeSpaceForPlayer(uuid)) {
-                event.allow();
-            }
-        }
-    }
-    private @Nullable String check(@NotNull AsyncPlayerPreLoginEvent event, @NotNull UUID uuid) {
         //refresh offline players names
         if (event.getName().length() > 36) {
-            return "&cTwój nick jest za długi! Może mieć maksymalnie 36 znaków.";
+            disallow(event, "&cTwój nick jest za długi! Może mieć maksymalnie 36 znaków.");
+            return;
         }
         plugin.getOfflinePlayers().refresh(uuid, event.getName());
         //check if Discord bot is online
         JDA jda = plugin.getJda();
         if (jda == null) {
-            return Prefixes.DISCORD + "&cBot na Discord jest offline! Nie możesz dołączyć do serwera.";
+            disallow(event, Prefixes.DISCORD + "&cBot na Discord jest offline! Nie możesz dołączyć do serwera.");
+            return;
+        }
+        if (Utils.getTps() < 15.0 && !plugin.getPremiumManager().isSuperPremium(uuid)) {
+            disallow(event, "&cSerwer jest przeciążony - TPS spadły poniżej 15\nSpróbuj dołączyć później\n&7Przepraszamy");
+            return;
         }
         //check if player has linked account
-        if (plugin.getAccountsManager().isRequired(uuid)) {
-            UserSnowflake id = plugin.getAccountsManager().getUserByPlayer(uuid);
-            if (id == null) {
-                String code = plugin.getAccountsManager().getNewVerificationCode(uuid);
-                return Prefixes.DISCORD + "\n" +
-                        "Nie połączyłeś konta Discord z twoim kontem minecraft!\n\n" +
-                        "Użyj komendy &9/accounts &bna Discord\n" +
-                        "z kodem &9" + code + "&b\n\n" +
-                        "&cUWAGA! &bKod będzie ważny tylko 5 minut.";
-            }
-            Guild guild = jda.getGuildById(plugin.getConfig().getLong("discord.guild-id"));
-            if (guild == null) {
-                Logs.warning("A guild id in the config file is not correct.");
-                return null;
-            }
-            Member member = guild.retrieveMember(id).complete();
-            if (member == null) {
-                return Prefixes.DISCORD + "Wygląda na to, że nie ma cię na naszym serwerze Discord! Dołącz do niego, aby grać na tym serwerze.";
-            }
-            Role role = guild.getRoleById(plugin.getConfig().getLong("discord.role-id"));
-            if (role == null) {
-                Logs.warning("A role id in the config file is not correct.");
-                return null;
-            }
-            if (!member.getRoles().contains(role)) {
-                plugin.getAccountsManager().unlink(uuid);
-                return Prefixes.DISCORD + "Twoje konto zostało rozłączone przed administratora. Dołącz ponownie, aby je połączyć.";
-            }
+        if (!plugin.getAccountsManager().isRequired(uuid)) return;
+        UserSnowflake id = plugin.getAccountsManager().getUserByPlayer(uuid);
+        if (id == null) {
+            String code = plugin.getAccountsManager().getNewVerificationCode(uuid);
+            disallow(event, Prefixes.DISCORD + "\n" +
+                    "Nie połączyłeś konta Discord z twoim kontem minecraft!\n\n" +
+                    "Użyj komendy &9/accounts &bna Discord\n" +
+                    "z kodem &9" + code + "&b\n\n" +
+                    "&cUWAGA! &bKod będzie ważny tylko 5 minut.");
+            return;
         }
-        return null;
+        Guild guild = jda.getGuildById(plugin.getConfig().getLong("discord.guild-id"));
+        if (guild == null) {
+            Logs.warning("A guild id in the config file is not correct.");
+            return;
+        }
+        Member member = guild.retrieveMember(id).complete();
+        if (member == null) {
+            disallow(event, Prefixes.DISCORD + "Wygląda na to, że nie ma cię na naszym serwerze Discord! Dołącz do niego, aby grać na tym serwerze.");
+            return;
+        }
+        Role role = guild.getRoleById(plugin.getConfig().getLong("discord.role-id"));
+        if (role == null) {
+            Logs.warning("A role id in the config file is not correct.");
+            return;
+        }
+        if (!member.getRoles().contains(role)) {
+            plugin.getAccountsManager().unlink(uuid);
+            disallow(event, Prefixes.DISCORD + "Twoje konto zostało rozłączone przed administratora. Dołącz ponownie, aby je połączyć.");
+        }
+    }
+    private void disallow(@NotNull AsyncPlayerPreLoginEvent event, @NotNull String msg) {
+        event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Utils.getComponentByString(msg));
     }
 
     @EventHandler (priority = EventPriority.MONITOR)
@@ -119,6 +118,16 @@ public class PlayerListener implements Listener {
                 .forEach(player -> Utils.sync(() -> player.kick(Utils.getComponentByString(Prefixes.INCOGNITO + "Gracz " + event.getName() + " dołącza do gry. Zostałeś wyrzucony, ponieważ masz włączony tryb incognito."))));
     }
 
+    @EventHandler
+    public void onPlayerLoginEvent(@NotNull PlayerLoginEvent event) {
+        if (event.getResult() != PlayerLoginEvent.Result.KICK_FULL) return;
+
+        UUID uuid = event.getPlayer().getUniqueId();
+        PremiumManager manager = plugin.getPremiumManager();
+        if (manager.isPremium(uuid) && manager.makeSpaceForPlayer(uuid)) {
+            event.allow();
+        }
+    }
 
     @EventHandler
     public void onPlayerJoin(@NotNull PlayerJoinEvent event) {
@@ -149,8 +158,10 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
 
         plugin.getTellCommand().removeReply(player.getUniqueId());
+        plugin.getTpaCommand().cancel(player);
         positionBossBars.remove(player.getUniqueId());
         plugin.getAfkManager().move(player);
+        plugin.getBackpackManager().clearCache(player.getUniqueId());
         //quit message
         event.quitMessage(Utils.getComponentByString("&eGracz " + player.getName() + " opuścił grę"));
         plugin.getChatMinecraft().sendQuitMessage(player);
@@ -172,7 +183,8 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerDeath(@NotNull PlayerDeathEvent event) {
-        //TODO: send death message
+        //noinspection deprecation
+        plugin.getChatMinecraft().sendDeathMessage(event.getDeathMessage() == null ? event.getPlayer().getName() + " umarł" : event.getDeathMessage(), event.getPlayer());
     }
 
     @EventHandler
@@ -210,6 +222,10 @@ public class PlayerListener implements Listener {
     public void onPlayerCommandPreprocess(@NotNull PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
         String command = event.getMessage().substring(1).toLowerCase();
+        if (command.equalsIgnoreCase("minecraft:stop")) {
+            event.setCancelled(true);
+            player.performCommand("st14:stop");
+        }
         if (command.isBlank()) return;
         if (command.charAt(0) == '/') command = command.substring(1);
 
@@ -235,8 +251,7 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerCommandSent(@NotNull PlayerCommandSendEvent event) {
-        if (event.getPlayer().isOp()) return;
+    public void onPlayerCommandSent(@NotNull PlayerCommandSendEvent event) {if (event.getPlayer().isOp()) return;
         List<String> allowedCommands = plugin.getConfig().getStringList("allowed-commands");
         if (allowedCommands.isEmpty()) return;
 
@@ -267,6 +282,7 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         World world = event.getBed().getWorld();
         sleepingPlayers.remove(world.getUID());
+        //noinspection SpellCheckingInspection
         Bukkit.getOnlinePlayers().stream()
                 .filter(p -> p.getWorld().equals(world))
                 .forEach(p -> p.sendMessage(Utils.getComponentByString("&eGracz &6" + player.getName() + "&eposzedł spać. Słodkich snów!")));

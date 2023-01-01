@@ -5,23 +5,23 @@ import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 public class GameTime {
-    public GameTime(int normal, int afk, int incognito) {
+    public GameTime(long normal, long afk, long incognito) {
         this.normal = normal;
         this.afk = afk;
         this.incognito = incognito;
     }
 
-    @Getter @Setter private int normal;
-    @Getter @Setter private int afk;
-    @Getter @Setter private int incognito;
+    @Getter @Setter private long normal;
+    @Getter @Setter private long afk;
+    @Getter @Setter private long incognito;
 
-    public void addNormal(int time) {
+    public void addNormal(long time) {
         normal += time;
     }
-    public void addAfk(int time) {
+    public void addAfk(long time) {
         afk += time;
     }
-    public void addIncognito(int time) {
+    public void addIncognito(long time) {
         incognito += time;
     }
 
@@ -44,10 +44,8 @@ public class GameTime {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null) return false;
-        if (!(o instanceof GameTime time)) return false;
-        return getNormal() == time.getNormal() &&
-                getAfk() == time.getAfk() &&
-                getIncognito() == time.getIncognito();
+        if (o == null || getClass() != o.getClass()) return false;
+        GameTime gameTime = (GameTime) o;
+        return getNormal() == gameTime.getNormal() && getAfk() == gameTime.getAfk() && getIncognito() == gameTime.getIncognito();
     }
 }

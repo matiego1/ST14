@@ -14,7 +14,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class GUI implements InventoryHolder {
 
@@ -68,4 +70,30 @@ public class GUI implements InventoryHolder {
         if (event.getView().getBottomInventory().equals(event.getClickedInventory())) return false;
         return event.getCurrentItem() != null && !event.getCurrentItem().getType().isAir();
     }
+
+    public static @NotNull String itemsToString(@NotNull List<ItemStack> items) {
+        List<String> result = new ArrayList<>();
+        for (ItemStack item : items) {
+            String base64 = Base64Utils.objectToBase64(item != null ? item : new ItemStack(Material.AIR));
+            if (base64 != null) {
+                result.add(base64);
+            }
+        }
+        return String.join("|", result);
+    }
+
+    public static @NotNull List<ItemStack> stringToItems(@NotNull String string) {
+        String[] items = string.split("\\|");
+        if (items.length == 0 || items[0].isBlank()) return new ArrayList<>();
+
+        List<ItemStack> result = new ArrayList<>();
+        for (String item : items) {
+            Object object = Base64Utils.base64ToObject(item);
+            if (object instanceof ItemStack itemStack) {
+                result.add(itemStack);
+            }
+        }
+        return result;
+    }
+
 }

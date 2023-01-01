@@ -1,4 +1,4 @@
-package me.matiego.st14.commands;
+package me.matiego.st14.commands.discord;
 
 import me.matiego.st14.IncognitoManager;
 import me.matiego.st14.Main;
@@ -28,7 +28,8 @@ public class ListCommand implements CommandHandler.Discord {
     }
 
     @Override
-    public void onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
+    public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
+        boolean ephemeral = event.getOption("incognito", "False", OptionMapping::getAsString).equals("True");
         List<String> players = new ArrayList<>();
         IncognitoManager manager = Main.getInstance().getIncognitoManager();
         for (Player player : Bukkit.getOnlinePlayers()) {
@@ -37,14 +38,15 @@ public class ListCommand implements CommandHandler.Discord {
             }
         }
         if (players.isEmpty()) {
-            event.reply("Nikt nie jest online!").setEphemeral(event.getOption("incognito", "False", OptionMapping::getAsString).equals("True")).queue();
-            return;
+            event.reply("Nikt nie jest online!").setEphemeral(ephemeral).queue();
+            return 5;
         }
         if (players.size() > 50) {
             int more = players.size() - 50;
             players = players.subList(0, 50);
             players.add("... i " + more + " innych graczy");
         }
-        event.reply("**__Gracze online:__**\n```\n" + String.join("\n", players) + "\n```").setEphemeral(event.getOption("incognito", "False", OptionMapping::getAsString).equals("True")).queue();
+        event.reply("**__Gracze online:__**\n```\n" + String.join("\n", players) + "\n```").setEphemeral(ephemeral).queue();
+        return 5;
     }
 }

@@ -1,4 +1,4 @@
-package me.matiego.st14.commands;
+package me.matiego.st14.commands.minecraft;
 
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.CommandHandler;
@@ -28,15 +28,19 @@ public class GameModeCommand implements CommandHandler.Minecraft {
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
+    public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage(Utils.getComponentByString("&cTej komendy może użyć tylko gracz."));
-            return true;
+            return 0;
         }
-        if (args.length != 0) return false;
+        if (args.length != 0) return -1;
         if (!Main.getInstance().getConfig().getStringList("gamemode-worlds").contains(player.getWorld().getName())) {
             sender.sendMessage(Utils.getComponentByString("&cNie możesz zmienić trybu gry w tym świecie."));
-            return true;
+            return 3;
+        }
+        if (player.getGameMode() == GameMode.SPECTATOR) {
+            change(player, GameMode.CREATIVE, "kreatywny");
+            return 2;
         }
         Inventory inv = GUI.createInventory(9, "&6Ustaw tryb gry");
         inv.setItem(1, GUI.createGuiItem(Material.DIAMOND_SWORD, "&ePrzetrwania", "Kliknij, aby ustawić"));
@@ -44,15 +48,16 @@ public class GameModeCommand implements CommandHandler.Minecraft {
         inv.setItem(5, GUI.createGuiItem(Material.GRASS_BLOCK, "&ePrzygodowy", "Kliknij, aby ustawić"));
         inv.setItem(7, GUI.createGuiItem(Material.ENDER_PEARL, "&eObserwatora", "Kliknij, aby ustawić"));
         player.openInventory(inv);
-        return true;
+        return 3;
     }
 
     @Override
     public void onInventoryClick(@NotNull InventoryClickEvent event) {
-        if (!GUI.checkInventory(event, "&6Ustaw poziom trudności")) return;
+        if (!GUI.checkInventory(event, "&6Ustaw tryb gry")) return;
 
         Player player = (Player) event.getWhoClicked();
         int slot = event.getSlot();
+        event.getInventory().close();
         switch (slot) {
             case 1 -> change(player, GameMode.SURVIVAL, "przetrwania");
             case 3 -> change(player, GameMode.CREATIVE, "kreatywny");
@@ -73,7 +78,7 @@ public class GameModeCommand implements CommandHandler.Minecraft {
                 .filter(p -> p.getWorld().equals(player.getWorld()))
                 .forEach(p -> p.sendMessage(Utils.getComponentByString("&aGracz &2" + player.getName() + "&a zmienił swój tryb gry na &2" + name + "&a.")));
         if (!Main.getInstance().getIncognitoManager().isIncognito(player.getUniqueId())) {
-            Main.getInstance().getChatMinecraft().sendMessage("Tryb gry", "[" + Utils.getWorldName(player.getWorld()) + "] Gracz **" + player + "** zmienił swój tryb gry na **" + name + "**.");
+            Main.getInstance().getChatMinecraft().sendMessage("[" + Utils.getWorldName(player.getWorld()) + "] Gracz **" + player.getName() + "** zmienił swój tryb gry na **" + name + "**.", "Tryb gry");
         }
     }
 }

@@ -73,12 +73,12 @@ public class PremiumManager {
                 .filter(p -> getPriority(p.getUniqueId()) < priority)
                 .collect(Collectors.toList());
         Player result = null;
-        int max = -1;
+        long max = -1;
         for (Player player : players) {
             PlayerTime playerTime = plugin.getTimeManager().getTime(player.getUniqueId());
             if (playerTime == null) continue;
             GameTime gameTime = playerTime.getCurrent();
-            int time = gameTime.getNormal() + gameTime.getAfk() + gameTime.getIncognito();
+            long time = gameTime.getNormal() + gameTime.getAfk() + gameTime.getIncognito();
             if (time > max) {
                 max = time;
                 result = player;
@@ -90,14 +90,14 @@ public class PremiumManager {
     }
 
     private void kickPlayer(@NotNull Player player) {
-        player.sendMessage(Utils.getComponentByString(Prefixes.PREMIUM + "Do serwera dołącza gracz z wyższym priorytetem od ciebie. Za 10 sekund zostaniesz wyrzucony, żeby zrobić mu miejsce. Wybór padł na ciebie, ponieważ grałeś dzisiaj najdłużej."));
-        player.showTitle(Title.title(Utils.getComponentByString("&6UWAGA!"), Utils.getComponentByString("PRZECZYTAJ CZAT")));
+        player.sendMessage(Utils.getComponentByString(Prefixes.PREMIUM + "Za 10 sekund zostaniesz wyrzucony z serwera, żeby zrobić miejsce innemu graczowi."));
+        player.showTitle(Title.title(Utils.getComponentByString("&6UWAGA!"), Utils.getComponentByString("&ePRZECZYTAJ CZAT")));
         player.playSound(player, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.NEUTRAL, 5, 1);
-        Bukkit.getScheduler().runTaskLater(
-                plugin,
-                () -> player.kick(Utils.getComponentByString(Prefixes.PREMIUM + "Do serwera dołączył gracz z wyższym priorytetem od ciebie. Zostałeś wyrzucony, żeby zrobić mu miejsce. Wybór padł na ciebie, ponieważ grałeś dzisiaj najdłużej.")),
-                200
-        );
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (!player.isOnline()) return;
+            player.kick(Utils.getComponentByString(Prefixes.PREMIUM + "Zostałeś wyrzucony z serwera, żeby zrobić miejsce graczowi z wyższym priorytetem. Wybór padł na ciebie, ponieważ grałeś dzisiaj najdłużej."));
+            plugin.getChatMinecraft().sendMessage("Gracz **" + player.getName() + "** został wyrzucony z serwera, żeby zrobić miejsce graczowi z wyższym priorytetem.", Prefixes.PREMIUM.getDiscord());
+        }, 200);
     }
 
     private int getPriority(@NotNull UUID uuid) {

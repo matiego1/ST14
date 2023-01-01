@@ -18,7 +18,7 @@ public class OfflinePlayers {
     private final Main plugin;
     public OfflinePlayers(@NotNull Main plugin) {
         this.plugin = plugin;
-        refresh();
+        refreshCache();
     }
 
     private final String ERROR_MSG = "An error occurred while modifying values in \"st14_offline_players\" table in the database.";
@@ -85,9 +85,9 @@ public class OfflinePlayers {
         } catch (SQLException e) {
             Logs.error(ERROR_MSG, e);
         }
-        refresh();
+        refreshCache();
     }
-    public synchronized void refresh() {
+    private synchronized void refreshCache() {
         try (Connection conn = plugin.getConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT name FROM st14_offline_players")) {
             ResultSet result = stmt.executeQuery();

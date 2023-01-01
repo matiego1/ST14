@@ -60,7 +60,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
     }
 
     @Override
-    public void onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
+    public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
         String code = event.getOption("code", OptionMapping::getAsString);
         AccountsManager manager = plugin.getAccountsManager();
         User user = event.getUser();
@@ -126,6 +126,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                     )
                     .queue();
         });
+        return 3;
     }
 
     private @Nullable MessageEmbed getEmbed(@NotNull UserSnowflake id) {
@@ -133,7 +134,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
         if (uuid == null) return null;
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("Twoje konto minecraft:");
-        eb.setDescription("**Nick:** `" + plugin.getOfflinePlayers().getEffectiveNameById(uuid) + "`\n**UUID:** `" + uuid);
+        eb.setDescription("**Nick:** `" + plugin.getOfflinePlayers().getEffectiveNameById(uuid) + "`\n**UUID:** `" + uuid + "`");
         eb.setColor(Color.BLUE);
         eb.setTimestamp(Instant.now());
         eb.setThumbnail(Utils.getSkinUrl(uuid));
@@ -141,8 +142,8 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
     }
 
     @Override
-    public void onButtonInteraction(@NotNull ButtonInteraction event) {
-        if (!event.getComponentId().equals("unlink-accounts")) return;
+    public int onButtonInteraction(@NotNull ButtonInteraction event) {
+        if (!event.getComponentId().equals("unlink-accounts")) return 0;
 
         event.deferReply(true).queue();
         User user = event.getUser();
@@ -166,15 +167,16 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                 hook.sendMessage("Napotkano niespodziewany błąd. Spróbuj później.").queue();
             }
         });
+        return 3;
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
+    public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage(Utils.getComponentByString(Prefixes.DISCORD + "&cTej komendy może użyć tylko gracz."));
-            return true;
+            return 0;
         }
-        if (args.length != 0) return false;
+        if (args.length != 0) return -1;
         AccountsManager manager = plugin.getAccountsManager();
         UUID uuid = player.getUniqueId();
 
@@ -222,7 +224,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
             inv.setItem(7, GUI.createGuiItem(Material.PAPER, "&9Serwer Discord", "&bKliknij, aby wyświetlić zaproszenie!"));
             Utils.sync(() -> player.openInventory(inv));
         });
-        return true;
+        return 5;
     }
 
     @Override

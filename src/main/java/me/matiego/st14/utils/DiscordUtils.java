@@ -157,15 +157,16 @@ public class DiscordUtils {
         );
     }
 
-    public static @NotNull List<Permission> getRequiredPermissions() {
-        return Arrays.asList(
-                Permission.MANAGE_CHANNEL,
-                Permission.MANAGE_WEBHOOKS,
+    public static @NotNull EnumSet<Permission> getRequiredPermissions() {
+        return EnumSet.of(
                 Permission.VIEW_CHANNEL,
-                Permission.MESSAGE_SEND,
                 Permission.MANAGE_CHANNEL,
-                Permission.MESSAGE_HISTORY,
-                Permission.MANAGE_ROLES
+                Permission.MANAGE_ROLES,
+                Permission.MESSAGE_SEND,
+                Permission.MESSAGE_SEND_IN_THREADS,
+                Permission.MESSAGE_EMBED_LINKS,
+                Permission.MESSAGE_MANAGE,
+                Permission.MESSAGE_HISTORY
         );
     }
 

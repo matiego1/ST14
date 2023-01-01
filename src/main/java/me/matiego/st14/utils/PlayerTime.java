@@ -15,7 +15,7 @@ import java.util.Date;
 import java.util.UUID;
 
 public class PlayerTime {
-    private PlayerTime(UUID uuid, GameTime total, GameTime daily) {
+    private PlayerTime(@NotNull UUID uuid, @NotNull GameTime total, @NotNull GameTime daily) {
         this.uuid = uuid;
         this.total = total;
         this.daily = daily;
@@ -30,8 +30,8 @@ public class PlayerTime {
     private long startOfCurrentType = 0;
     @Getter(onMethod_ = {@Synchronized}) private GameTime.Type type = null;
 
-    private int getTimeOfCurrentType() {
-        return startOfCurrentType == 0 ? 0 : (int) (Utils.now() - startOfCurrentType) / 1000;
+    private long getTimeOfCurrentType() {
+        return startOfCurrentType == 0 ? 0 : Utils.now() - startOfCurrentType;
     }
     private void updateCurrent() {
         if (type == null) return;
@@ -83,14 +83,14 @@ public class PlayerTime {
                 String lastSave = format.format(new Date(result.getLong("last_save")));
                 String now = format.format(new Date(Utils.now()));
 
-                GameTime daily = new GameTime(result.getInt("normal"), result.getInt("afk"), result.getInt("incognito"));
+                GameTime daily = new GameTime(result.getLong("normal"), result.getLong("afk"), result.getLong("incognito"));
                 if (!lastSave.equals(now)) {
                     daily = new GameTime(0, 0, 0);
                 }
 
                 return new PlayerTime(
                         uuid,
-                        new GameTime(result.getInt("t_normal"), result.getInt("t_afk"), result.getInt("t_incognito")),
+                        new GameTime(result.getLong("t_normal"), result.getLong("t_afk"), result.getLong("t_incognito")),
                         daily
                 );
             }
@@ -118,20 +118,20 @@ public class PlayerTime {
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_time(uuid, t_normal, t_afk, t_incognito, normal, afk, incognito, last_save) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE t_normal = ?, t_afk = ?, t_incognito = ?, normal = ?, afk = ?, incognito = ?, last_save = ?")) {
             stmt.setString(1, uuid.toString());
 
-            stmt.setInt(2, total.getNormal());
-            stmt.setInt(3, total.getAfk());
-            stmt.setInt(4, total.getIncognito());
-            stmt.setInt(5, daily.getNormal());
-            stmt.setInt(6, daily.getAfk());
-            stmt.setInt(7, daily.getIncognito());
+            stmt.setLong(2, total.getNormal());
+            stmt.setLong(3, total.getAfk());
+            stmt.setLong(4, total.getIncognito());
+            stmt.setLong(5, daily.getNormal());
+            stmt.setLong(6, daily.getAfk());
+            stmt.setLong(7, daily.getIncognito());
             stmt.setLong(8, Utils.now());
 
-            stmt.setInt(9, total.getNormal());
-            stmt.setInt(10, total.getAfk());
-            stmt.setInt(11, total.getIncognito());
-            stmt.setInt(12, daily.getNormal());
-            stmt.setInt(13, daily.getAfk());
-            stmt.setInt(14, daily.getIncognito());
+            stmt.setLong(9, total.getNormal());
+            stmt.setLong(10, total.getAfk());
+            stmt.setLong(11, total.getIncognito());
+            stmt.setLong(12, daily.getNormal());
+            stmt.setLong(13, daily.getAfk());
+            stmt.setLong(14, daily.getIncognito());
             stmt.setLong(15, Utils.now());
 
             stmt.execute();

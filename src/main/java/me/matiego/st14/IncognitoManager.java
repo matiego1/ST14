@@ -18,7 +18,7 @@ public class IncognitoManager {
         this.plugin = plugin;
     }
 
-    private final String ERROR_MSG = "An error occurred while modifying values in \"st14_inc_trusted\" table in the database.";
+    private final String ERROR_MSG = "An error occurred while modifying values in \"st14_inc\" table in the database.";
     private final Set<UUID> incognito = new HashSet<>();
 
     public @NotNull Set<UUID> getIncognitoPlayers() {
@@ -34,6 +34,9 @@ public class IncognitoManager {
         Player player = Bukkit.getPlayer(uuid);
         if (value) {
             if (player != null) {
+                if (plugin.getAfkManager().isAfk(player)) {
+                    plugin.getChatMinecraft().sendMessage("Gracz **" + player.getName() + "** już nie jest AFK!", Prefixes.AFK.getDiscord());
+                }
                 plugin.getChatMinecraft().sendFakeQuitMessage(player);
                 player.sendMessage(Utils.getComponentByString(Prefixes.INCOGNITO + "Jesteś incognito!"));
 
@@ -44,6 +47,9 @@ public class IncognitoManager {
         } else {
             if (player != null) {
                 plugin.getChatMinecraft().sendFakeJoinMessage(player);
+                if (plugin.getAfkManager().isAfk(player)) {
+                    plugin.getChatMinecraft().sendMessage("Gracz **" + player.getName() + "** jest AFK!", Prefixes.AFK.getDiscord());
+                }
                 player.sendMessage(Utils.getComponentByString(Prefixes.INCOGNITO + "Już nie jesteś incognito!"));
 
                 PlayerTime time = plugin.getTimeManager().getTime(uuid);
@@ -120,8 +126,8 @@ public class IncognitoManager {
             return true;
         } catch (SQLException e) {
             Logs.error(ERROR_MSG, e);
-            return false;
         }
+        return false;
     }
 
     public static boolean createTable() {

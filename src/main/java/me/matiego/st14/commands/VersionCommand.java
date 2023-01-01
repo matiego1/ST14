@@ -30,10 +30,10 @@ public class VersionCommand implements CommandHandler.Discord, CommandHandler.Mi
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
-        if (args.length != 0) return false;
+    public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
+        if (args.length != 0) return -1;
         sender.sendMessage(Utils.getComponentByString("&aWersja pluginu ST14: " + getVersion()));
-        return true;
+        return 0;
     }
 
     @Override
@@ -47,10 +47,11 @@ public class VersionCommand implements CommandHandler.Discord, CommandHandler.Mi
     }
 
     @Override
-    public void onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
+    public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
         event.reply("**Wersja pluginu ST14:** `" + getVersion() + "`")
                 .setEphemeral(event.getOption("incognito", "False", OptionMapping::getAsString).equals("True"))
                 .queue();
+        return 0;
     }
 
     private @NotNull String getVersion() {
