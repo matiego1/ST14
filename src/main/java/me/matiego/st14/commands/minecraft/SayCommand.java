@@ -19,8 +19,10 @@ import java.util.regex.Pattern;
 
 public class SayCommand implements CommandHandler.Minecraft {
     private final PluginCommand command;
-    public SayCommand() {
-        command = Main.getInstance().getCommand("say");
+    private final Main plugin;
+    public SayCommand(@NotNull Main plugin) {
+        this.plugin = plugin;
+        command = plugin.getCommand("say");
         if (command == null) {
             Logs.warning("The command /say does not exist in the plugin.yml file and cannot be registered.");
         }
@@ -39,7 +41,12 @@ public class SayCommand implements CommandHandler.Minecraft {
 
         if (!(sender instanceof Player)) {
             try {
-                if (Pattern.compile(Main.getInstance().getConfig().getString("say-command-disallowed-regex", "[^\\s\\S]*")).matcher(message).matches()) return 0;
+                if (Pattern.compile(plugin.getConfig().getString("say-command.disallowed-regex", "[^\\s\\S]*")).matcher(message).matches()) return 0;
+                if (Pattern.compile(plugin.getConfig().getString("say-command.stop-regex", "[^\\s\\S]*")).matcher(message).matches()
+                        || Pattern.compile(plugin.getConfig().getString("say-command.restart-regex", "[^\\s\\S]*")).matcher(message).matches()) {
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "st14:stop");
+                    return 0;
+                }
             } catch (Exception e) {
                 Logs.warning("An error occurred while matching the /say message to the regex. Is the regex valid?");
                 e.printStackTrace();
@@ -51,7 +58,7 @@ public class SayCommand implements CommandHandler.Minecraft {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setDescription(DiscordUtils.checkLength(message, MessageEmbed.DESCRIPTION_MAX_LENGTH));
         eb.setColor(Color.GREEN);
-        Main.getInstance().getChatMinecraft().sendMessageEmbed(eb.build());
+        plugin.getChatMinecraft().sendMessageEmbed(eb.build());
         return 0;
     }
 }

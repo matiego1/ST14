@@ -204,7 +204,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new TimeCommand(this),
                 new EconomyCommand(this),
                 //Minecraft commands
-                new SayCommand(),
+                new SayCommand(this),
                 new St14Command(),
                 new DifficultyCommand(),
                 new GameModeCommand(),

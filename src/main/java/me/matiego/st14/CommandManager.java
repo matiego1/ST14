@@ -130,7 +130,7 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
         //check cooldown
         long time = getRemainingCooldown(getCommandName(handler.getDiscordCommand()), user);
         if (time > 0) {
-            event.reply("Tej komendy możesz użyć za " + Utils.parseMillisToString(time, true) + ".").setEphemeral(true).queue();
+            event.reply("Tej komendy możesz użyć za " + Utils.parseMillisToString(time, false) + ".").setEphemeral(true).queue();
             return;
         }
         //execute command

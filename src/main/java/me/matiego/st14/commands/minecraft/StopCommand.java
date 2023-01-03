@@ -33,16 +33,17 @@ public class StopCommand implements CommandHandler.Minecraft {
 
     @Override
     public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
+        if (isStoping) {
+            sender.sendMessage(Utils.getComponentByString("&cZatrzymanie serwera już trwa!"));
+            return 0;
+        }
+
         if (args.length == 1 && args[0].equalsIgnoreCase("now")) {
             shutdown();
             return 0;
         }
         if (args.length != 0) return -1;
 
-        if (isStoping) {
-            sender.sendMessage(Utils.getComponentByString("&cZatrzymanie serwera już trwa!"));
-            return 0;
-        }
         isStoping = true;
 
         if (Bukkit.getOnlinePlayers().isEmpty()) {
@@ -82,6 +83,7 @@ public class StopCommand implements CommandHandler.Minecraft {
     }
 
     private void shutdown() {
+        isStoping = true;
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.kick(Utils.getComponentByString("&cWyłączenie serwera. Zapraszamy później!"));
         }

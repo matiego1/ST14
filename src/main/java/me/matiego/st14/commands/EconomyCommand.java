@@ -109,7 +109,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                     sender.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "&cNapotkano niespodziewany błąd."));
                     return;
                 }
-                sender.sendMessage(Utils.getComponentByString("Pomyślnie zmieniono saldo konta gracza " + args[1] + " (" + uuid +") na " + economy.format(response.balance)));
+                sender.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "Pomyślnie zmieniono saldo konta gracza " + args[1] + " (" + uuid +") na " + economy.format(response.balance)));
                 informPlayer(
                         uuid,
                         "[Administrator]",
@@ -182,11 +182,6 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                         if (!economy.has(player, amount)) {
                             return List.of(AnvilGUI.ResponseAction.replaceInputText("Brak środków"));
                         }
-                        EconomyResponse response = economy.withdrawPlayer(player, amount);
-                        if (!response.transactionSuccess()) {
-                            player.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "&cNapotkano niespodziewany błąd. Spróbuj później."));
-                            return List.of(AnvilGUI.ResponseAction.close());
-                        }
 
                         finishTransfer(player, amount);
                         return List.of(AnvilGUI.ResponseAction.close());
@@ -221,7 +216,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                             return List.of(AnvilGUI.ResponseAction.close());
                         }
 
-                        HashMap<Integer, ItemStack> drop = player.getInventory().addItem(GUI.createGuiItem(Material.PAPER, "&9Banknot", "&bKliknij PPM, aby wpłacić", "&bWartość: &9" + economy.format(amount)));
+                        HashMap<Integer, ItemStack> drop = player.getInventory().addItem(GUI.createGuiItem(Material.PAPER, "&9Banknot", "&bKliknij PPM, trzymając w ręku,", "&baby wpłacić", "&bWartość: &9" + economy.format(amount)));
                         for (ItemStack item : drop.values()) {
                             player.getWorld().dropItem(player.getLocation().add(0, 0.5, 0), item);
                         }
@@ -249,8 +244,17 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                     }
 
                     Economy economy = plugin.getEconomy();
-                    EconomyResponse response = economy.depositPlayer(Bukkit.getOfflinePlayer(target), amount);
-                    if (!response.transactionSuccess()) {
+                    if (!economy.has(player, amount)) {
+                        player.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "&cBrak środków!"));
+                        return List.of(AnvilGUI.ResponseAction.close());
+                    }
+                    EconomyResponse r1 = economy.withdrawPlayer(player, amount);
+                    if (!r1.transactionSuccess()) {
+                        player.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "&cNapotkano niespodziewany błąd. Spróbuj później."));
+                        return List.of(AnvilGUI.ResponseAction.close());
+                    }
+                    EconomyResponse r2 = economy.depositPlayer(Bukkit.getOfflinePlayer(target), amount);
+                    if (!r2.transactionSuccess()) {
                         player.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "&cNapotkano niespodziewany błąd. Zgłoś się do administratora, żeby odzyskać swoje pieniądze. Przepraszamy."));
                         Logs.warning("Gracz " + player.getName() + " (" + player.getUniqueId() + ") stracił " + economy.format(amount) + " ze swojego konta! Kwota musi być przywrócona ręcznie.");
                         return List.of(AnvilGUI.ResponseAction.close());
