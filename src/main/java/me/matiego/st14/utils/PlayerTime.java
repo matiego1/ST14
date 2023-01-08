@@ -10,8 +10,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.UUID;
 
 public class PlayerTime {
@@ -79,12 +77,8 @@ public class PlayerTime {
             stmt.setString(1, uuid.toString());
             ResultSet result = stmt.executeQuery();
             if (result.next()) {
-                SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
-                String lastSave = format.format(new Date(result.getLong("last_save")));
-                String now = format.format(new Date(Utils.now()));
-
                 GameTime daily = new GameTime(result.getLong("normal"), result.getLong("afk"), result.getLong("incognito"));
-                if (!lastSave.equals(now)) {
+                if (Utils.isDifferentDay(result.getLong("last_save"), Utils.now())) {
                     daily = new GameTime(0, 0, 0);
                 }
 

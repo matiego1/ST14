@@ -8,11 +8,13 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.UserSnowflake;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
+import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
 import net.dv8tion.jda.api.interactions.components.selections.StringSelectInteraction;
@@ -189,6 +191,18 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
             }
         }
         event.reply("Nieznana komenda.").setEphemeral(true).queue();
+    }
+
+    @Override
+    public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
+        CommandAutoCompleteInteraction interaction = event.getInteraction();
+        for (CommandHandler.Discord handler : discordCommands.values()) {
+            try {
+                handler.onCommandAutoCompleteInteraction(interaction);
+            } catch (Exception ignored) {}
+            if (interaction.isAcknowledged()) return;
+        }
+        event.replyChoices(new ArrayList<>()).queue();
     }
 
     @EventHandler

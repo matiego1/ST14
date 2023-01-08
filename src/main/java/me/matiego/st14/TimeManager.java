@@ -37,7 +37,9 @@ public class TimeManager {
     }
 
     public @Nullable PlayerTime retrieveTime(@NotNull UUID uuid) {
-        return cache.getOrDefault(uuid, PlayerTime.load(uuid));
+        PlayerTime time = cache.get(uuid);
+        if (time != null) return time;
+        return PlayerTime.load(uuid);
     }
 
     public @Nullable PlayerTime getTime(@NotNull UUID uuid) {

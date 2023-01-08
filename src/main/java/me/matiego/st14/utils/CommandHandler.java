@@ -1,5 +1,6 @@
 package me.matiego.st14.utils;
 
+import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
@@ -11,6 +12,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,5 +41,6 @@ public interface CommandHandler {
         default int onButtonInteraction(@NotNull ButtonInteraction event) {
             return -1;
         }
+        default void onCommandAutoCompleteInteraction(@Nonnull CommandAutoCompleteInteraction event) {}
     }
 }

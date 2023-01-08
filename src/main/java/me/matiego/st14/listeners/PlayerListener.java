@@ -1,9 +1,11 @@
 package me.matiego.st14.listeners;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
+import io.papermc.paper.event.player.PlayerItemFrameChangeEvent;
 import me.matiego.st14.IncognitoManager;
 import me.matiego.st14.Main;
 import me.matiego.st14.PremiumManager;
+import me.matiego.st14.utils.FixedSizeMap;
 import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Prefixes;
 import me.matiego.st14.utils.Utils;
@@ -18,10 +20,9 @@ import net.kyori.adventure.text.TextReplacementConfig;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.milkbowl.vault.economy.EconomyResponse;
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -32,6 +33,7 @@ import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
@@ -44,12 +46,16 @@ public class PlayerListener implements Listener {
     private final Main plugin;
     public PlayerListener(@NotNull Main plugin) {
         this.plugin = plugin;
+        INVISIBLE_ITEM_FRAME = new NamespacedKey(plugin, "invisible_item_frame");
     }
 
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private final HashMap<UUID, BukkitTask> disablingIncognito = new HashMap<>();
     private final HashMap<UUID, Player> sleepingPlayers = new HashMap<>();
     private final HashMap<UUID, BossBar> positionBossBars = new HashMap<>();
+    private final FixedSizeMap<UUID, Long> itemFrameRotation = new FixedSizeMap<>(100);
+
+    private final NamespacedKey INVISIBLE_ITEM_FRAME;
 
     @EventHandler
     public void onAsyncPlayerPreLogin(@NotNull AsyncPlayerPreLoginEvent event) {
@@ -141,13 +147,20 @@ public class PlayerListener implements Listener {
     public void onPlayerJoin(@NotNull PlayerJoinEvent event) {
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
+
+        Utils.async(() -> {
+            if (!plugin.getRewardsManager().load(uuid)) {
+                player.sendMessage(Utils.getComponentByString("&cNapotkano niespodziewany błąd! Aby dostawać pieniądze za granie, dołącz ponownie."));
+            }
+        });
         //load player times
         if (!plugin.getTimeManager().join(player)) {
             player.kick(Utils.getComponentByString("&cNapotkano niespodziewany błąd przy ładowaniu twoich czasów. Spróbuj ponownie."));
             return;
         }
         //incognito
-        disablingIncognito.remove(uuid);
+        BukkitTask task = disablingIncognito.remove(uuid);
+        if (task != null) task.cancel();
         if (plugin.getIncognitoManager().isIncognito(uuid)) {
             player.sendMessage(Utils.getComponentByString(Prefixes.INCOGNITO + "Jesteś incognito!"));
         }
@@ -159,23 +172,28 @@ public class PlayerListener implements Listener {
         //join messages
         event.joinMessage(Utils.getComponentByString("&eGracz " + player.getName() + " dołączył do gry"));
         plugin.getChatMinecraft().sendJoinMessage(player);
+        plugin.getChatMinecraft().sendConsoleJoinMessage(player);
     }
 
     @EventHandler
     public void onPlayerQuit(@NotNull PlayerQuitEvent event) {
         Player player = event.getPlayer();
 
+        event.quitMessage(Utils.getComponentByString("&eGracz " + player.getName() + " opuścił grę"));
+        plugin.getChatMinecraft().sendConsoleQuitMessage(player);
+        plugin.getChatMinecraft().sendQuitMessage(player);
+
         plugin.getTellCommand().removeReply(player.getUniqueId());
         plugin.getTpaCommand().cancel(player);
         positionBossBars.remove(player.getUniqueId());
         plugin.getAfkManager().move(player);
         plugin.getBackpackManager().clearCache(player.getUniqueId());
-        //quit message
-        event.quitMessage(Utils.getComponentByString("&eGracz " + player.getName() + " opuścił grę"));
-        plugin.getChatMinecraft().sendQuitMessage(player);
-        //save player times
-        plugin.getTimeManager().quit(player);
-        //incognito
+        Utils.async(() -> {
+            plugin.getTimeManager().quit(player);
+            plugin.getRewardsManager().unload(player.getUniqueId());
+        });
+
+
         disablingIncognito.put(
                 player.getUniqueId(),
                 Bukkit.getScheduler().runTaskLater(
@@ -290,10 +308,10 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         World world = event.getBed().getWorld();
         sleepingPlayers.remove(world.getUID());
-        //noinspection SpellCheckingInspection
+        if (world.getTime() != 0) return;
         Bukkit.getOnlinePlayers().stream()
                 .filter(p -> p.getWorld().equals(world))
-                .forEach(p -> p.sendMessage(Utils.getComponentByString("&eGracz &6" + player.getName() + "&eposzedł spać. Słodkich snów!")));
+                .forEach(p -> p.sendMessage(Utils.getComponentByString("&eGracz &6" + player.getName() + "&e poszedł spać. Słodkich snów!")));
         if (!plugin.getIncognitoManager().isIncognito(player.getUniqueId())) {
             plugin.getChatMinecraft().sendMessage("Przesypianie nocy", "[" + Utils.getWorldName(world) + "] Gracz **" + player + "** poszedł spać. Słodkich snów!");
         }
@@ -373,5 +391,39 @@ public class PlayerListener implements Listener {
         List<Component> lores = meta.lore();
         if (lores == null) return new ArrayList<>();
         return lores.stream().map(lore -> LegacyComponentSerializer.legacyAmpersand().serialize(lore)).collect(Collectors.toList());
+    }
+
+    @EventHandler (ignoreCancelled = true)
+    public void onPlayerItemFrameChange(@NotNull PlayerItemFrameChangeEvent event) {
+        Player player = event.getPlayer();
+        ItemFrame frame = event.getItemFrame();
+
+        switch (event.getAction()) {
+            case ROTATE -> {
+                long now = Utils.now();
+                long last = itemFrameRotation.getOrDefault(player.getUniqueId(), now);
+                itemFrameRotation.put(player.getUniqueId(), now);
+
+                now -= last;
+                if (now <= 0 || now > 10_000) {
+                    event.setCancelled(true);
+                    player.sendMessage(Utils.getComponentByString("&cAby obróć ten przedmiot, kliknij ponownie!"));
+                }
+            }
+            case PLACE -> {
+                frame.setRotation(Rotation.NONE);
+                if (event.getItemStack().getType() == Material.SHEARS) {
+                    frame.getPersistentDataContainer().set(INVISIBLE_ITEM_FRAME, PersistentDataType.BYTE, (byte) 1);
+                }
+                if (frame.getPersistentDataContainer().has(INVISIBLE_ITEM_FRAME, PersistentDataType.BYTE)) {
+                    frame.setVisible(false);
+                }
+            }
+            case REMOVE -> {
+                if (frame.getPersistentDataContainer().has(INVISIBLE_ITEM_FRAME, PersistentDataType.BYTE)) {
+                    frame.setVisible(true);
+                }
+            }
+        }
     }
 }

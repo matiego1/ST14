@@ -5,9 +5,7 @@ import me.matiego.st14.Main;
 import me.matiego.st14.utils.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.interactions.InteractionHook;
-import net.dv8tion.jda.api.interactions.commands.OptionMapping;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
+import net.dv8tion.jda.api.interactions.commands.*;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -19,7 +17,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @ToString
 public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minecraft {
@@ -95,7 +96,8 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
     public @NotNull CommandData getDiscordCommand() {
         return Commands.slash("time", "Wyświetla czasy gracza")
                 .addOptions(
-                        new OptionData(OptionType.STRING, "gracz", "Gracz, którego czasy mają być wyświetlone", true),
+                        new OptionData(OptionType.STRING, "gracz", "Gracz, którego czasy mają być wyświetlone", true)
+                                .setAutoComplete(true),
                         new OptionData(OptionType.STRING, "incognito", "czy wiadomość ma być widoczna tylko dla ciebie", false)
                                 .addChoice("Tak", "True")
                                 .addChoice("Nie", "False")
@@ -158,5 +160,22 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
             result += " &6|&e " + Utils.parseMillisToString(time.getIncognito(), false);
         }
         return result + "&6]";
+    }
+
+    @Override
+    public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args) {
+        if (args.length == 1) {
+            return plugin.getOfflinePlayers().getNames();
+        }
+        return new ArrayList<>();
+    }
+
+    @Override
+    public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteraction event) {
+        event.replyChoices(plugin.getOfflinePlayers().getNames().stream()
+                .filter(name -> name.startsWith(event.getFocusedOption().getValue()))
+                .map(name -> new Command.Choice(name, name))
+                .collect(Collectors.toList())
+        ).queue();
     }
 }

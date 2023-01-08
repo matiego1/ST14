@@ -60,8 +60,8 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private TeleportsManager teleportsManager;
     @Getter private CommandManager commandManager;
     @Getter private BackpackManager backpackManager;
+    @Getter private RewardsManager rewardsManager;
     private TabListManager tabListManager;
-    private MoneyForPlaying moneyForPlaying;
 
     @Getter private TellCommand tellCommand;
     @Getter private TpaCommand tpaCommand;
@@ -120,7 +120,7 @@ public final class Main extends JavaPlugin implements Listener {
         premiumManager = new PremiumManager(this);
         tabListManager = new TabListManager(this);
         teleportsManager = new TeleportsManager();
-        moneyForPlaying = new MoneyForPlaying(this);
+        rewardsManager = new RewardsManager(this);
         backpackManager = new BackpackManager(this);
 
         Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomy(), vault, ServicePriority.High);
@@ -130,8 +130,8 @@ public final class Main extends JavaPlugin implements Listener {
         final ServerListener serverListener = new ServerListener(this);
         Bukkit.getPluginManager().registerEvents(serverListener, this);
         Bukkit.getPluginManager().registerEvents(new AfkListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new EntityListener(), this);
         Bukkit.getPluginManager().registerEvents(getTeleportsManager(), this);
-        Bukkit.getPluginManager().registerEvents(moneyForPlaying, this);
 
         Bukkit.getMessenger().registerIncomingPluginChannel(this, "minecraft:brand", serverListener);
         Bukkit.getPluginManager().registerEvents(this, this);
@@ -226,8 +226,9 @@ public final class Main extends JavaPlugin implements Listener {
         commandManager.setEnabled(true);
         getAfkManager().start();
         tabListManager.start();
-        moneyForPlaying.start();
+        getRewardsManager().start();
         getChatMinecraft().unblock();
+        Utils.registerRecipes();
 
         Utils.async(() -> {
             Utils.deleteOldLogFiles();
@@ -263,7 +264,7 @@ public final class Main extends JavaPlugin implements Listener {
         //disable managers
         if (afkManager != null) afkManager.stop();
         if (tabListManager != null) tabListManager.stop();
-        if (moneyForPlaying != null) moneyForPlaying.stop();
+        if (rewardsManager != null) rewardsManager.stop();
         if (chatMinecraft != null) chatMinecraft.block();
         if (teleportsManager != null) teleportsManager.cancelAll();
         if (economy != null) economy.setEnabled(false);

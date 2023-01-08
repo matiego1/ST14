@@ -6,11 +6,9 @@ import me.matiego.st14.Main;
 import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.event.server.ServerListPingEvent;
 import org.bukkit.plugin.messaging.PluginMessageListener;
@@ -64,13 +62,6 @@ public class ServerListener implements Listener, PluginMessageListener {
         IncognitoManager manager = plugin.getIncognitoManager();
         while (iterator.hasNext()) {
             if (manager.isIncognito(iterator.next().getUniqueId())) iterator.remove();
-        }
-    }
-
-    @EventHandler (ignoreCancelled = true)
-    public void onEntityChangeBlock(@NotNull EntityChangeBlockEvent event) {
-        if (event.getEntityType() == EntityType.ENDERMAN) {
-            event.setCancelled(true);
         }
     }
 

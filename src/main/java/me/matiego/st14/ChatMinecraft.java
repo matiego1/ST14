@@ -105,6 +105,10 @@ public class ChatMinecraft extends ListenerAdapter {
         sendFakeJoinMessage(player);
     }
 
+    public void sendConsoleJoinMessage(@NotNull Player player) {
+        Logs.discord("Gracz **" + player.getName() + "** dołączył do gry.");
+    }
+
     public void sendFakeJoinMessage(@NotNull Player player) {
         UUID uuid = player.getUniqueId();
 
@@ -136,16 +140,34 @@ public class ChatMinecraft extends ListenerAdapter {
     public void sendFakeQuitMessage(@NotNull Player player) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setAuthor("Gracz " + player.getName() + " opuścił grę", null, Utils.getSkinUrl(player.getUniqueId()));
+        eb.setColor(Color.YELLOW);
         PlayerTime playerTime = plugin.getTimeManager().getTime(player.getUniqueId());
         if (playerTime != null) {
             GameTime time = playerTime.getFakeCurrent();
             eb.setFooter("Czas gry: " + Utils.parseMillisToString(time.getNormal() + time.getAfk(), false));
         }
-        eb.setColor(Color.YELLOW);
         TextChannel chn = DiscordUtils.getChatMinecraftChannel();
         if (chn != null) {
             chn.sendMessageEmbeds(eb.build()).queue();
         }
+    }
+
+    public void sendConsoleQuitMessage(@NotNull Player player) {
+        PlayerTime playerTime = plugin.getTimeManager().getTime(player.getUniqueId());
+        String time = "";
+        if (playerTime != null) {
+            GameTime gameTime = playerTime.getCurrent();
+            time = "Czas gry: `" +
+                    Utils.parseMillisToString(gameTime.getNormal() + gameTime.getAfk() + gameTime.getIncognito(), true) +
+                    "` [`" +
+                    Utils.parseMillisToString(gameTime.getNormal(), true) +
+                    "` | `" +
+                    Utils.parseMillisToString(gameTime.getAfk(), true) +
+                    "` | `" +
+                    Utils.parseMillisToString(gameTime.getIncognito(), true) +
+                    "`]";
+        }
+        Logs.discord("Gracz **" + player.getName() + "** opuścił grę. " + time);
     }
 
     public void sendDeathMessage(@NotNull String message, @NotNull Player... players) {

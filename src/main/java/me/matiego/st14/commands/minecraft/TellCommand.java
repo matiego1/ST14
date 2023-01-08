@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class TellCommand implements CommandHandler.Minecraft {
     private final PluginCommand command;
@@ -118,7 +119,7 @@ public class TellCommand implements CommandHandler.Minecraft {
     @Override
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args) {
         if (args.length == 1) {
-            List<String> names = Main.getInstance().getOfflinePlayers().getNames();
+            List<String> names = Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList());
             names.add("!Serwer");
             return names;
         }

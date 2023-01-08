@@ -4,7 +4,11 @@ import me.matiego.st14.Main;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.plugin.IllegalPluginAccessException;
 import org.jetbrains.annotations.NotNull;
 
@@ -13,10 +17,7 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class Utils {
@@ -140,5 +141,18 @@ public class Utils {
         });
     }
 
+    public static void registerRecipes() {
+        //Name tag
+        NamespacedKey key = new NamespacedKey(Main.getInstance(), "name_tag");
+        ShapedRecipe recipe = new ShapedRecipe(key, new ItemStack(Material.NAME_TAG));
+        recipe.shape("  S", " P ", "P  ");
+        recipe.setIngredient('S', Material.STRING);
+        recipe.setIngredient('P', Material.PAPER);
+        Bukkit.addRecipe(recipe);
+    }
 
+    public static boolean isDifferentDay(long date1, long date2) {
+        SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
+        return !format.format(new Date(date1)).equals(format.format(new Date(date2)));
+    }
 }

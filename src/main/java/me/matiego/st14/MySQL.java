@@ -66,6 +66,7 @@ public class MySQL {
         if (!PremiumManager.createTable()) return false;
         if (!WorldsCommand.createTable()) return false;
         if (!BackpackManager.createTable()) return false;
+        if (!RewardsManager.createTable()) return false;
         return AccountsManager.createTable();
     }
 }

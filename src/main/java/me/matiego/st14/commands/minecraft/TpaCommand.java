@@ -21,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class TpaCommand implements CommandHandler.Minecraft {
     private final PluginCommand command;
@@ -202,7 +203,7 @@ public class TpaCommand implements CommandHandler.Minecraft {
     @Override
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args) {
         if (args.length == 1) {
-            return plugin.getOfflinePlayers().getNames();
+            return Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList());
         }
         return new ArrayList<>();
     }
