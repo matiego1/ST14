@@ -128,7 +128,11 @@ public class WorldsCommand implements CommandHandler.Minecraft {
             try {
                 player.sendMessage(Utils.getComponentByString(Prefixes.WORLDS +
                         switch (plugin.getTeleportsManager().teleport(player, finalLoc, 5).get(6, TimeUnit.SECONDS)) {
-                            case SUCCESS -> "Przeteleportowano pomyślnie.";
+                            case SUCCESS -> broadcastMessage(
+                                    player,
+                                    "Gracz &1" + player.getName() + "&3 przeszedł do świata &1" + Utils.getWorldName(finalLoc.getWorld()) + "&3!",
+                                    "Gracz **" + player.getName() + " przeszedł do świata **" + Utils.getWorldName(finalLoc.getWorld()) + "**!"
+                            );
                             case MOVE -> "&dTeleportowanie anulowane, poruszyłeś się.";
                             case ALREADY_ACTIVE -> "&dProces teleportowania już został rozpoczęty.";
                             case CANCELLED, FAILURE -> "&dNapotkano niespodziewany błąd. Spróbuj ponownie.";
@@ -138,6 +142,19 @@ public class WorldsCommand implements CommandHandler.Minecraft {
                 player.sendMessage(Utils.getComponentByString(Prefixes.WORLDS + "&dNapotkano niespodziewany błąd! Spróbuj ponownie."));
             }
         });
+    }
+
+    private @NotNull String broadcastMessage(@NotNull Player player, @NotNull String others, @NotNull String discord) {
+        Utils.async(() -> {
+            Bukkit.getOnlinePlayers().stream()
+                    .filter(p -> !p.equals(player))
+                    .forEach(p -> p.sendMessage(Utils.getComponentByString(Prefixes.WORLDS + others)));
+            Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString(Prefixes.WORLDS + others));
+
+            if (plugin.getIncognitoManager().isIncognito(player.getUniqueId())) return;
+            plugin.getChatMinecraft().sendMessage(discord, Prefixes.WORLDS.getDiscord());
+        });
+        return "Przeteleportowano pomyślnie.";
     }
 
     private @Nullable Location getLastLocation(@NotNull UUID uuid, @NotNull World world) {

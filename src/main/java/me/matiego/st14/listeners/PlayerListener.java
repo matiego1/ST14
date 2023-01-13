@@ -1,5 +1,6 @@
 package me.matiego.st14.listeners;
 
+import com.destroystokyo.paper.event.player.PlayerAdvancementCriterionGrantEvent;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import io.papermc.paper.event.player.PlayerItemFrameChangeEvent;
 import me.matiego.st14.IncognitoManager;
@@ -313,7 +314,7 @@ public class PlayerListener implements Listener {
                 .filter(p -> p.getWorld().equals(world))
                 .forEach(p -> p.sendMessage(Utils.getComponentByString("&eGracz &6" + player.getName() + "&e poszedł spać. Słodkich snów!")));
         if (!plugin.getIncognitoManager().isIncognito(player.getUniqueId())) {
-            plugin.getChatMinecraft().sendMessage("Przesypianie nocy", "[" + Utils.getWorldName(world) + "] Gracz **" + player + "** poszedł spać. Słodkich snów!");
+            plugin.getChatMinecraft().sendMessage("**[" + Utils.getWorldName(world) + "]** Gracz **" + player.getName() + "** poszedł spać. Słodkich snów!", "Przesypianie nocy");
         }
     }
 
@@ -425,5 +426,15 @@ public class PlayerListener implements Listener {
                 }
             }
         }
+    }
+
+    @EventHandler (ignoreCancelled = true)
+    public void onPlayerAdvancementCriterionGrant(@NotNull PlayerAdvancementCriterionGrantEvent event) {
+        event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onPlayerAdvancementDone(@NotNull PlayerAdvancementDoneEvent event) {
+        event.message(null);
     }
 }

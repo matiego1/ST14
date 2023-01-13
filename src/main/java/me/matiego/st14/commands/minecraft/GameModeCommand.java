@@ -78,7 +78,7 @@ public class GameModeCommand implements CommandHandler.Minecraft {
                 .filter(p -> p.getWorld().equals(player.getWorld()))
                 .forEach(p -> p.sendMessage(Utils.getComponentByString("&aGracz &2" + player.getName() + "&a zmienił swój tryb gry na &2" + name + "&a.")));
         if (!Main.getInstance().getIncognitoManager().isIncognito(player.getUniqueId())) {
-            Main.getInstance().getChatMinecraft().sendMessage("[" + Utils.getWorldName(player.getWorld()) + "] Gracz **" + player.getName() + "** zmienił swój tryb gry na **" + name + "**.", "Tryb gry");
+            Main.getInstance().getChatMinecraft().sendMessage("**[" + Utils.getWorldName(player.getWorld()) + "]** Gracz **" + player.getName() + "** zmienił swój tryb gry na **" + name + "**.", "Tryb gry");
         }
     }
 }

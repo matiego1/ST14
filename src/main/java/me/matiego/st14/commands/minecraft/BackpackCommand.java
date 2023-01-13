@@ -45,6 +45,11 @@ public class BackpackCommand implements CommandHandler.Minecraft, Listener {
             return 0;
         }
 
+        if (!Main.getInstance().getConfig().getStringList("backpack-worlds").contains(player.getWorld().getName())) {
+            sender.sendMessage(Utils.getComponentByString("&cNie możesz użyć tej komendy w tym świecie."));
+            return 3;
+        }
+
         List<ItemStack> items = plugin.getBackpackManager().loadBackpack(player.getUniqueId());
         if (items == null) {
             player.sendMessage(Utils.getComponentByString("&cNapotkano niespodziewany błąd. Spróbuj później."));

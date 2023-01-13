@@ -89,7 +89,7 @@ public class ChatMinecraft extends ListenerAdapter {
             if (DiscordUtils.sendWebhook(
                     plugin.getConfig().getString("discord.webhook-urls.chat-minecraft", ""),
                     DiscordUtils.getAvatar(user, event.getMember()),
-                    "[DC]" + DiscordUtils.getName(user, event.getMember()),
+                    "[DC] " + DiscordUtils.getName(user, event.getMember()),
                     DiscordUtils.escapeFormatting(msgContent))) {
                 for (String line : msgContent.split("\n")) {
                     Bukkit.broadcast(Utils.getComponentByString("&a[DC] &7" + user.getName() + "&f: " + line));
