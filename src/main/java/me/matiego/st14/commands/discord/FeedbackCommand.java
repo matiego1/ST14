@@ -55,9 +55,9 @@ public class FeedbackCommand implements Discord {
         eb.setTimestamp(Instant.now());
         eb.setColor(Color.MAGENTA);
         eb.setFooter(event.getUser().getAsTag());
-        Logs.discord(eb.build());
 
-        event.reply("Dziękujemy za twoją opinię!").queue();
+        event.deferReply(true).queue();
+        Logs.discord(eb.build()).thenAcceptAsync(b -> event.getHook().sendMessage(b ? "Dziękujemy za twoją opinię!" : "Napotkano niespodziewany błąd.").queue());
         return 15;
     }
 }

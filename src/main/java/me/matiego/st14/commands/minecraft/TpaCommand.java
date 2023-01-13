@@ -163,6 +163,7 @@ public class TpaCommand implements CommandHandler.Minecraft {
         Utils.async(() -> {
             try {
                 switch (plugin.getTeleportsManager().teleport(target, destination, 5, () -> {
+                    if (cost == 0) return true;
                     Economy economy = plugin.getEconomy();
                     EconomyResponse response = economy.withdrawPlayer(target, cost);
                     if (!response.transactionSuccess()) {

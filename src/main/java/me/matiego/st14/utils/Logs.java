@@ -2,7 +2,6 @@ package me.matiego.st14.utils;
 
 import me.matiego.st14.Main;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.jetbrains.annotations.NotNull;
@@ -11,6 +10,7 @@ import java.awt.*;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
 
 public class Logs {
     private static final Main plugin;
@@ -78,23 +78,19 @@ public class Logs {
         discord(eb.build());
     }
 
-    /**
-     * Sends an embed to Discord logs channel if possible.
-     * @param embed the embed to send
-     */
-    public static void discord(@NotNull MessageEmbed embed) {
-        JDA jda = plugin.getJda();
-        if (jda == null) return;
+    public static @NotNull CompletableFuture<Boolean> discord(@NotNull MessageEmbed embed) {
         TextChannel chn = DiscordUtils.getConsoleChannel();
-        if (chn == null) return;
-        chn.sendMessageEmbeds(embed).queue();
+        if (chn == null) return CompletableFuture.completedFuture(false);
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        chn.sendMessageEmbeds(embed).queue(msg -> future.complete(true), failure -> future.complete(false));
+        return future;
     }
 
-    public static void discord(@NotNull String message) {
-        JDA jda = plugin.getJda();
-        if (jda == null) return;
+    public static @NotNull CompletableFuture<Boolean> discord(@NotNull String message) {
         TextChannel chn = DiscordUtils.getConsoleChannel();
-        if (chn == null) return;
-        chn.sendMessage(message).queue();
+        if (chn == null) return CompletableFuture.completedFuture(false);
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        chn.sendMessage(message).queue(msg -> future.complete(true), failure -> future.complete(false));
+        return future;
     }
 }

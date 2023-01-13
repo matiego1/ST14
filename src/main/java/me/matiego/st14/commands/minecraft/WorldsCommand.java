@@ -122,7 +122,7 @@ public class WorldsCommand implements CommandHandler.Minecraft {
         player.sendMessage(Utils.getComponentByString(Prefixes.WORLDS + "Zostaniesz przeteleportowany za 5 sekund. Nie ruszaj się!"));
 
         setLastLocation(player.getUniqueId(), player.getLocation());
-        Location loc = getLastLocation(player.getUniqueId());
+        Location loc = getLastLocation(player.getUniqueId(), target);
         Location finalLoc = loc == null ? target.getSpawnLocation() : loc;
         Utils.async(() -> {
             try {
@@ -140,18 +140,13 @@ public class WorldsCommand implements CommandHandler.Minecraft {
         });
     }
 
-    private @Nullable Location getLastLocation(@NotNull UUID uuid) {
+    private @Nullable Location getLastLocation(@NotNull UUID uuid, @NotNull World world) {
         try (Connection conn = plugin.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT world, x, y, z, yaw, pitch FROM st14_worlds_cmd WHERE uuid = ?")) {
+             PreparedStatement stmt = conn.prepareStatement("SELECT x, y, z, yaw, pitch FROM st14_worlds_cmd WHERE uuid = ? AND world = ?")) {
             stmt.setString(1, uuid.toString());
+            stmt.setString(2, world.getUID().toString());
             ResultSet result = stmt.executeQuery();
             if (!result.next()) return null;
-
-            World world = null;
-            try {
-                world = Bukkit.getWorld(UUID.fromString(result.getString("world")));
-            } catch (Exception ignored) {}
-            if (world == null) return null;
 
             return new Location(
                     world,

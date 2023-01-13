@@ -27,7 +27,6 @@ public class TeleportsManager implements Listener {
         return teleport(player, loc, time, () -> true);
     }
     public synchronized @NotNull CompletableFuture<Response> teleport(@NotNull Player player, @NotNull Location loc, int time, @NotNull Callable<Boolean> teleportWhenReady) {
-
         CompletableFuture<Response> future = new CompletableFuture<>();
         if (tasks.get(player.getUniqueId()) != null) {
             future.complete(Response.ALREADY_ACTIVE);
