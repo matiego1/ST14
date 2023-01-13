@@ -1,3 +1,3 @@
 # ST14
-Plugin na serwer ST14
+Plugin for ST14 server
 
