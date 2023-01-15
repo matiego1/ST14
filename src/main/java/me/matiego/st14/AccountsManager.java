@@ -1,9 +1,6 @@
 package me.matiego.st14;
 
-import me.matiego.st14.utils.Logs;
-import me.matiego.st14.utils.Pair;
-import me.matiego.st14.utils.Prefixes;
-import me.matiego.st14.utils.Utils;
+import me.matiego.st14.utils.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -31,7 +28,8 @@ public class AccountsManager {
     }
 
     private final String ERROR_MSG = "An error occurred while modifying values in \"st14_accounts\" table in the database.";
-    private final String CODE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    @SuppressWarnings("SpellCheckingInspection")
+    private final String CODE_CHARS = "ABCDEFGHIJKLMNPQRSTUVWXYZ123456789";
     private final HashMap<String, Pair<UUID, Long>> verificationCodes = new HashMap<>();
 
     public synchronized @NotNull String getNewVerificationCode(@NotNull UUID uuid) {
@@ -54,10 +52,14 @@ public class AccountsManager {
     }
 
     public boolean isRequired(@NotNull UUID uuid) {
+        if (NonPremiumUtils.isNonPremiumUuid(uuid)) return false;
         return plugin.getConfig().getBoolean("discord.linking-required") && !plugin.getConfig().getStringList("discord.linking-required-bypass").contains(uuid.toString());
     }
 
     public @Nullable UserSnowflake getUserByPlayer(@NotNull UUID uuid) {
+        if (NonPremiumUtils.isNonPremiumUuid(uuid)) {
+            return UserSnowflake.fromId(NonPremiumUtils.getIdByNonPremiumUuid(uuid));
+        }
         try (Connection conn = plugin.getConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT id FROM st14_accounts WHERE uuid = ?")) {
             stmt.setString(1, uuid.toString());
@@ -82,6 +84,7 @@ public class AccountsManager {
     }
 
     public boolean isLinked(@NotNull UUID uuid) {
+        if (NonPremiumUtils.isNonPremiumUuid(uuid)) return true;
         return getUserByPlayer(uuid) != null;
     }
 
@@ -90,6 +93,9 @@ public class AccountsManager {
     }
 
     public boolean link(@NotNull UUID uuid, @NotNull UserSnowflake id) {
+        if (NonPremiumUtils.isNonPremiumUuid(uuid) && NonPremiumUtils.getIdByNonPremiumUuid(uuid) != id.getIdLong()) {
+            throw new IllegalArgumentException("tried to link a non-premium uuid to another Discord account");
+        }
         if (!modifyRole(id, true)) return false;
         try (Connection conn = plugin.getConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_accounts(uuid, id) VALUES (?, ?) ON DUPLICATE KEY UPDATE uuid = ?, id = ?")) {
@@ -129,6 +135,7 @@ public class AccountsManager {
     }
 
     public boolean unlink(@NotNull UUID uuid) {
+        if (NonPremiumUtils.isNonPremiumUuid(uuid)) return false;
         UserSnowflake id = getUserByPlayer(uuid);
         if (id != null && !modifyRole(id, false)) return false;
         try (Connection conn = plugin.getConnection();

@@ -408,7 +408,7 @@ public class PlayerListener implements Listener {
                 now -= last;
                 if (now <= 0 || now > 10_000) {
                     event.setCancelled(true);
-                    player.sendMessage(Utils.getComponentByString("&cAby obróć ten przedmiot, kliknij ponownie!"));
+                    player.sendMessage(Utils.getComponentByString("&cAby obrócić ten przedmiot, kliknij ponownie!"));
                 }
             }
             case PLACE -> {
