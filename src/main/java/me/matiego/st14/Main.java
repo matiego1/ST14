@@ -62,7 +62,7 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private BackpackManager backpackManager;
     @Getter private RewardsManager rewardsManager;
     private TabListManager tabListManager;
-    private ChatReports chatReports;
+    private ChatReportsManager chatReportsManager;
 
     @Getter private TellCommand tellCommand;
     @Getter private TpaCommand tpaCommand;
@@ -121,7 +121,7 @@ public final class Main extends JavaPlugin implements Listener {
         teleportsManager = new TeleportsManager();
         rewardsManager = new RewardsManager(this);
         backpackManager = new BackpackManager(this);
-        chatReports = new ChatReports();
+        chatReportsManager = new ChatReportsManager();
 
         Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomy(), vault, ServicePriority.High);
 
@@ -223,7 +223,7 @@ public final class Main extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(commandManager, this);
         jda.addEventListener(commandManager);
 
-        chatReports.start();
+        chatReportsManager.start();
         commandManager.setEnabled(true);
         getAfkManager().start();
         tabListManager.start();
@@ -269,7 +269,7 @@ public final class Main extends JavaPlugin implements Listener {
         if (chatMinecraft != null) chatMinecraft.block();
         if (teleportsManager != null) teleportsManager.cancelAll();
         if (economy != null) economy.setEnabled(false);
-        if (chatReports != null) chatReports.stop();
+        if (chatReportsManager != null) chatReportsManager.stop();
         //unregister all events
         HandlerList.unregisterAll((Plugin) this);
         //disable Discord bot

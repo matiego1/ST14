@@ -104,21 +104,21 @@
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.19.2-R0.1-SNAPSHOT</version>
+            <version>1.19.3-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <!--NMS-->
         <dependency>
             <groupId>ca.bkaw</groupId>
             <artifactId>paper-nms</artifactId>
-            <version>1.19.2-SNAPSHOT</version>
+            <version>1.19.3-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <!--JDA-->
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.0.0-beta.1</version>
+            <version>5.0.0-beta.2</version>
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
