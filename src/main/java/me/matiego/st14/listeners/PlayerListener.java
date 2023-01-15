@@ -257,19 +257,19 @@ public class PlayerListener implements Listener {
         if (command.charAt(0) == '/') command = command.substring(1);
 
         if (player.isOp()) {
-            Logs.info("[" + player.getName() + "]: /" + command);
+            Logs.info("[" + player.getName() + "]: " + event.getMessage());
             return;
         }
 
         List<String> allowedCommands = plugin.getConfig().getStringList("allowed-commands");
         if (allowedCommands.isEmpty()) {
-            Logs.info("[" + player.getName() + "]: /" + command);
+            Logs.info("[" + player.getName() + "]: " + event.getMessage());
             return;
         }
 
         for (String allowedCommand : allowedCommands) {
             if (command.startsWith(allowedCommand.toLowerCase())) {
-                Logs.info("[" + player.getName() + "]: /" + command);
+                Logs.info("[" + player.getName() + "]: " + event.getMessage());
                 return;
             }
         }

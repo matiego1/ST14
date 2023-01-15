@@ -172,7 +172,7 @@ public class TpaCommand implements CommandHandler.Minecraft {
                         return false;
                     }
                     return true;
-                }).get(4, TimeUnit.SECONDS)) {
+                }).get(6, TimeUnit.SECONDS)) {
                     case SUCCESS -> {
                         player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "Gracz " + target.getName() + " przeteleportował się do ciebie."));
                         target.sendMessage(Utils.getComponentByString(Prefixes.TPA + "Przeteleportowałeś się do gracza " + player.getName() + "."));
@@ -197,6 +197,7 @@ public class TpaCommand implements CommandHandler.Minecraft {
                 }
             } catch (Exception e) {
                 player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
+                Logs.error("An error occurred while teleporting player", e);
             }
         });
     }
