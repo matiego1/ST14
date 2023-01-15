@@ -71,7 +71,6 @@ public final class Main extends JavaPlugin implements Listener {
     private boolean isJdaEnabled = false;
     private ExecutorService callbackThreadPool;
 
-
     @Override
     public void onEnable() {
         instance = this;
@@ -85,7 +84,7 @@ public final class Main extends JavaPlugin implements Listener {
             return;
         }
 
-        //Vault plugin
+        //Dependencies
         Plugin vault = Bukkit.getPluginManager().getPlugin("Vault");
         if (vault == null) {
             Logs.error("Vault plugin not found!");

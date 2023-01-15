@@ -6,7 +6,6 @@ import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
-import org.geysermc.floodgate.api.FloodgateApi;
 import org.jetbrains.annotations.NotNull;
 
 public class TabListManager {
@@ -21,7 +20,6 @@ public class TabListManager {
 
     private void run() {
         String tps = formatTps(Utils.getTps());
-        FloodgateApi floodgate = FloodgateApi.getInstance();
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.sendPlayerListHeaderAndFooter(Utils.getComponentByString("&a&lSerwer ST14"), Utils.getComponentByString("&aTPS: " + tps + "&a; PING: " + (player.getPing() == 0 ? "&cWczytywanie..." : player.getPing() + " ms")));
             player.playerListName(Utils.getComponentByString(
@@ -29,7 +27,6 @@ public class TabListManager {
                     (plugin.getAfkManager().isAfk(player) ? "&8[AFK]&f " : "") +
                     (plugin.getIncognitoManager().isIncognito(player.getUniqueId()) ? "&7[INC]&f " : "") +
                     (NonPremiumUtils.isNonPremiumUuid(player.getUniqueId()) ? "&c" : "") +
-                    (floodgate == null ? "" : (floodgate.isFloodgatePlayer(player.getUniqueId()) ? "&b" : "")) +
                     (plugin.getPremiumManager().isPremium(player.getUniqueId()) ? "&e" : "") +
                     (plugin.getPremiumManager().isSuperPremium(player.getUniqueId()) ? "&6" : "") +
                     player.getName()
