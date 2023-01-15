@@ -131,7 +131,7 @@ public class WorldsCommand implements CommandHandler.Minecraft {
                             case SUCCESS -> broadcastMessage(
                                     player,
                                     "Gracz &1" + player.getName() + "&3 przeszedł do świata &1" + Utils.getWorldName(finalLoc.getWorld()) + "&3!",
-                                    "Gracz **" + player.getName() + " przeszedł do świata **" + Utils.getWorldName(finalLoc.getWorld()) + "**!"
+                                    "Gracz **" + player.getName() + "** przeszedł do świata **" + Utils.getWorldName(finalLoc.getWorld()) + "**!"
                             );
                             case MOVE -> "&dTeleportowanie anulowane, poruszyłeś się.";
                             case ALREADY_ACTIVE -> "&dProces teleportowania już został rozpoczęty.";
