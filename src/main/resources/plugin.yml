@@ -60,6 +60,7 @@ commands:
     permission: st14.stop
     usage: 'Poprawne użycie: /stop'
   backpack:
+    aliases: bp
     permission: st14.backpack
     usage: 'Poprawne użycie: /backpack'
 permissions:

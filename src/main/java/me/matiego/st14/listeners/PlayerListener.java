@@ -38,6 +38,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -68,6 +69,12 @@ public class PlayerListener implements Listener {
                 .noneMatch(u -> u.equals(uuid))) {
             return;
         }
+        //check (real) time
+        int seconds = LocalDateTime.now().toLocalTime().toSecondOfDay();
+        if (seconds >= 24 * 60 * 60 - 7 || seconds <= 3) {
+            disallow(event, "&cNa serwer możesz ponownie dołączyć 3 sekundy po północy. Przepraszamy.");
+        }
+
         //refresh offline players names
         if (event.getName().length() > 36) {
             disallow(event, "&cTwój nick jest za długi! Może mieć maksymalnie 36 znaków.");
@@ -142,6 +149,12 @@ public class PlayerListener implements Listener {
         if (manager.isPremium(uuid) && manager.makeSpaceForPlayer(uuid)) {
             event.allow();
         }
+
+        Utils.async(() -> {
+            UserSnowflake id = plugin.getAccountsManager().getUserByPlayer(uuid);
+            if (id == null) return;
+            plugin.getAccountsManager().modifyNickname(id, event.getPlayer().getName());
+        });
     }
 
     @EventHandler
@@ -208,10 +221,13 @@ public class PlayerListener implements Listener {
         );
     }
 
-    @EventHandler
+    @EventHandler (ignoreCancelled = true)
     public void onPlayerDeath(@NotNull PlayerDeathEvent event) {
-        //noinspection deprecation
-        plugin.getChatMinecraft().sendDeathMessage(event.getDeathMessage() == null ? event.getPlayer().getName() + " umarł" : event.getDeathMessage(), event.getPlayer());
+        Component deathMsg = event.deathMessage();
+        Component msg = Utils.getComponentByString("&4[" + Utils.getWorldPrefix(event.getPlayer().getWorld()) + "]&c ")
+                .append(deathMsg == null ? Utils.getComponentByString(event.getPlayer().getName() + " died") : deathMsg);
+        event.deathMessage(msg);
+        plugin.getChatMinecraft().sendDeathMessage(PlainTextComponentSerializer.plainText().serialize(msg), event.getPlayer());
     }
 
     @EventHandler

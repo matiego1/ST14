@@ -72,6 +72,7 @@ public class PlayerTime {
     }
 
     public static @Nullable PlayerTime load(@NotNull UUID uuid) {
+        Logs.warning("Wczytano czasy gracza!!!");
         try (Connection conn = Main.getInstance().getConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT t_normal, t_afk, t_incognito, normal, afk, incognito, last_save FROM st14_time WHERE uuid = ?")) {
             stmt.setString(1, uuid.toString());

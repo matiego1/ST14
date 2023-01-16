@@ -6,7 +6,7 @@
 
     <groupId>me.matiego</groupId>
     <artifactId>ST14</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
 
     <name>ST14</name>
@@ -31,7 +31,71 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
+                <version>3.3.0</version>
+                <configuration>
+                    <relocations>
+                        <relocation>
+                            <pattern>net.dv8tion.jda</pattern>
+                            <shadedPattern>me.matiego.st14.resources.net.dv8tion.jda</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>net.wesjd.anvilgui</pattern>
+                            <shadedPattern>me.matiego.st14.resources.net.wesjd.anvilgui</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>club.minnced.discord.webhook</pattern>
+                            <shadedPattern>me.matiego.st14.resources.club.minnced.discord.webhook</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.fasterxml.jackson</pattern>
+                            <shadedPattern>me.matiego.st14.resources.com.fasterxml.jackson</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.iwebpp.crypto</pattern>
+                            <shadedPattern>me.matiego.st14.resources.com.iwebpp.crypto</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.neovisionaries.ws.client</pattern>
+                            <shadedPattern>me.matiego.st14.resources.com.neovisionaries.ws.client</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.zaxxer.hikari</pattern>
+                            <shadedPattern>me.matiego.st14.resources.com.zaxxer.hikari</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.zwitserloot.cmdreader</pattern>
+                            <shadedPattern>me.matiego.st14.resources.com.zwitserloot.cmdreader</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>gnu.trove</pattern>
+                            <shadedPattern>me.matiego.st14.resources.gnu.trove</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>kotlin</pattern>
+                            <shadedPattern>me.matiego.st14.resources.kotlin</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>lombok</pattern>
+                            <shadedPattern>me.matiego.st14.resources.lombok</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>okhttp3</pattern>
+                            <shadedPattern>me.matiego.st14.resources.okhttp3</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>okio</pattern>
+                            <shadedPattern>me.matiego.st14.resources.okio</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>Class50.lombok</pattern>
+                            <shadedPattern>me.matiego.st14.resources.Class50.lombok</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.minidns</pattern>
+                            <shadedPattern>me.matiego.st14.resources.org.minidns</shadedPattern>
+                        </relocation>
+                    </relocations>
+                </configuration>
                 <executions>
                     <execution>
                         <phase>package</phase>

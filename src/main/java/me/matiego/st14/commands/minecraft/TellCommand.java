@@ -70,10 +70,10 @@ public class TellCommand implements CommandHandler.Minecraft {
             Block block = player.getLocation().getBlock();
             msg = msg.replace("[here]", "[" + Utils.getWorldName(player.getWorld()) + ": " + block.getX() + ", " + block.getY() + ", " + block.getZ() + "]");
 
-            if (args[0].equalsIgnoreCase("!Serwer")) {
+            if (args[0].equalsIgnoreCase("[admin]")) {
                 removeReply(player.getUniqueId());
-                player.sendMessage(Utils.getComponentByString("&6[&cJa &6->&c Serwer&6]:&r " + msg));
-                Bukkit.getConsoleSender().sendMessage("&6[&c" + player.getName() + " &6->&4 Serwer&6]:&r " + msg);
+                player.sendMessage(Utils.getComponentByString("&6[&cJa &6->&4 [admin]&6]:&r " + msg));
+                Bukkit.getConsoleSender().sendMessage("&6[&c" + player.getName() + " &6->&4 [admin]&6]:&r " + msg);
                 log(msg, "Wiadomość prywatna - od " + player.getName());
                 return 0;
             }
@@ -102,8 +102,8 @@ public class TellCommand implements CommandHandler.Minecraft {
             return 0;
         }
         removeReply(receiver.getUniqueId());
-        sender.sendMessage(Utils.getComponentByString("&6[&cSerwer &6->&c " + receiver.getName() + "&6]:&r " + msg));
-        receiver.sendMessage(Utils.getComponentByString("&6[&cSerwer &6->&c Ja&6]:&r " + msg));
+        sender.sendMessage(Utils.getComponentByString("&6[&4[admin] &6->&c " + receiver.getName() + "&6]:&r " + msg));
+        receiver.sendMessage(Utils.getComponentByString("&6[&4[admin] &6->&c Ja&6]:&r " + msg));
         return 0;
     }
 
@@ -120,7 +120,7 @@ public class TellCommand implements CommandHandler.Minecraft {
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args) {
         if (args.length == 1) {
             List<String> names = Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList());
-            names.add("!Serwer");
+            names.add("[admin]");
             return names;
         }
         return new ArrayList<>();

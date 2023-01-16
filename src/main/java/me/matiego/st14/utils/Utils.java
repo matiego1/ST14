@@ -7,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.plugin.IllegalPluginAccessException;
@@ -14,10 +15,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class Utils {
@@ -154,5 +155,20 @@ public class Utils {
     public static boolean isDifferentDay(long date1, long date2) {
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
         return !format.format(new Date(date1)).equals(format.format(new Date(date2)));
+    }
+
+    public static void kickPlayersAtMidnightTask() {
+        LocalTime midnight = LocalTime.of(23, 59, 55);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime task = LocalDateTime.of(now.toLocalDate(), midnight);
+        if (!task.isAfter(now)) {
+            task = task.plusDays(1);
+        }
+        long seconds = Duration.between(now.atZone(ZoneId.systemDefault()).toInstant(), task.atZone(ZoneId.systemDefault()).toInstant()).getSeconds();
+        Executors.newScheduledThreadPool(1).schedule(() -> Utils.sync(() -> {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                player.kick(Utils.getComponentByString("&cNa serwer możesz ponownie dołączyć 3 sekundy po północy. Przepraszamy."));
+            }
+        }), seconds, TimeUnit.SECONDS);
     }
 }

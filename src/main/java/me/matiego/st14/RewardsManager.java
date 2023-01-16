@@ -68,7 +68,6 @@ public class RewardsManager {
                     data.setLimit(limit);
 
                     if (economy.depositPlayer(player, amount).transactionSuccess()) {
-                        System.out.println("[DEBUG] Gracz " + player.getName() + " dostał " + amount + " za minuty gry");
                         sendActionBar(player, "&eDostałeś " + economy.format(amount) + " za " + amount + " minut gry");
                         cache.put(uuid, data);
                     }

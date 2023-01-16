@@ -66,7 +66,7 @@ public class OfflinePlayers {
 
     public static boolean createTable() {
         try (Connection conn = Main.getInstance().getConnection();
-             PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_offline_players(uuid VARCHAR(36) NOT NULL, name VARCHAR(36) NOT NULL, PRIMARY KEY (uuid))")) {
+             PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS test(uuid VARCHAR(36) NOT NULL, name VARCHAR(36) NOT NULL, PRIMARY KEY (uuid), UNIQUE KEY (name))")) {
             stmt.execute();
             return true;
         } catch (SQLException e) {
@@ -77,10 +77,11 @@ public class OfflinePlayers {
 
     public void refresh(@NotNull UUID uuid, @NotNull String name) {
         try (Connection conn = plugin.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_offline_players(uuid, name) VALUES (?, ?) ON DUPLICATE KEY UPDATE uuid = uuid, name = ?")) {
+             PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_offline_players(uuid, name) VALUES (?, ?) ON DUPLICATE KEY UPDATE uuid = ?, name = ?")) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, name);
-            stmt.setString(3, name);
+            stmt.setString(3, uuid.toString());
+            stmt.setString(4, name);
             stmt.execute();
         } catch (SQLException e) {
             Logs.error(ERROR_MSG, e);

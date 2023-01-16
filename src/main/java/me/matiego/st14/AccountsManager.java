@@ -137,7 +137,10 @@ public class AccountsManager {
     public boolean unlink(@NotNull UUID uuid) {
         if (NonPremiumUtils.isNonPremiumUuid(uuid)) return false;
         UserSnowflake id = getUserByPlayer(uuid);
-        if (id != null && !modifyRole(id, false)) return false;
+        if (id != null) {
+            if (!modifyRole(id, false)) return  false;
+            modifyNickname(id, null);
+        }
         try (Connection conn = plugin.getConnection();
              PreparedStatement stmt = conn.prepareStatement("DELETE FROM st14_accounts WHERE uuid = ?")) {
             stmt.setString(1, uuid.toString());
@@ -196,5 +199,13 @@ public class AccountsManager {
             guild.removeRoleFromMember(id, role).queue();
         }
         return true;
+    }
+
+    public void modifyNickname(@NotNull UserSnowflake id, @Nullable String nickname) {
+        JDA jda = plugin.getJda();
+        if (jda == null) return;
+        Guild guild = jda.getGuildById(plugin.getConfig().getLong("discord.guild-id"));
+        if (guild == null) return;
+        guild.retrieveMember(id).queue(member -> member.modifyNickname(nickname).queue(), failure -> {});
     }
 }

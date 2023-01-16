@@ -230,6 +230,7 @@ public final class Main extends JavaPlugin implements Listener {
         getRewardsManager().start();
         getChatMinecraft().unblock();
         Utils.registerRecipes();
+        Utils.kickPlayersAtMidnightTask();
 
         Utils.async(() -> {
             Utils.deleteOldLogFiles();
