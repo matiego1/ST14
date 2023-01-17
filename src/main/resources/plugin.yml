@@ -4,7 +4,7 @@ main: me.matiego.st14.Main
 api-version: 1.19
 author: Matiego
 description: A plugin for ST14 server
-depend: [Vault]
+depend: [Vault, Graves]
 commands:
   st14:
     permission: st14.st14

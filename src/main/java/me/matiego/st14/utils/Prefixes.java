@@ -11,7 +11,8 @@ public enum Prefixes{
     WORLDS("&1[&3Światy&1]&3 ", "Światy"),
     TPA("&2[&6TPA&2]&e ", "TPA"),
     ECONOMY("&9[&b$&9]&b ", "**[$]** "),
-    DISCORD("&1[&9DC&1]&b ", "");
+    DISCORD("&1[&9DC&1]&b ", ""),
+    SUICIDE("&4[&cSamobójstwa&4]&c ", "Samobójstwa");
 
     @Getter private final String minecraft;
     @Getter private final String discord;

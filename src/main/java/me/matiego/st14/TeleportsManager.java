@@ -27,9 +27,6 @@ public class TeleportsManager implements Listener {
         return tasks.get(player.getUniqueId()) != null;
     }
 
-    public synchronized @NotNull CompletableFuture<Response> teleport(@NotNull Player player, @NotNull Location loc, int time) {
-        return teleport(player, loc, time, () -> true);
-    }
     public synchronized @NotNull CompletableFuture<Response> teleport(@NotNull Player player, @NotNull Location loc, int time, @NotNull Callable<Boolean> teleportWhenReady) {
         CompletableFuture<Response> future = new CompletableFuture<>();
         if (tasks.get(player.getUniqueId()) != null) {
@@ -96,7 +93,7 @@ public class TeleportsManager implements Listener {
             Pair<BukkitTask, CompletableFuture<Response>> cur = it.next().getValue();
             it.remove();
             cur.getFirst().cancel();
-            cur.getSecond().complete(Response.CANCELLED);
+            cur.getSecond().complete(Response.FAILURE);
         }
         location.clear();
     }

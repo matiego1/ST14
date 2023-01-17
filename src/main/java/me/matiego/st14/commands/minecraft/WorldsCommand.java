@@ -59,15 +59,10 @@ public class WorldsCommand implements CommandHandler.Minecraft {
         }
 
         List<Pair<World, Material>> worlds = new ArrayList<>();
-        for (String entry : plugin.getConfig().getStringList("worlds-command")) {
-            List<String> list = List.of(entry.split(";"));
-            if (list.size() != 2) continue;
-            World w = Bukkit.getWorld(list.get(0));
-            if (w == null) continue;
-            if (w.equals(world)) continue;
+        for (World w : Bukkit.getWorlds()) {
             Material m = null;
             try {
-                m = Material.valueOf(list.get(1));
+                m = Material.valueOf(plugin.getConfig().getString("worlds-command." + w.getName() + ".material"));
             } catch (Exception ignored) {}
             if (m == null) continue;
             worlds.add(new Pair<>(w, m));
@@ -108,9 +103,12 @@ public class WorldsCommand implements CommandHandler.Minecraft {
             player.sendMessage(Utils.getComponentByString(Prefixes.WORLDS + "&dNapotkano niespodziewany błąd. Spróbuj ponownie."));
             return;
         }
-
         if (target.equals(player.getWorld())) {
             player.sendMessage(Utils.getComponentByString(Prefixes.WORLDS + "&dJuż jesteś w tym świecie."));
+            return;
+        }
+        if (plugin.getConfig().getBoolean("worlds-command." + target.getName() + ".private") && !player.hasPermission("st14.worlds." + target.getName())) {
+            player.sendMessage(Utils.getComponentByString(Prefixes.WORLDS + "&dNie masz uprawnień, aby przenieść się do tego świata."));
             return;
         }
 
@@ -127,7 +125,10 @@ public class WorldsCommand implements CommandHandler.Minecraft {
         Utils.async(() -> {
             try {
                 player.sendMessage(Utils.getComponentByString(Prefixes.WORLDS +
-                        switch (plugin.getTeleportsManager().teleport(player, finalLoc, 5).get(6, TimeUnit.SECONDS)) {
+                        switch (plugin.getTeleportsManager().teleport(player, finalLoc, 5, () -> {
+                            String world = finalLoc.getWorld().getName();
+                            return !plugin.getConfig().getBoolean("worlds-command." + world + ".private") || player.hasPermission("st14.worlds." + world);
+                        }).get(6, TimeUnit.SECONDS)) {
                             case SUCCESS -> broadcastMessage(
                                     player,
                                     "Gracz &1" + player.getName() + "&3 przeszedł do świata &1" + Utils.getWorldName(finalLoc.getWorld()) + "&3!",
@@ -135,7 +136,8 @@ public class WorldsCommand implements CommandHandler.Minecraft {
                             );
                             case MOVE -> "&dTeleportowanie anulowane, poruszyłeś się.";
                             case ALREADY_ACTIVE -> "&dProces teleportowania już został rozpoczęty.";
-                            case CANCELLED, FAILURE -> "&dNapotkano niespodziewany błąd. Spróbuj ponownie.";
+                            case CANCELLED -> "&dNie masz uprawnień, aby przenieść się do tego świata.";
+                            case FAILURE -> "&dNapotkano niespodziewany błąd. Spróbuj ponownie.";
                         }
                 ));
             } catch (Exception e) {

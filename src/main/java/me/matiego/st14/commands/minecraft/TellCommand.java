@@ -73,7 +73,7 @@ public class TellCommand implements CommandHandler.Minecraft {
             if (args[0].equalsIgnoreCase("[admin]")) {
                 removeReply(player.getUniqueId());
                 player.sendMessage(Utils.getComponentByString("&6[&cJa &6->&4 [admin]&6]:&r " + msg));
-                Bukkit.getConsoleSender().sendMessage("&6[&c" + player.getName() + " &6->&4 [admin]&6]:&r " + msg);
+                Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString("&6[&c" + player.getName() + " &6->&4 [admin]&6]:&r " + msg));
                 log(msg, "Wiadomość prywatna - od " + player.getName());
                 return 0;
             }

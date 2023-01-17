@@ -54,7 +54,7 @@ public class RewardsManager {
                     int difference = (int) ((time.getNormal() - data.getLast()) / RFP_INTERVAL_MS);
                     if (difference <= 0) return;
                     data.addLast(difference * RFP_INTERVAL_MS);
-                    int amount = 5 * difference;
+                    int amount = plugin.getConfig().getInt("reward-for-playing", 5) * difference;
 
                     int limit = data.getLimit();
                     if (limit >= MAX_RFP) {

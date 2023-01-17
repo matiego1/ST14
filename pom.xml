@@ -248,5 +248,12 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.12.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.ranull</groupId>
+            <artifactId>graves</artifactId>
+            <version>4.9</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}\Graves-4.9.jar</systemPath>
+        </dependency>
     </dependencies>
 </project>

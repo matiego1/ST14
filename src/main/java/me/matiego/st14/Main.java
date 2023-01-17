@@ -66,6 +66,7 @@ public final class Main extends JavaPlugin implements Listener {
 
     @Getter private TellCommand tellCommand;
     @Getter private TpaCommand tpaCommand;
+    @Getter private SuicideCommand suicideCommand;
 
     private JDA jda;
     private boolean isJdaEnabled = false;
@@ -84,7 +85,7 @@ public final class Main extends JavaPlugin implements Listener {
             return;
         }
 
-        //Dependencies
+        //Vault plugin
         Plugin vault = Bukkit.getPluginManager().getPlugin("Vault");
         if (vault == null) {
             Logs.error("Vault plugin not found!");
@@ -132,6 +133,7 @@ public final class Main extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(new AfkListener(this), this);
         Bukkit.getPluginManager().registerEvents(new EntityListener(), this);
         Bukkit.getPluginManager().registerEvents(getTeleportsManager(), this);
+        Bukkit.getPluginManager().registerEvents(new GravesListener(), this);
 
         Bukkit.getMessenger().registerIncomingPluginChannel(this, "minecraft:brand", serverListener);
         Bukkit.getPluginManager().registerEvents(this, this);
@@ -197,6 +199,7 @@ public final class Main extends JavaPlugin implements Listener {
         //register commands
         tellCommand = new TellCommand();
         tpaCommand = new TpaCommand(this);
+        suicideCommand = new SuicideCommand();
         commandManager = new CommandManager(Arrays.asList(
                 new IncognitoCommand(this),
                 new AccountsCommand(this),
@@ -215,6 +218,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new BackpackCommand(this),
                 tellCommand,
                 tpaCommand,
+                suicideCommand,
                 //Discord commands
                 new PingCommand(),
                 new ListCommand(),
