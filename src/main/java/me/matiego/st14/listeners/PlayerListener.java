@@ -474,6 +474,7 @@ public class PlayerListener implements Listener {
     public void onPlayerPortal(@NotNull PlayerPortalEvent event) {
         if (event.getCause() == PlayerTeleportEvent.TeleportCause.END_PORTAL && plugin.getConfig().getBoolean("block-end")) {
             event.setCancelled(true);
+            event.getPlayer().sendActionBar(Utils.getComponentByString("&cEnd jest zablokowany"));
         }
     }
 
