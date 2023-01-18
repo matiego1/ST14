@@ -30,8 +30,8 @@ public class GameModeCommand implements CommandHandler.Minecraft {
     @Override
     public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(Utils.getComponentByString("&cTej komendy może użyć tylko gracz."));
-            return 0;
+            Bukkit.dispatchCommand(sender, "minecraft:gamemode " + String.join(" ", args));
+            return 1; //to prevent a loop if it somehow happens
         }
         if (args.length != 0) return -1;
         if (!Main.getInstance().getConfig().getStringList("gamemode-worlds").contains(player.getWorld().getName())) {

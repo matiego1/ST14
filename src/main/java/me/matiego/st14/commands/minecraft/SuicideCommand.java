@@ -12,8 +12,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
 import java.util.UUID;
 
 public class SuicideCommand implements CommandHandler.Minecraft {
@@ -24,7 +23,7 @@ public class SuicideCommand implements CommandHandler.Minecraft {
         }
     }
     private final PluginCommand command;
-    private final Set<UUID> suicides = new HashSet<>();
+    private final HashMap<UUID, Long> suicides = new HashMap<>();
 
     @Override
     public @Nullable PluginCommand getMinecraftCommand() {
@@ -34,26 +33,28 @@ public class SuicideCommand implements CommandHandler.Minecraft {
     @Override
     public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(Utils.getComponentByString(Prefixes.SUICIDE + "This command can be used only by the player."));
+            sender.sendMessage(Utils.getComponentByString(Prefixes.SUICIDE + "Tej komendy może użyć tylko gracz"));
             return 0;
         }
-        suicides.add(player.getUniqueId());
+        suicides.put(player.getUniqueId(), Utils.now());
         player.setHealth(0);
 
-        player.sendMessage(Utils.getComponentByString(Prefixes.SUICIDE + "&cYou committed suicide! Your grave is not protected."));
+        player.sendMessage(Utils.getComponentByString(Prefixes.SUICIDE + "&cPopełniłeś samobójstwo! Twój grób nie jest zabezpieczony."));
         Utils.async(() -> {
             Bukkit.getOnlinePlayers().stream()
                     .filter(p -> !p.equals(player))
-                    .forEach(p -> p.sendMessage(Utils.getComponentByString(Prefixes.SUICIDE + player.getName() + " committed suicide!")));
-            Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString(Prefixes.SUICIDE + player.getName() + " committed suicide!"));
+                    .forEach(p -> p.sendMessage(Utils.getComponentByString(Prefixes.SUICIDE + player.getName() + " popełnił samobójstwo!")));
+            Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString(Prefixes.SUICIDE + player.getName() + " popełnił samobójstwo!"));
 
             if (Main.getInstance().getIncognitoManager().isIncognito(player.getUniqueId())) return;
-            Main.getInstance().getChatMinecraft().sendMessage("**" + player.getName() + "** committed suicide!" , Prefixes.SUICIDE.getDiscord());
+            Main.getInstance().getChatMinecraft().sendMessage("**" + player.getName() + "** popełnił samobójstwo!" , Prefixes.SUICIDE.getDiscord());
         });
         return 60;
     }
 
     public synchronized boolean isSuicide(@NotNull UUID uuid) {
-        return suicides.remove(uuid);
+        Long time = suicides.remove(uuid);
+        if (time == null) return false;
+        return (Utils.now() - time) <= 3000;
     }
 }
