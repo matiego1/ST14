@@ -464,7 +464,7 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onBlockBreak(@NotNull BlockBreakEvent event) {
         String material = event.getBlock().getBlockData().getMaterial().name().toLowerCase();
-        if (material.contains("diamond") || material.contains("netherite")) {
+        if (material.contains("diamond") || material.contains("netherite") || material.contains("ancient_debris")) {
             Logs.info("Gracz " + event.getPlayer().getName() + " wykopał " + material.toUpperCase() + "!");
         }
 
