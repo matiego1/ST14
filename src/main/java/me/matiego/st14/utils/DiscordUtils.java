@@ -166,7 +166,8 @@ public class DiscordUtils {
                 Permission.MESSAGE_SEND_IN_THREADS,
                 Permission.MESSAGE_EMBED_LINKS,
                 Permission.MESSAGE_MANAGE,
-                Permission.MESSAGE_HISTORY
+                Permission.MESSAGE_HISTORY,
+                Permission.NICKNAME_MANAGE
         );
     }
 

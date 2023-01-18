@@ -37,6 +37,7 @@ public class SuicideCommand implements CommandHandler.Minecraft {
             sender.sendMessage(Utils.getComponentByString(Prefixes.SUICIDE + "This command can be used only by the player."));
             return 0;
         }
+        suicides.add(player.getUniqueId());
         player.setHealth(0);
 
         player.sendMessage(Utils.getComponentByString(Prefixes.SUICIDE + "&cYou committed suicide! Your grave is not protected."));
@@ -52,7 +53,7 @@ public class SuicideCommand implements CommandHandler.Minecraft {
         return 60;
     }
 
-    public boolean isSuicide(@NotNull UUID uuid) {
+    public synchronized boolean isSuicide(@NotNull UUID uuid) {
         return suicides.remove(uuid);
     }
 }

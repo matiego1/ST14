@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.UserSnowflake;
+import net.dv8tion.jda.api.exceptions.HierarchyException;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -206,6 +207,17 @@ public class AccountsManager {
         if (jda == null) return;
         Guild guild = jda.getGuildById(plugin.getConfig().getLong("discord.guild-id"));
         if (guild == null) return;
-        guild.retrieveMember(id).queue(member -> member.modifyNickname(nickname).queue(), failure -> {});
+        guild.retrieveMember(id).queue(member -> {
+            try {
+                member.modifyNickname(nickname).queue(
+                        success -> {
+                        },
+                        failure -> Logs.warning("An error occurred while modifying the nickname of user " + member.getUser().getAsTag())
+                );
+            } catch (HierarchyException ignored) {
+            } catch (Exception e) {
+                Logs.warning("An error occurred while modifying the nickname of user " + member.getUser().getAsTag());
+            }
+        }, failure -> {});
     }
 }

@@ -142,19 +142,21 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerLoginEvent(@NotNull PlayerLoginEvent event) {
+        UUID uuid = event.getPlayer().getUniqueId();
+
+        if (event.getResult() == PlayerLoginEvent.Result.ALLOWED) {
+            Utils.async(() -> {
+                UserSnowflake id = plugin.getAccountsManager().getUserByPlayer(uuid);
+                if (id == null) return;
+                plugin.getAccountsManager().modifyNickname(id, event.getPlayer().getName());
+            });
+        }
         if (event.getResult() != PlayerLoginEvent.Result.KICK_FULL) return;
 
-        UUID uuid = event.getPlayer().getUniqueId();
         PremiumManager manager = plugin.getPremiumManager();
         if (manager.isPremium(uuid) && manager.makeSpaceForPlayer(uuid)) {
             event.allow();
         }
-
-        Utils.async(() -> {
-            UserSnowflake id = plugin.getAccountsManager().getUserByPlayer(uuid);
-            if (id == null) return;
-            plugin.getAccountsManager().modifyNickname(id, event.getPlayer().getName());
-        });
     }
 
     @EventHandler
@@ -223,11 +225,14 @@ public class PlayerListener implements Listener {
 
     @EventHandler (ignoreCancelled = true)
     public void onPlayerDeath(@NotNull PlayerDeathEvent event) {
-        Component deathMsg = event.deathMessage();
-        Component msg = Utils.getComponentByString("&4[" + Utils.getWorldPrefix(event.getPlayer().getWorld()) + "]&c ")
-                .append(deathMsg == null ? Utils.getComponentByString(event.getPlayer().getName() + " died") : deathMsg);
-        event.deathMessage(msg);
-        plugin.getChatMinecraft().sendDeathMessage(PlainTextComponentSerializer.plainText().serialize(msg), event.getPlayer());
+        Component component = event.deathMessage();
+
+        String msg = event.getPlayer().getName() + " died";
+        if (component != null) {
+            msg = PlainTextComponentSerializer.plainText().serialize(component);
+        }
+        event.deathMessage(Utils.getComponentByString("&4[" + Utils.getWorldPrefix(event.getPlayer().getWorld()) + "]&c " + msg));
+        plugin.getChatMinecraft().sendDeathMessage("**[" + Utils.getWorldPrefix(event.getPlayer().getWorld()) + "]** " + msg, event.getPlayer());
     }
 
     @EventHandler

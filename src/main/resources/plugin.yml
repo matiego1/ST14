@@ -5,6 +5,7 @@ api-version: 1.19
 author: Matiego
 description: A plugin for ST14 server
 depend: [Vault, Graves]
+load: STARTUP
 commands:
   st14:
     permission: st14.st14
@@ -63,6 +64,9 @@ commands:
     aliases: bp
     permission: st14.backpack
     usage: 'Poprawne użycie: /backpack'
+  suicide:
+    permission: st14.suicide
+    usage: 'Poprawne użycie: /suicide'
 permissions:
   st14.st14:
     default: op
@@ -95,4 +99,6 @@ permissions:
   st14.stop:
     default: op
   st14.backpack:
+    default: true
+  st14.suicide:
     default: true
