@@ -29,6 +29,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
@@ -458,4 +460,28 @@ public class PlayerListener implements Listener {
     public void onPlayerAdvancementDone(@NotNull PlayerAdvancementDoneEvent event) {
         event.message(null);
     }
+
+    @EventHandler
+    public void onBlockBreak(@NotNull BlockBreakEvent event) {
+        String material = event.getBlock().getBlockData().getMaterial().name().toLowerCase();
+        if (material.contains("diamond") || material.contains("netherite")) {
+            Logs.info("Gracz " + event.getPlayer().getName() + " wykopał " + material.toUpperCase() + "!");
+        }
+
+    }
+
+    @EventHandler
+    public void onPlayerPortal(@NotNull PlayerPortalEvent event) {
+        if (event.getCause() == PlayerTeleportEvent.TeleportCause.END_PORTAL && plugin.getConfig().getBoolean("block-end")) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onEntityPortal(@NotNull EntityPortalEvent event) {
+        if (event.getPortalType() == PortalType.ENDER && plugin.getConfig().getBoolean("block-end")) {
+            event.setCancelled(true);
+        }
+    }
+
 }
