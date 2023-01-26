@@ -1,11 +1,7 @@
 package me.matiego.st14.commands.minecraft;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.utils.CommandHandler;
-import me.matiego.st14.utils.GUI;
-import me.matiego.st14.utils.Logs;
-import me.matiego.st14.utils.Utils;
-import org.bukkit.Bukkit;
+import me.matiego.st14.utils.*;
 import org.bukkit.Difficulty;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -70,13 +66,13 @@ public class DifficultyCommand implements CommandHandler.Minecraft {
             return;
         }
         world.setDifficulty(difficulty);
-        player.sendMessage(Utils.getComponentByString("&aPomyślnie zmieniono poziom trudności na &2" + name + "&a."));
-        Bukkit.getOnlinePlayers().stream()
-                .filter(p -> !p.equals(player))
-                .filter(p -> p.getWorld().equals(world))
-                .forEach(p -> p.sendMessage(Utils.getComponentByString("&aGracz &2" + player.getName() + "&a zmienił poziom trudności na &2" + name + "&a.")));
-        if (!Main.getInstance().getIncognitoManager().isIncognito(player.getUniqueId())) {
-            Main.getInstance().getChatMinecraft().sendMessage("**[" + Utils.getWorldName(world) + "]** Gracz **" + player.getName() + "** zmienił poziom trudności na **" + name + "**.", "Poziom trudności");
-        }
+
+        Utils.broadcastMessage(
+                player,
+                Prefix.DIFFICULTY,
+                "&aPomyślnie zmieniono poziom trudności na &2" + name + "&a.",
+                "&aGracz &2" + player.getName() + "&a zmienił poziom trudności na &2" + name + "&a.",
+                "**[" + Utils.getWorldName(world) + "]** Gracz **" + player.getName() + "** zmienił poziom trudności na **" + name + "**."
+        );
     }
 }

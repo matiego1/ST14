@@ -50,7 +50,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
     public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         if (!(sender instanceof Player player) || (player.isOp() && args.length > 0)) {
             if (args.length < 2) {
-                sender.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "Poprawne użycie: /economy [add|remove|set|get] <gracz> <ilość*>"));
+                sender.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Poprawne użycie: /economy [add|remove|set|get] <gracz> <ilość*>"));
                 return 0;
             }
             Economy economy = plugin.getEconomy();
@@ -58,30 +58,30 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                 args[0] = args[0].toLowerCase();
                 if (args[0].equals("get")) {
                     if (args.length != 2) {
-                        sender.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "Poprawne użycie: /economy get <gracz>"));
+                        sender.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Poprawne użycie: /economy get <gracz>"));
                         return;
                     }
                     UUID uuid = plugin.getOfflinePlayers().getIdByName(args[1]);
                     if (uuid == null) {
-                        sender.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "&cTen gracz nie jest online."));
+                        sender.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cTen gracz nie jest online."));
                         return;
                     }
-                    sender.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "Gracz &9" + args[1] + "&b ma &9" + economy.format(economy.getBalance(Bukkit.getOfflinePlayer(uuid))) + "&b."));
+                    sender.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Gracz &9" + args[1] + "&b ma &9" + economy.format(economy.getBalance(Bukkit.getOfflinePlayer(uuid))) + "&b."));
                     return;
                 }
 
                 if (args.length != 3) {
-                    sender.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "Poprawne użycie: /economy [add|remove|set] <gracz> <ilość>"));
+                    sender.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Poprawne użycie: /economy [add|remove|set] <gracz> <ilość>"));
                     return;
                 }
                 if (!(args[0].equals("add") || args[0].equals("remove") || args[0].equals("set"))) {
-                    sender.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "Poprawne użycie: /economy [add|remove|set] <gracz> <ilość>"));
+                    sender.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Poprawne użycie: /economy [add|remove|set] <gracz> <ilość>"));
                     return;
                 }
 
                 UUID uuid = plugin.getOfflinePlayers().getIdByName(args[1]);
                 if (uuid == null) {
-                    sender.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "&cNieznany gracz."));
+                    sender.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNieznany gracz."));
                     return;
                 }
 
@@ -89,11 +89,11 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                 try {
                     amount = Double.parseDouble(args[2]);
                 } catch (Exception e) {
-                    sender.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "&cPodaj poprawną ilość pieniędzy."));
+                    sender.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cPodaj poprawną ilość pieniędzy."));
                     return;
                 }
                 if (amount < 0d) {
-                    sender.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "&cNie można ustawić ujemnej wartości."));
+                    sender.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNie można ustawić ujemnej wartości."));
                     return;
                 }
                 amount = Utils.round(amount, 2);
@@ -106,10 +106,10 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                 };
 
                 if (!response.transactionSuccess()) {
-                    sender.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "&cNapotkano niespodziewany błąd."));
+                    sender.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd."));
                     return;
                 }
-                sender.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "Pomyślnie zmieniono saldo konta gracza " + args[1] + " (" + uuid +") na " + economy.format(response.balance)));
+                sender.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie zmieniono saldo konta gracza " + args[1] + " (" + uuid +") na " + economy.format(response.balance)));
                 informPlayer(
                         uuid,
                         "[Administrator]",
@@ -126,10 +126,10 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
         } else {
             if (args.length != 0) return -1;
             if (!Main.getInstance().getConfig().getStringList("economy-worlds").contains(player.getWorld().getName())) {
-                Utils.async(() -> player.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "Saldo twojego konta: &9" + plugin.getEconomy().format(plugin.getEconomy().getBalance(player)))));
+                Utils.async(() -> player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Saldo twojego konta: &9" + plugin.getEconomy().format(plugin.getEconomy().getBalance(player)))));
                 return 5;
             }
-            Inventory inv = GUI.createInventory(9, Prefixes.ECONOMY + "Twoje konto");
+            Inventory inv = GUI.createInventory(9, Prefix.ECONOMY + "Twoje konto");
             inv.setItem(0, GUI.createGuiItem(Material.DISPENSER, "&9Przelew", "&bPrzelej pieniądze innemu graczowi"));
             inv.setItem(1, GUI.createGuiItem(Material.PAPER, "&9Wypłata", "&bWypłać pieniądze w postaci banknotu"));
             Utils.async(() -> inv.setItem(4, GUI.createGuiItem(Material.DIAMOND, "&9Saldo konta", "&b" + plugin.getEconomy().format(plugin.getEconomy().getBalance(player)))));
@@ -155,13 +155,13 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
 
     @Override
     public void onInventoryClick(@NotNull InventoryClickEvent event) {
-        if (!GUI.checkInventory(event, Prefixes.ECONOMY + "Twoje konto")) return;
+        if (!GUI.checkInventory(event, Prefix.ECONOMY + "Twoje konto")) return;
 
         Player player = (Player) event.getWhoClicked();
         int slot = event.getSlot();
         if (slot == 0) {
             new AnvilGUI.Builder()
-                    .title(ChatColor.translateAlternateColorCodes('&', Prefixes.ECONOMY + "Wpisz wartość"))
+                    .title(ChatColor.translateAlternateColorCodes('&', Prefix.ECONOMY + "Wpisz wartość"))
                     .text("Wpisz tutaj...")
                     .itemLeft(GUI.createGuiItem(Material.PAPER, "&9Wprowadź wartość...", "&bKliknij &9ESC&b, aby wyjść", "&bKliknij przedmiot po prawej, aby zaakceptować"))
                     .plugin(plugin)
@@ -189,7 +189,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                     .open(player);
         } else if (slot == 1) {
             new AnvilGUI.Builder()
-                    .title(ChatColor.translateAlternateColorCodes('&', Prefixes.ECONOMY + "Wpisz wartość"))
+                    .title(ChatColor.translateAlternateColorCodes('&', Prefix.ECONOMY + "Wpisz wartość"))
                     .text("Wpisz tutaj...")
                     .itemLeft(GUI.createGuiItem(Material.PAPER, "&9Wprowadź wartość...", "&bKliknij &9ESC&b, aby wyjść", "&bKliknij przedmiot po prawej, aby zaakceptować"))
                     .plugin(plugin)
@@ -212,7 +212,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                         }
                         EconomyResponse response = economy.withdrawPlayer(player, amount);
                         if (!response.transactionSuccess()) {
-                            player.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "&cNapotkano niespodziewany błąd. Spróbuj później."));
+                            player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd. Spróbuj później."));
                             return List.of(AnvilGUI.ResponseAction.close());
                         }
 
@@ -220,7 +220,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                         for (ItemStack item : drop.values()) {
                             player.getWorld().dropItem(player.getLocation().add(0, 0.5, 0), item);
                         }
-                        player.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "Pomyślnie wypłacono &9" + economy.format(amount) + "&b z twojego konta."));
+                        player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie wypłacono &9" + economy.format(amount) + "&b z twojego konta."));
                         return List.of(AnvilGUI.ResponseAction.close());
                     })
                     .open(player);
@@ -229,7 +229,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
 
     private void finishTransfer(@NotNull Player player, double amount) {
         new AnvilGUI.Builder()
-                .title(ChatColor.translateAlternateColorCodes('&', Prefixes.ECONOMY + "Podaj nick"))
+                .title(ChatColor.translateAlternateColorCodes('&', Prefix.ECONOMY + "Podaj nick"))
                 .text("Wpisz tutaj...")
                 .itemLeft(GUI.createGuiItem(Material.PAPER, "&9Podaj nick odbiorcy...", "&bKliknij &9ESC&b, aby wyjść", "&bKliknij przedmiot po prawej, aby zaakceptować"))
                 .plugin(plugin)
@@ -245,22 +245,22 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
 
                     Economy economy = plugin.getEconomy();
                     if (!economy.has(player, amount)) {
-                        player.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "&cBrak środków!"));
+                        player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cBrak środków!"));
                         return List.of(AnvilGUI.ResponseAction.close());
                     }
                     EconomyResponse r1 = economy.withdrawPlayer(player, amount);
                     if (!r1.transactionSuccess()) {
-                        player.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "&cNapotkano niespodziewany błąd. Spróbuj później."));
+                        player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd. Spróbuj później."));
                         return List.of(AnvilGUI.ResponseAction.close());
                     }
                     EconomyResponse r2 = economy.depositPlayer(Bukkit.getOfflinePlayer(target), amount);
                     if (!r2.transactionSuccess()) {
-                        player.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "&cNapotkano niespodziewany błąd. Zgłoś się do administratora, żeby odzyskać swoje pieniądze. Przepraszamy."));
+                        player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd. Zgłoś się do administratora, żeby odzyskać swoje pieniądze. Przepraszamy."));
                         Logs.warning("Gracz " + player.getName() + " (" + player.getUniqueId() + ") stracił " + economy.format(amount) + " ze swojego konta! Kwota musi być przywrócona ręcznie.");
                         return List.of(AnvilGUI.ResponseAction.close());
                     }
 
-                    player.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "Pomyślnie przelano " + economy.format(amount) + " graczowi " + completion.getText() + "."));
+                    player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie przelano " + economy.format(amount) + " graczowi " + completion.getText() + "."));
                     informPlayer(target, player.getName(), amount, Type.ADD);
                     return List.of(AnvilGUI.ResponseAction.close());
                 })
@@ -285,16 +285,16 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
         AccountsManager manager = plugin.getAccountsManager();
         Utils.async(() -> {
             if (!manager.isLinked(user)) {
-                hook.sendMessage(Prefixes.ECONOMY.getDiscord() + "Twoje konto nie jest jeszcze połączone z kontem minecraft! Aby je połączyć, użyj komendy `/accounts` w grze.").queue();
+                hook.sendMessage(Prefix.ECONOMY.getDiscord() + "Twoje konto nie jest jeszcze połączone z kontem minecraft! Aby je połączyć, użyj komendy `/accounts` w grze.").queue();
                 return;
             }
             UUID uuid = manager.getPlayerByUser(user);
             if (uuid == null) {
-                hook.sendMessage(Prefixes.ECONOMY.getDiscord() + "Napotkano niespodziewany błąd. Spróbuj później.").queue();
+                hook.sendMessage(Prefix.ECONOMY.getDiscord() + "Napotkano niespodziewany błąd. Spróbuj później.").queue();
                 return;
             }
             Economy economy = plugin.getEconomy();
-            hook.sendMessage(Prefixes.ECONOMY.getDiscord() + "Saldo twojego konta: `" + economy.format(economy.getBalance(Bukkit.getOfflinePlayer(uuid))) + "`").queue();
+            hook.sendMessage(Prefix.ECONOMY.getDiscord() + "Saldo twojego konta: `" + economy.format(economy.getBalance(Bukkit.getOfflinePlayer(uuid))) + "`").queue();
         });
         return 5;
     }
@@ -302,7 +302,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
     private void informPlayer(@NotNull UUID uuid, @NotNull String executor, double amount, @NotNull Type type) {
         Player player = Bukkit.getPlayer(uuid);
         if (player != null) {
-            player.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + switch (type) {
+            player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + switch (type) {
                 case ADD -> "Na twoje konto zostało przelane &9" + plugin.getEconomy().format(amount) + "&b przez &9" + executor + "&b.";
                 case REMOVE -> "Z twojego konta zostało zabrane &9" + plugin.getEconomy().format(amount) + "&b przez &9" + executor + "&b.";
                 case SET -> "Saldo twojego konta zostało ustawione na &9" + plugin.getEconomy().format(amount) + "&b przez &9" + executor + "&b.";
@@ -316,7 +316,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
             JDA jda = plugin.getJda();
             if (jda == null) return;
             jda.retrieveUserById(id.getId()).queue(
-                    user -> DiscordUtils.sendPrivateMessage(user, Prefixes.ECONOMY.getDiscord() + switch (type) {
+                    user -> DiscordUtils.sendPrivateMessage(user, Prefix.ECONOMY.getDiscord() + switch (type) {
                         case ADD -> "Na twoje konto zostało przelane **" + plugin.getEconomy().format(amount) + "** przez **" + executor + "**.";
                         case REMOVE -> "Z twojego konta zostało zabrane **" + plugin.getEconomy().format(amount) + "** przez **" + executor + "**.";
                         case SET -> "Saldo twojego konta zostało ustawione na **" + plugin.getEconomy().format(amount) + "** przez **" + executor + "**.";

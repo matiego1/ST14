@@ -52,21 +52,21 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
             Utils.async(() -> {
                 UUID uuid = plugin.getOfflinePlayers().getIdByName(args[0]);
                 if (uuid == null) {
-                    sender.sendMessage(Utils.getComponentByString(Prefixes.TIME + "&cNieznany gracz."));
+                    sender.sendMessage(Utils.getComponentByString(Prefix.TIME + "&cNieznany gracz."));
                     return;
                 }
                 PlayerTime time = plugin.getTimeManager().retrieveTime(uuid);
                 if (time == null) {
-                    sender.sendMessage(Utils.getComponentByString(Prefixes.TIME + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
+                    sender.sendMessage(Utils.getComponentByString(Prefix.TIME + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
                     return;
                 }
                 sender.sendMessage(Utils.getComponentByString(
-                        Prefixes.TIME + "&6==============================\n" +
-                        Prefixes.TIME + "&6&lCzasy gracza &6" + args[0] + "&e:\n" +
-                        Prefixes.TIME + "&6Aktualny czas&e: " + formatMinecraft(time.getCurrent(), false) + "\n" +
-                        Prefixes.TIME + "&6Czas dzienny &e: " + formatMinecraft(time.getDaily(), false) + "\n" +
-                        Prefixes.TIME + "&6Łączny czas  &e: " + formatMinecraft(time.getTotal(), false) + "\n" +
-                        Prefixes.TIME + "&6=============================="
+                        Prefix.TIME + "&6==============================\n" +
+                        Prefix.TIME + "&6&lCzasy gracza &6" + args[0] + "&e:\n" +
+                        Prefix.TIME + "&6Aktualny czas&e: " + formatMinecraft(time.getSession(), false) + "\n" +
+                        Prefix.TIME + "&6Czas dzienny &e: " + formatMinecraft(time.getDaily(), false) + "\n" +
+                        Prefix.TIME + "&6Łączny czas  &e: " + formatMinecraft(time.getTotal(), false) + "\n" +
+                        Prefix.TIME + "&6=============================="
                 ));
             });
             return 5;
@@ -78,16 +78,16 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
         Utils.async(() -> {
             PlayerTime time = plugin.getTimeManager().retrieveTime(player.getUniqueId());
             if (time == null) {
-                player.sendMessage(Utils.getComponentByString(Prefixes.TIME + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
+                player.sendMessage(Utils.getComponentByString(Prefix.TIME + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
                 return;
             }
             player.sendMessage(Utils.getComponentByString(
-                    Prefixes.TIME + "&6==============================\n" +
-                    Prefixes.TIME + "&6&lTwoje czasy:\n" +
-                    Prefixes.TIME + "&6Aktualny czas&e: " + formatMinecraft(time.getCurrent(), true) + "\n" +
-                    Prefixes.TIME + "&6Czas dzienny &e: " + formatMinecraft(time.getDaily(), true) + "\n" +
-                    Prefixes.TIME + "&6Łączny czas  &e: " + formatMinecraft(time.getTotal(), true) + "\n" +
-                    Prefixes.TIME + "&6=============================="
+                    Prefix.TIME + "&6==============================\n" +
+                    Prefix.TIME + "&6&lTwoje czasy:\n" +
+                    Prefix.TIME + "&6Aktualny czas&e: " + formatMinecraft(time.getSession(), true) + "\n" +
+                    Prefix.TIME + "&6Czas dzienny &e: " + formatMinecraft(time.getDaily(), true) + "\n" +
+                    Prefix.TIME + "&6Łączny czas  &e: " + formatMinecraft(time.getTotal(), true) + "\n" +
+                    Prefix.TIME + "&6=============================="
             ));
         });
     }
@@ -128,9 +128,9 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
             EmbedBuilder eb = new EmbedBuilder();
             eb.setTitle(self ? "Twoje czasy gry" : "Czasy gry " + name);
             if (self) {
-                eb.addField("Aktualny czas", time.getCurrent().equals(new GameTime(0, 0, 0)) ? "Gracz jest offline" : formatDiscord(time.getCurrent(), true), false);
+                eb.addField("Aktualny czas", time.getSession().equals(GameTime.empty()) ? "Gracz jest offline" : formatDiscord(time.getSession(), true), false);
             } else {
-                eb.addField("Aktualny czas", time.getFakeCurrent().equals(new GameTime(0, 0, 0)) ? "Gracz jest offline" : formatDiscord(time.getCurrent(), false), false);
+                eb.addField("Aktualny czas", time.getFakeSession().equals(GameTime.empty()) ? "Gracz jest offline" : formatDiscord(time.getFakeSession(), false), false);
             }
             eb.addField("Czas dzienny", formatDiscord(time.getDaily(), self), false);
             eb.addField("Łączny czas", formatDiscord(time.getTotal(), self), false);

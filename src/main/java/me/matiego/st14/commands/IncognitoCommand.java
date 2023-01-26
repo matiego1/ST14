@@ -29,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -46,6 +47,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
 
     private final Material BLOCK_ON = Material.LIME_WOOL;
     private final Material BLOCK_OFF = Material.RED_WOOL;
+    private final HashMap<UUID, Boolean> inventory = new HashMap<>();
 
     @Override
     public @NotNull CommandData getDiscordCommand() {
@@ -60,16 +62,18 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
     @Override
     public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(Utils.getComponentByString(Prefixes.INCOGNITO + "&cTej komendy może użyć tylko gracz."));
+            sender.sendMessage(Utils.getComponentByString(Prefix.INCOGNITO + "&cTej komendy może użyć tylko gracz."));
             return 0;
         }
         if (args.length != 0) return -1;
         IncognitoManager manager = plugin.getIncognitoManager();
-        Inventory inv = GUI.createInventory(18, Prefixes.INCOGNITO + "Ustawienia");
+        Inventory inv = GUI.createInventory(18, Prefix.INCOGNITO + "Ustawienia");
         inv.setItem(2, GUI.createGuiItem(Material.NAME_TAG, "&8Zaufaj graczowi", "&7Kliknij, aby zaufać nowemu graczowi!"));
         if (manager.isIncognito(player.getUniqueId())) {
+            inventory.put(player.getUniqueId(), true);
             inv.setItem(4, GUI.createGuiItem(BLOCK_ON,  "&8Tryb incognito", "&7Status: &aON", "&7Kliknij, aby zmienić"));
         } else {
+            inventory.put(player.getUniqueId(), false);
             inv.setItem(4, GUI.createGuiItem(BLOCK_OFF,  "&8Tryb incognito", "&7Status: &cOFF", "&7Kliknij, aby zmienić"));
         }
         Utils.async(() -> {
@@ -102,7 +106,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
 
     @Override
     public void onInventoryClick(@NotNull InventoryClickEvent event) {
-        if (!GUI.checkInventory(event, Prefixes.INCOGNITO + "Ustawienia")) return;
+        if (!GUI.checkInventory(event, Prefix.INCOGNITO + "Ustawienia")) return;
 
         Player player = (Player) event.getWhoClicked();
         UUID uuid = player.getUniqueId();
@@ -113,11 +117,11 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
         Objects.requireNonNull(item); //already checked in GUI#checkInventory()
 
         if (slot == 4) {
-            if (manager.isIncognito(uuid)) {
-                manager.setIncognito(uuid, false);
+            if (item.getType() == BLOCK_ON) {
+                inventory.put(uuid, false);
                 inv.setItem(4, GUI.createGuiItem(BLOCK_OFF,  "&8Tryb incognito", "&7Status: &cOFF", "&7Kliknij, aby zmienić"));
             } else {
-                manager.setIncognito(uuid, true);
+                inventory.put(uuid, true);
                 inv.setItem(4, GUI.createGuiItem(BLOCK_ON,  "&8Tryb incognito", "&7Status: &aON", "&7Kliknij, aby zmienić"));
             }
         } else if (slot == 6) {
@@ -132,7 +136,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
             }
         } else if (slot == 2) {
             new AnvilGUI.Builder()
-                    .title(ChatColor.translateAlternateColorCodes('&', Prefixes.INCOGNITO + "Podaj nick gracza"))
+                    .title(ChatColor.translateAlternateColorCodes('&', Prefix.INCOGNITO + "Podaj nick gracza"))
                     .text("Podaj nick...")
                     .itemLeft(GUI.createGuiItem(Material.PAPER, "&8Wprowadź nick gracza...", "&7Kliknij &8ESC&7, aby wyjść", "&7Kliknij przedmiot po prawej, aby zaakceptować"))
                     .plugin(plugin)
@@ -146,7 +150,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
                             return List.of(AnvilGUI.ResponseAction.replaceInputText("To twój nick!"));
                         }
                         Utils.async(() -> manager.addTrustedPlayer(uuid, trustedUuid));
-                        player.sendMessage(Utils.getComponentByString(Prefixes.INCOGNITO + "Pomyślnie zaufano nowemu graczowi"));
+                        player.sendMessage(Utils.getComponentByString(Prefix.INCOGNITO + "Pomyślnie zaufano nowemu graczowi"));
                         return List.of(AnvilGUI.ResponseAction.close());
                     })
                     .open(player);
@@ -154,7 +158,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
             if (item.getType() == Material.BARRIER) return;
             UUID trustedUuid = plugin.getOfflinePlayers().getIdByName(PlainTextComponentSerializer.plainText().serialize(Objects.requireNonNull(item.getItemMeta().displayName())));
             if (trustedUuid == null) {
-                player.sendMessage(Utils.getComponentByString(Prefixes.INCOGNITO + "Napotkano niespodziewany błąd. Spróbuj później."));
+                player.sendMessage(Utils.getComponentByString(Prefix.INCOGNITO + "Napotkano niespodziewany błąd. Spróbuj później."));
                 player.closeInventory();
                 return;
             }
@@ -162,6 +166,12 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
                 if (manager.removeTrustedPlayer(uuid, trustedUuid)) updateTrustedPlayers(manager.getTrustedPlayers(uuid), inv);
             });
         }
+    }
+
+    public void onInventoryClose(@NotNull UUID uuid) {
+        Boolean value = inventory.get(uuid);
+        if (value == null) return;
+        plugin.getIncognitoManager().setIncognito(uuid, value);
     }
 
     @Override

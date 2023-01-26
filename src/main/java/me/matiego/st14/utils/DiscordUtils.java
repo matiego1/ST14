@@ -210,13 +210,18 @@ public class DiscordUtils {
         return attachment.getProxy().download().get();
     }
 
+    private static final FixedSizeMap<Long, Long> privateMessages = new FixedSizeMap<>(100);
     public static void sendPrivateMessage(@NotNull User user, @NotNull String message) {
         user.openPrivateChannel().queue(
                 privateChannel -> privateChannel.sendMessage(checkLength(message, Message.MAX_CONTENT_LENGTH)).queue(
                         success -> {},
                         failure -> {
                             if (failure instanceof ErrorResponseException e && e.getErrorCode() == 50007) {
-                                Logs.warning("User " + user.getAsTag() + " doesn't allow private messages.");
+                                long now = Utils.now();
+                                if (now - privateMessages.getOrDefault(user.getIdLong(), 0L) >= 15 * 60 * 1000L) {
+                                    Logs.warning("User " + user.getAsTag() + " doesn't allow private messages.");
+                                    privateMessages.put(user.getIdLong(), now);
+                                }
                             } else {
                                 Logs.error("An error occurred while sending a private message.", failure);
                             }

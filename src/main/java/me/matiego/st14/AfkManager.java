@@ -2,7 +2,7 @@ package me.matiego.st14;
 
 import me.matiego.st14.utils.GameTime;
 import me.matiego.st14.utils.PlayerTime;
-import me.matiego.st14.utils.Prefixes;
+import me.matiego.st14.utils.Prefix;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -32,33 +32,31 @@ public class AfkManager {
     private void setAfk(@NotNull Player player, boolean value) {
         if (isAfk(player) == value) return;
         if (value) {
-            broadcastMessage(player, "Jesteś AFK!", "Gracz " + player.getName() + " jest AFK!", "Gracz **" + player.getName() + "** jest AFK!");
+            Utils.broadcastMessage(
+                    player,
+                    Prefix.AFK,
+                    "Jesteś AFK!",
+                    "Gracz " + player.getName() + " jest AFK!",
+                    "Gracz **" + player.getName() + "** jest AFK!"
+            );
             lastMove.remove(player);
             afk.add(player);
 
             PlayerTime time = plugin.getTimeManager().getTime(player.getUniqueId());
             if (time != null && time.getType() == GameTime.Type.NORMAL) time.setType(GameTime.Type.AFK);
         } else {
-            broadcastMessage(player, "Już nie jesteś AFK!", "Gracz " + player.getName() + " już nie jest AFK!", "Gracz **" + player.getName() + "** już nie jest AFK!");
+            Utils.broadcastMessage(
+                    player,
+                    Prefix.AFK,
+                    "Już nie jesteś AFK!",
+                    "Gracz " + player.getName() + " już nie jest AFK!",
+                    "Gracz **" + player.getName() + "** już nie jest AFK!"
+            );
             afk.remove(player);
 
             PlayerTime time = plugin.getTimeManager().getTime(player.getUniqueId());
             if (time != null && time.getType() == GameTime.Type.AFK) time.setType(GameTime.Type.NORMAL);
         }
-    }
-
-    private void broadcastMessage(@NotNull Player player, @NotNull String self, @NotNull String others, @NotNull String discord) {
-        Utils.async(() -> {
-            player.sendMessage(Utils.getComponentByString(Prefixes.AFK + self));
-
-            Bukkit.getOnlinePlayers().stream()
-                    .filter(p -> !p.equals(player))
-                    .forEach(p -> p.sendMessage(Utils.getComponentByString(Prefixes.AFK + others)));
-            Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString(Prefixes.AFK + others));
-
-            if (plugin.getIncognitoManager().isIncognito(player.getUniqueId())) return;
-            plugin.getChatMinecraft().sendMessage(discord, Prefixes.AFK.getDiscord());
-        });
     }
 
     public synchronized void move(@NotNull Player player) {

@@ -3,17 +3,13 @@ package me.matiego.st14.commands.minecraft;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.CommandHandler;
 import me.matiego.st14.utils.Logs;
-import me.matiego.st14.utils.Prefixes;
+import me.matiego.st14.utils.Prefix;
 import me.matiego.st14.utils.Utils;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.HashMap;
-import java.util.UUID;
 
 public class SuicideCommand implements CommandHandler.Minecraft {
     public SuicideCommand() {
@@ -23,7 +19,6 @@ public class SuicideCommand implements CommandHandler.Minecraft {
         }
     }
     private final PluginCommand command;
-    private final HashMap<UUID, Long> suicides = new HashMap<>();
 
     @Override
     public @Nullable PluginCommand getMinecraftCommand() {
@@ -33,28 +28,19 @@ public class SuicideCommand implements CommandHandler.Minecraft {
     @Override
     public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(Utils.getComponentByString(Prefixes.SUICIDE + "Tej komendy może użyć tylko gracz"));
+            sender.sendMessage(Utils.getComponentByString(Prefix.SUICIDE + "Tej komendy może użyć tylko gracz"));
             return 0;
         }
-        suicides.put(player.getUniqueId(), Utils.now());
+        Main.getInstance().getGravesListener().unprotectNextGrave(player.getUniqueId());
         player.setHealth(0);
 
-        player.sendMessage(Utils.getComponentByString(Prefixes.SUICIDE + "&cPopełniłeś samobójstwo! Twój grób nie jest zabezpieczony."));
-        Utils.async(() -> {
-            Bukkit.getOnlinePlayers().stream()
-                    .filter(p -> !p.equals(player))
-                    .forEach(p -> p.sendMessage(Utils.getComponentByString(Prefixes.SUICIDE + player.getName() + " popełnił samobójstwo!")));
-            Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString(Prefixes.SUICIDE + player.getName() + " popełnił samobójstwo!"));
-
-            if (Main.getInstance().getIncognitoManager().isIncognito(player.getUniqueId())) return;
-            Main.getInstance().getChatMinecraft().sendMessage("**" + player.getName() + "** popełnił samobójstwo!" , Prefixes.SUICIDE.getDiscord());
-        });
+        Utils.broadcastMessage(
+                player,
+                Prefix.SUICIDE,
+                "&cPopełniłeś samobójstwo! Twój grób nie jest zabezpieczony.",
+                "Gracz " + player.getName() + " popełnił samobójstwo!",
+                "Gracz **" + player.getName() + "** popełnił samobójstwo!"
+        );
         return 60;
-    }
-
-    public synchronized boolean isSuicide(@NotNull UUID uuid) {
-        Long time = suicides.remove(uuid);
-        if (time == null) return false;
-        return (Utils.now() - time) <= 3000;
     }
 }

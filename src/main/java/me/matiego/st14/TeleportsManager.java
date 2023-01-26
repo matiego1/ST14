@@ -48,6 +48,10 @@ public class TeleportsManager implements Listener {
                                 result.complete(Response.CANCELLED);
                                 return;
                             }
+                            if (Main.getInstance().getAntyLogoutManager().isInAntyLogout(player)) {
+                                result.complete(Response.CANCELLED);
+                                return;
+                            }
                             if (!location.get(player.getUniqueId()).equals(player.getLocation())) {
                                 result.complete(Response.MOVE);
                                 return;

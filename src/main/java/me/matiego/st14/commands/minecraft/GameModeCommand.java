@@ -1,10 +1,7 @@
 package me.matiego.st14.commands.minecraft;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.utils.CommandHandler;
-import me.matiego.st14.utils.GUI;
-import me.matiego.st14.utils.Logs;
-import me.matiego.st14.utils.Utils;
+import me.matiego.st14.utils.*;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
@@ -72,13 +69,13 @@ public class GameModeCommand implements CommandHandler.Minecraft {
             return;
         }
         player.setGameMode(gameMode);
-        player.sendMessage(Utils.getComponentByString("&aPomyślnie zmieniono twój tryb gry na &2" + name + "&a."));
-        Bukkit.getOnlinePlayers().stream()
-                .filter(p -> !p.equals(player))
-                .filter(p -> p.getWorld().equals(player.getWorld()))
-                .forEach(p -> p.sendMessage(Utils.getComponentByString("&aGracz &2" + player.getName() + "&a zmienił swój tryb gry na &2" + name + "&a.")));
-        if (!Main.getInstance().getIncognitoManager().isIncognito(player.getUniqueId())) {
-            Main.getInstance().getChatMinecraft().sendMessage("**[" + Utils.getWorldName(player.getWorld()) + "]** Gracz **" + player.getName() + "** zmienił swój tryb gry na **" + name + "**.", "Tryb gry");
-        }
+
+        Utils.broadcastMessage(
+                player,
+                Prefix.GAMEMODE,
+                "&aPomyślnie zmieniono twój tryb gry na &2" + name + "&a.",
+                "&aGracz &2" + player.getName() + "&a zmienił swój tryb gry na &2" + name + "&a.",
+                "**[" + Utils.getWorldName(player.getWorld()) + "]** Gracz **" + player.getName() + "** zmienił swój tryb gry na **" + name + "**."
+        );
     }
 }

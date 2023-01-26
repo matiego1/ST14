@@ -25,7 +25,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 public class WorldsCommand implements CommandHandler.Minecraft {
     private final Main plugin;
@@ -47,14 +46,14 @@ public class WorldsCommand implements CommandHandler.Minecraft {
     @Override
     public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(Utils.getComponentByString(Prefixes.WORLDS + "&dTej komendy może użyć tylko gracz."));
+            sender.sendMessage(Utils.getComponentByString(Prefix.WORLDS + "&dTej komendy może użyć tylko gracz."));
             return 0;
         }
 
         World world = player.getWorld();
         World.Environment env = world.getEnvironment();
         if (env == World.Environment.NETHER || env == World.Environment.THE_END) {
-            player.sendMessage(Utils.getComponentByString(Prefixes.WORLDS + "&dNie możesz się teleportować z netheru i endu"));
+            player.sendMessage(Utils.getComponentByString(Prefix.WORLDS + "&dNie możesz się teleportować z netheru i endu"));
             return 5;
         }
 
@@ -69,13 +68,13 @@ public class WorldsCommand implements CommandHandler.Minecraft {
         }
 
         if (worlds.isEmpty()) {
-            player.sendMessage(Utils.getComponentByString(Prefixes.WORLDS + "&dNie znaleziono światów do których możesz się przenieść."));
+            player.sendMessage(Utils.getComponentByString(Prefix.WORLDS + "&dNie znaleziono światów do których możesz się przenieść."));
             return 5;
         }
         worlds = worlds.subList(0, Math.min(worlds.size(), 54));
 
         int slots = worlds.size() / 9 * 9 == worlds.size() ? worlds.size() : (worlds.size() / 9 + 1) * 9;
-        Inventory inv = GUI.createInventory(slots, Prefixes.WORLDS + "Wybierz świat");
+        Inventory inv = GUI.createInventory(slots, Prefix.WORLDS + "Wybierz świat");
         for (Pair<World, Material> pair : worlds) {
             inv.addItem(GUI.createGuiItem(pair.getSecond(), "&d" + Utils.getWorldName(pair.getFirst()), "Kliknij, aby wybrać"));
         }
@@ -86,7 +85,7 @@ public class WorldsCommand implements CommandHandler.Minecraft {
 
     @Override
     public void onInventoryClick(@NotNull InventoryClickEvent event) {
-        if (!GUI.checkInventory(event, Prefixes.WORLDS + "Wybierz świat")) return;
+        if (!GUI.checkInventory(event, Prefix.WORLDS + "Wybierz świat")) return;
 
         Player player = (Player) event.getWhoClicked();
         String name = getItemName(event.getCurrentItem());
@@ -100,60 +99,52 @@ public class WorldsCommand implements CommandHandler.Minecraft {
             }
         }
         if (target == null) {
-            player.sendMessage(Utils.getComponentByString(Prefixes.WORLDS + "&dNapotkano niespodziewany błąd. Spróbuj ponownie."));
+            player.sendMessage(Utils.getComponentByString(Prefix.WORLDS + "&dNapotkano niespodziewany błąd. Spróbuj ponownie."));
             return;
         }
         if (target.equals(player.getWorld())) {
-            player.sendMessage(Utils.getComponentByString(Prefixes.WORLDS + "&dJuż jesteś w tym świecie."));
+            player.sendMessage(Utils.getComponentByString(Prefix.WORLDS + "&dJuż jesteś w tym świecie."));
             return;
         }
         if (!hasPermission(player, target)) {
-            player.sendMessage(Utils.getComponentByString(Prefixes.WORLDS + "&dNie masz uprawnień, aby przenieść się do tego świata."));
+            player.sendMessage(Utils.getComponentByString(Prefix.WORLDS + "&dNie masz uprawnień, aby przenieść się do tego świata."));
             return;
         }
 
         if (plugin.getTeleportsManager().isAlreadyActive(player)) {
-            player.sendMessage(Utils.getComponentByString(Prefixes.WORLDS + "&dProces teleportowania już został rozpoczęty"));
+            player.sendMessage(Utils.getComponentByString(Prefix.WORLDS + "&dProces teleportowania już został rozpoczęty"));
             return;
         }
 
-        player.sendMessage(Utils.getComponentByString(Prefixes.WORLDS + "Zostaniesz przeteleportowany za 5 sekund. Nie ruszaj się!"));
+        player.sendMessage(Utils.getComponentByString(Prefix.WORLDS + "Zostaniesz przeteleportowany za 5 sekund. Nie ruszaj się!"));
 
         setLastLocation(player.getUniqueId(), player.getLocation());
         Location loc = getLastLocation(player.getUniqueId(), target);
         Location finalLoc = loc == null ? target.getSpawnLocation() : loc;
         Utils.async(() -> {
             try {
-                player.sendMessage(Utils.getComponentByString(Prefixes.WORLDS +
-                        switch (plugin.getTeleportsManager().teleport(player, finalLoc, 5, () -> hasPermission(player, finalLoc.getWorld())).get(6, TimeUnit.SECONDS)) {
-                            case SUCCESS -> broadcastMessage(
-                                    player,
-                                    "Gracz &1" + player.getName() + "&3 przeszedł do świata &1" + Utils.getWorldName(finalLoc.getWorld()) + "&3!",
-                                    "Gracz **" + player.getName() + "** przeszedł do świata **" + Utils.getWorldName(finalLoc.getWorld()) + "**!"
-                            );
-                            case MOVE -> "&dTeleportowanie anulowane, poruszyłeś się.";
-                            case ALREADY_ACTIVE -> "&dProces teleportowania już został rozpoczęty.";
-                            case CANCELLED -> "&dNie masz uprawnień, aby przenieść się do tego świata.";
-                            case FAILURE -> "&dNapotkano niespodziewany błąd. Spróbuj ponownie.";
-                        }
-                ));
+                String msg = switch (plugin.getTeleportsManager().teleport(player, finalLoc, 5, () -> hasPermission(player, finalLoc.getWorld())).get()) {
+                    case SUCCESS -> null;
+                    case MOVE -> "&dTeleportowanie anulowane, poruszyłeś się.";
+                    case ALREADY_ACTIVE -> "&dProces teleportowania już został rozpoczęty.";
+                    case CANCELLED -> "&dNie masz uprawnień, aby przenieść się do tego świata.";
+                    case FAILURE -> "&dNapotkano niespodziewany błąd. Spróbuj ponownie.";
+                };
+                if (msg == null) {
+                    Utils.broadcastMessage(
+                            player,
+                            Prefix.WORLDS,
+                            "Przeteleportowano pomyślnie.",
+                            "Gracz &1" + player.getName() + "&3 przeszedł do świata &1" + Utils.getWorldName(finalLoc.getWorld()) + "&3!",
+                            "Gracz **" + player.getName() + "** przeszedł do świata **" + Utils.getWorldName(finalLoc.getWorld()) + "**!"
+                    );
+                    return;
+                }
+                player.sendMessage(Utils.getComponentByString(msg));
             } catch (Exception e) {
-                player.sendMessage(Utils.getComponentByString(Prefixes.WORLDS + "&dNapotkano niespodziewany błąd! Spróbuj ponownie."));
+                player.sendMessage(Utils.getComponentByString(Prefix.WORLDS + "&dNapotkano niespodziewany błąd! Spróbuj ponownie."));
             }
         });
-    }
-
-    private @NotNull String broadcastMessage(@NotNull Player player, @NotNull String others, @NotNull String discord) {
-        Utils.async(() -> {
-            Bukkit.getOnlinePlayers().stream()
-                    .filter(p -> !p.equals(player))
-                    .forEach(p -> p.sendMessage(Utils.getComponentByString(Prefixes.WORLDS + others)));
-            Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString(Prefixes.WORLDS + others));
-
-            if (plugin.getIncognitoManager().isIncognito(player.getUniqueId())) return;
-            plugin.getChatMinecraft().sendMessage(discord, Prefixes.WORLDS.getDiscord());
-        });
-        return "Przeteleportowano pomyślnie.";
     }
 
     private boolean hasPermission(@NotNull Player player, @NotNull World world) {

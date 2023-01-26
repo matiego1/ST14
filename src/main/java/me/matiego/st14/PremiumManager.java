@@ -77,7 +77,7 @@ public class PremiumManager {
         for (Player player : players) {
             PlayerTime playerTime = plugin.getTimeManager().getTime(player.getUniqueId());
             if (playerTime == null) continue;
-            GameTime gameTime = playerTime.getCurrent();
+            GameTime gameTime = playerTime.getSession();
             long time = gameTime.getNormal() + gameTime.getAfk() + gameTime.getIncognito();
             if (time > max) {
                 max = time;
@@ -90,13 +90,13 @@ public class PremiumManager {
     }
 
     private void kickPlayer(@NotNull Player player) {
-        player.sendMessage(Utils.getComponentByString(Prefixes.PREMIUM + "Za 10 sekund zostaniesz wyrzucony z serwera, żeby zrobić miejsce innemu graczowi."));
+        player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Za 10 sekund zostaniesz wyrzucony z serwera, żeby zrobić miejsce innemu graczowi."));
         player.showTitle(Title.title(Utils.getComponentByString("&6UWAGA!"), Utils.getComponentByString("&ePRZECZYTAJ CZAT")));
         player.playSound(player, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.NEUTRAL, 5, 1);
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (!player.isOnline()) return;
-            player.kick(Utils.getComponentByString(Prefixes.PREMIUM + "Zostałeś wyrzucony z serwera, żeby zrobić miejsce graczowi z wyższym priorytetem. Wybór padł na ciebie, ponieważ grałeś dzisiaj najdłużej."));
-            plugin.getChatMinecraft().sendMessage("Gracz **" + player.getName() + "** został wyrzucony z serwera, żeby zrobić miejsce graczowi z wyższym priorytetem.", Prefixes.PREMIUM.getDiscord());
+            player.kick(Utils.getComponentByString(Prefix.PREMIUM + "Zostałeś wyrzucony z serwera, żeby zrobić miejsce graczowi z wyższym priorytetem. Wybór padł na ciebie, ponieważ grałeś dzisiaj najdłużej."));
+            plugin.getChatMinecraft().sendMessage("Gracz **" + player.getName() + "** został wyrzucony z serwera, żeby zrobić miejsce graczowi z wyższym priorytetem.", Prefix.PREMIUM.getDiscord());
         }, 200);
     }
 

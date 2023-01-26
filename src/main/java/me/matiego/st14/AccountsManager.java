@@ -4,6 +4,7 @@ import me.matiego.st14.utils.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.UserSnowflake;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
@@ -97,6 +98,7 @@ public class AccountsManager {
         if (NonPremiumUtils.isNonPremiumUuid(uuid) && NonPremiumUtils.getIdByNonPremiumUuid(uuid) != id.getIdLong()) {
             throw new IllegalArgumentException("tried to link a non-premium uuid to another Discord account");
         }
+        if (hasBannedRole(id)) return false;
         if (!modifyRole(id, true)) return false;
         try (Connection conn = plugin.getConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_accounts(uuid, id) VALUES (?, ?) ON DUPLICATE KEY UPDATE uuid = ?, id = ?")) {
@@ -108,7 +110,7 @@ public class AccountsManager {
 
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) {
-                player.sendMessage(Utils.getComponentByString(Prefixes.DISCORD + "Pomyślnie połączono to konto z kontem Discord!"));
+                player.sendMessage(Utils.getComponentByString(Prefix.DISCORD + "Pomyślnie połączono to konto z kontem Discord!"));
             }
 
             String playerName = plugin.getOfflinePlayers().getEffectiveNameById(uuid);
@@ -147,7 +149,7 @@ public class AccountsManager {
             stmt.setString(1, uuid.toString());
             if (stmt.executeUpdate() > 0) {
                 Player player = Bukkit.getPlayer(uuid);
-                if (player != null && isRequired(uuid)) Utils.sync(() -> player.kick(Utils.getComponentByString(Prefixes.DISCORD + "Twoje konto zostało rozłączone z kontem Discord!")));
+                if (player != null && isRequired(uuid)) Utils.sync(() -> player.kick(Utils.getComponentByString(Prefix.DISCORD + "Twoje konto zostało rozłączone z kontem Discord!")));
                 logUnlink(plugin.getOfflinePlayers().getEffectiveNameById(uuid));
                 return true;
             }
@@ -178,6 +180,25 @@ public class AccountsManager {
         return false;
     }
 
+    private boolean hasBannedRole(@NotNull UserSnowflake id) {
+        JDA jda = plugin.getJda();
+        if (jda == null) return false;
+
+        Guild guild = jda.getGuildById(plugin.getConfig().getLong("discord.guild-id"));
+        if (guild == null) return false;
+
+        Role role = guild.getRoleById(plugin.getConfig().getLong("discord.role-ids.banned"));
+        if (role == null) {
+            Logs.warning("A banned-role-id in the config file is not correct.");
+            return false;
+        }
+
+        Member member = guild.retrieveMember(id).complete();
+        if (member == null) return false;
+
+        return member.getRoles().contains(role);
+    }
+
     private boolean modifyRole(@NotNull UserSnowflake id, boolean add) {
         JDA jda = plugin.getJda();
         if (jda == null) return false;
@@ -188,9 +209,9 @@ public class AccountsManager {
             return false;
         }
 
-        Role role = guild.getRoleById(plugin.getConfig().getLong("discord.role-id"));
+        Role role = guild.getRoleById(plugin.getConfig().getLong("discord.role-ids.player"));
         if (role == null) {
-            Logs.warning("A role id in the config file is not correct.");
+            Logs.warning("A player-role-id in the config file is not correct.");
             return false;
         }
 

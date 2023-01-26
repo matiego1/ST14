@@ -35,10 +35,10 @@ public class IncognitoManager {
         if (value) {
             if (player != null) {
                 if (plugin.getAfkManager().isAfk(player)) {
-                    plugin.getChatMinecraft().sendMessage("Gracz **" + player.getName() + "** już nie jest AFK!", Prefixes.AFK.getDiscord());
+                    plugin.getChatMinecraft().sendMessage("Gracz **" + player.getName() + "** już nie jest AFK!", Prefix.AFK.getDiscord());
                 }
                 plugin.getChatMinecraft().sendFakeQuitMessage(player);
-                player.sendMessage(Utils.getComponentByString(Prefixes.INCOGNITO + "Jesteś incognito!"));
+                player.sendMessage(Utils.getComponentByString(Prefix.INCOGNITO + "Jesteś incognito!"));
 
                 PlayerTime time = plugin.getTimeManager().getTime(uuid);
                 if (time != null) time.setType(GameTime.Type.INCOGNITO);
@@ -48,9 +48,9 @@ public class IncognitoManager {
             if (player != null) {
                 plugin.getChatMinecraft().sendFakeJoinMessage(player);
                 if (plugin.getAfkManager().isAfk(player)) {
-                    plugin.getChatMinecraft().sendMessage("Gracz **" + player.getName() + "** jest AFK!", Prefixes.AFK.getDiscord());
+                    plugin.getChatMinecraft().sendMessage("Gracz **" + player.getName() + "** jest AFK!", Prefix.AFK.getDiscord());
                 }
-                player.sendMessage(Utils.getComponentByString(Prefixes.INCOGNITO + "Już nie jesteś incognito!"));
+                player.sendMessage(Utils.getComponentByString(Prefix.INCOGNITO + "Już nie jesteś incognito!"));
 
                 PlayerTime time = plugin.getTimeManager().getTime(uuid);
                 if (time != null) time.setType(plugin.getAfkManager().isAfk(player) ? GameTime.Type.AFK : GameTime.Type.NORMAL);

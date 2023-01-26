@@ -32,13 +32,17 @@ public class GameTime {
     }
 
     public static @NotNull GameTime add(@NotNull GameTime... times) {
-        GameTime result = new GameTime(0, 0, 0);
+        GameTime result = GameTime.empty();
         for (GameTime time : times) {
             result.addNormal(time.getNormal());
             result.addAfk(time.getAfk());
             result.addIncognito(time.getIncognito());
         }
         return result;
+    }
+    
+    public static @NotNull GameTime empty() {
+        return new GameTime(0, 0, 0);
     }
 
     @Override

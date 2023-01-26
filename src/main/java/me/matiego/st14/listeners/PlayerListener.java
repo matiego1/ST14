@@ -8,7 +8,7 @@ import me.matiego.st14.Main;
 import me.matiego.st14.PremiumManager;
 import me.matiego.st14.utils.FixedSizeMap;
 import me.matiego.st14.utils.Logs;
-import me.matiego.st14.utils.Prefixes;
+import me.matiego.st14.utils.Prefix;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -30,8 +30,9 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.entity.EntityPortalEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -86,7 +87,7 @@ public class PlayerListener implements Listener {
         //check if Discord bot is online
         JDA jda = plugin.getJda();
         if (jda == null) {
-            disallow(event, Prefixes.DISCORD + "&cBot na Discord jest offline! Nie możesz dołączyć do serwera.");
+            disallow(event, Prefix.DISCORD + "&cBot na Discord jest offline! Nie możesz dołączyć do serwera.");
             return;
         }
         if (Utils.getTps() < 15.0 && !plugin.getPremiumManager().isSuperPremium(uuid)) {
@@ -98,7 +99,7 @@ public class PlayerListener implements Listener {
         UserSnowflake id = plugin.getAccountsManager().getUserByPlayer(uuid);
         if (id == null) {
             String code = plugin.getAccountsManager().getNewVerificationCode(uuid);
-            disallow(event, Prefixes.DISCORD + "\n" +
+            disallow(event, Prefix.DISCORD + "\n" +
                     "Nie połączyłeś konta Discord z twoim kontem minecraft!\n\n" +
                     "Użyj komendy &9/accounts &bna Discord\n" +
                     "z kodem &9" + code + "&b\n\n" +
@@ -112,17 +113,17 @@ public class PlayerListener implements Listener {
         }
         Member member = guild.retrieveMember(id).complete();
         if (member == null) {
-            disallow(event, Prefixes.DISCORD + "Wygląda na to, że nie ma cię na naszym serwerze Discord! Dołącz do niego, aby grać na tym serwerze.");
+            disallow(event, Prefix.DISCORD + "Wygląda na to, że nie ma cię na naszym serwerze Discord! Dołącz do niego, aby grać na tym serwerze.");
             return;
         }
-        Role role = guild.getRoleById(plugin.getConfig().getLong("discord.role-id"));
+        Role role = guild.getRoleById(plugin.getConfig().getLong("discord.role-ids.player"));
         if (role == null) {
-            Logs.warning("A role id in the config file is not correct.");
+            Logs.warning("A player-role-id in the config file is not correct.");
             return;
         }
         if (!member.getRoles().contains(role)) {
             plugin.getAccountsManager().unlink(uuid);
-            disallow(event, Prefixes.DISCORD + "Twoje konto zostało rozłączone przed administratora. Dołącz ponownie, aby je połączyć.");
+            disallow(event, Prefix.DISCORD + "Twoje konto zostało rozłączone przed administratora. Dołącz ponownie, aby je połączyć.");
         }
     }
     private void disallow(@NotNull AsyncPlayerPreLoginEvent event, @NotNull String msg) {
@@ -139,7 +140,7 @@ public class PlayerListener implements Listener {
                 .filter(uuid -> !manager.getTrustedPlayers(uuid).contains(event.getUniqueId()))
                 .map(Bukkit::getPlayer)
                 .filter(Objects::nonNull)
-                .forEach(player -> Utils.sync(() -> player.kick(Utils.getComponentByString(Prefixes.INCOGNITO + "Gracz " + event.getName() + " dołącza do gry. Zostałeś wyrzucony, ponieważ masz włączony tryb incognito."))));
+                .forEach(player -> Utils.sync(() -> player.kick(Utils.getComponentByString(Prefix.INCOGNITO + "Gracz " + event.getName() + " dołącza do gry. Zostałeś wyrzucony, ponieważ masz włączony tryb incognito."))));
     }
 
     @EventHandler
@@ -180,12 +181,12 @@ public class PlayerListener implements Listener {
         BukkitTask task = disablingIncognito.remove(uuid);
         if (task != null) task.cancel();
         if (plugin.getIncognitoManager().isIncognito(uuid)) {
-            player.sendMessage(Utils.getComponentByString(Prefixes.INCOGNITO + "Jesteś incognito!"));
+            player.sendMessage(Utils.getComponentByString(Prefix.INCOGNITO + "Jesteś incognito!"));
         }
         //premium
         long time = plugin.getPremiumManager().getRemainingTime(uuid);
         if (time > 0) {
-            player.sendMessage(Utils.getComponentByString(Prefixes.PREMIUM + "Jesteś graczem premium! Twój status premium wygaśnie za &6" + Utils.parseMillisToString(time, false) + "&d."));
+            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Jesteś graczem premium! Twój status premium wygaśnie za &6" + Utils.parseMillisToString(time, false) + "&d."));
         }
         //join messages
         event.joinMessage(Utils.getComponentByString("&eGracz " + player.getName() + " dołączył do gry"));
@@ -197,10 +198,7 @@ public class PlayerListener implements Listener {
     public void onPlayerQuit(@NotNull PlayerQuitEvent event) {
         Player player = event.getPlayer();
 
-        event.quitMessage(Utils.getComponentByString("&eGracz " + player.getName() + " opuścił grę"));
-        plugin.getChatMinecraft().sendConsoleQuitMessage(player);
-        plugin.getChatMinecraft().sendQuitMessage(player);
-
+        plugin.getAntyLogoutManager().quit(player);
         plugin.getTellCommand().removeReply(player.getUniqueId());
         plugin.getTpaCommand().cancel(player);
         positionBossBars.remove(player.getUniqueId());
@@ -211,6 +209,9 @@ public class PlayerListener implements Listener {
             plugin.getRewardsManager().unload(player.getUniqueId());
         });
 
+        event.quitMessage(Utils.getComponentByString("&eGracz " + player.getName() + " opuścił grę"));
+        plugin.getChatMinecraft().sendConsoleQuitMessage(player);
+        plugin.getChatMinecraft().sendQuitMessage(player);
 
         disablingIncognito.put(
                 player.getUniqueId(),
@@ -225,16 +226,19 @@ public class PlayerListener implements Listener {
         );
     }
 
-    @EventHandler (ignoreCancelled = true)
+    @EventHandler (priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerDeath(@NotNull PlayerDeathEvent event) {
-        Component component = event.deathMessage();
+        Player player = event.getPlayer();
 
-        String msg = event.getPlayer().getName() + " died";
+        plugin.getAntyLogoutManager().cancelAntyLogout(player);
+
+        Component component = event.deathMessage();
+        String msg = player.getName() + " died";
         if (component != null) {
             msg = PlainTextComponentSerializer.plainText().serialize(component);
         }
-        event.deathMessage(Utils.getComponentByString("&4[" + Utils.getWorldPrefix(event.getPlayer().getWorld()) + "]&c " + msg));
-        plugin.getChatMinecraft().sendDeathMessage("**[" + Utils.getWorldPrefix(event.getPlayer().getWorld()) + "]** " + msg, event.getPlayer());
+        event.deathMessage(Utils.getComponentByString("&4[" + Utils.getWorldPrefix(player.getWorld()) + "]&c " + msg));
+        plugin.getChatMinecraft().sendDeathMessage("**[" + Utils.getWorldPrefix(player.getWorld()) + "]** " + msg, event.getPlayer());
     }
 
     @EventHandler
@@ -258,7 +262,7 @@ public class PlayerListener implements Listener {
         plugin.getChatMinecraft().sendChatMessage(PlainTextComponentSerializer.plainText().serialize(message), player);
     }
 
-    @EventHandler
+    @EventHandler (ignoreCancelled = true)
     public void onPlayerTeleport(@NotNull PlayerTeleportEvent event) {
         if (event.getCause() == PlayerTeleportEvent.TeleportCause.SPECTATE) {
             if (!event.getFrom().getWorld().equals(event.getTo().getWorld())) {
@@ -301,7 +305,8 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerCommandSent(@NotNull PlayerCommandSendEvent event) {if (event.getPlayer().isOp()) return;
+    public void onPlayerCommandSent(@NotNull PlayerCommandSendEvent event) {
+        if (event.getPlayer().isOp()) return;
         List<String> allowedCommands = plugin.getConfig().getStringList("allowed-commands");
         if (allowedCommands.isEmpty()) return;
 
@@ -327,7 +332,7 @@ public class PlayerListener implements Listener {
         sleepingPlayers.put(uuid, player);
     }
 
-    @EventHandler (priority = EventPriority.MONITOR)
+    @EventHandler (priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerBedLeave(@NotNull PlayerBedLeaveEvent event) {
         Player player = event.getPlayer();
         World world = event.getBed().getWorld();
@@ -341,7 +346,7 @@ public class PlayerListener implements Listener {
         }
     }
 
-    @EventHandler (ignoreCancelled = true, priority = EventPriority.MONITOR)
+    @EventHandler (priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerMove(@NotNull PlayerMoveEvent event) {
         if (event.hasChangedBlock()) {
             Player player = event.getPlayer();
@@ -364,7 +369,7 @@ public class PlayerListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler (ignoreCancelled = true)
     public void onPlayerUse(@NotNull PlayerInteractEvent event) {
         Action action = event.getAction();
         if (action != Action.RIGHT_CLICK_AIR) return;
@@ -384,6 +389,8 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         if (!Main.getInstance().getConfig().getStringList("economy-worlds").contains(player.getWorld().getName())) return;
 
+        event.setCancelled(true);
+
         double amount;
         try {
             amount = Double.parseDouble(lores.get(2).replaceFirst(Pattern.quote("&bWartość: &9"), "").replaceFirst(Pattern.quote("$"), ""));
@@ -393,11 +400,11 @@ public class PlayerListener implements Listener {
 
         EconomyResponse response = plugin.getEconomy().depositPlayer(player, amount);
         if (!response.transactionSuccess()) {
-            player.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "Napotkano niespodziewany błąd. Spróbuj później."));
+            player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Napotkano niespodziewany błąd. Spróbuj później."));
             return;
         }
 
-        player.sendMessage(Utils.getComponentByString(Prefixes.ECONOMY + "Pomyślnie wpłacono pieniądze na twoje konto!"));
+        player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie wpłacono pieniądze na twoje konto!"));
         player.getInventory().getItemInMainHand().setAmount(player.getInventory().getItemInMainHand().getAmount() - 1);
     }
 
@@ -461,7 +468,7 @@ public class PlayerListener implements Listener {
         event.message(null);
     }
 
-    @EventHandler
+    @EventHandler (priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreak(@NotNull BlockBreakEvent event) {
         String material = event.getBlock().getBlockData().getMaterial().name().toLowerCase();
         if (material.contains("diamond") || material.contains("netherite") || material.contains("ancient_debris")) {
@@ -470,7 +477,7 @@ public class PlayerListener implements Listener {
 
     }
 
-    @EventHandler
+    @EventHandler (ignoreCancelled = true)
     public void onPlayerPortal(@NotNull PlayerPortalEvent event) {
         if (event.getCause() == PlayerTeleportEvent.TeleportCause.END_PORTAL && plugin.getConfig().getBoolean("block-end")) {
             event.setCancelled(true);
@@ -478,11 +485,15 @@ public class PlayerListener implements Listener {
         }
     }
 
-    @EventHandler
-    public void onEntityPortal(@NotNull EntityPortalEvent event) {
-        if (event.getPortalType() == PortalType.ENDER && plugin.getConfig().getBoolean("block-end")) {
-            event.setCancelled(true);
-        }
+    @EventHandler (priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onEntityDamageByEntity(@NotNull EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+        plugin.getAntyLogoutManager().putAntyLogout(player, event.getDamager());
+    }
+
+    @EventHandler (priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onInventoryClose(@NotNull InventoryCloseEvent event) {
+        plugin.getIncognitoCommand().onInventoryClose(event.getPlayer().getUniqueId());
     }
 
 }

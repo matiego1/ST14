@@ -22,8 +22,9 @@ public class PlayerTime {
     private final UUID uuid;
     private final GameTime total;
     private final GameTime daily;
-    private GameTime current = new GameTime(0, 0, 0);
-    private GameTime fake = new GameTime(0, 0, 0);
+    private GameTime session = GameTime.empty();
+    private GameTime fakeSession = GameTime.empty();
+    private GameTime current = GameTime.empty();
 
     private long startOfCurrentType = 0;
     @Getter(onMethod_ = {@Synchronized}) private GameTime.Type type = null;
@@ -34,45 +35,45 @@ public class PlayerTime {
     private void updateCurrent() {
         if (type == null) return;
         switch (type) {
-            case NORMAL -> {
-                current.setNormal(getTimeOfCurrentType());
-                fake.setNormal(getTimeOfCurrentType());
-            }
-            case AFK -> {
-                current.setAfk(getTimeOfCurrentType());
-                fake.setAfk(getTimeOfCurrentType());
-            }
+            case NORMAL -> current.setNormal(getTimeOfCurrentType());
+            case AFK -> current.setAfk(getTimeOfCurrentType());
             case INCOGNITO -> current.setIncognito(getTimeOfCurrentType());
         }
     }
 
     public synchronized @NotNull GameTime getTotal() {
-        return GameTime.add(total, getCurrent());
+        return GameTime.add(total, getSession());
     }
     public synchronized @NotNull GameTime getDaily() {
-        return GameTime.add(daily, getCurrent());
+        return GameTime.add(daily, getSession());
     }
-    public synchronized @NotNull GameTime getCurrent() {
+    public synchronized @NotNull GameTime getSession() {
         updateCurrent();
-        return current;
+        return GameTime.add(session, current);
     }
-    public synchronized @NotNull GameTime getFakeCurrent() {
+    public synchronized @NotNull GameTime getFakeSession() {
+        if (getType() == GameTime.Type.INCOGNITO) return GameTime.empty();
         updateCurrent();
-        return fake;
+        GameTime time = GameTime.add(fakeSession, current);
+        time.setIncognito(0);
+        return time;
     }
 
     public synchronized void setType(@NotNull GameTime.Type newType) {
         if (type == newType) return;
-        if (type == GameTime.Type.INCOGNITO) {
-            fake = new GameTime(0, 0, 0);
-        }
         updateCurrent();
+        session = GameTime.add(session, current);
+        if (newType == GameTime.Type.INCOGNITO) {
+            fakeSession = GameTime.empty();
+        } else {
+            fakeSession = session;
+        }
+        current = GameTime.empty();
         type = newType;
         startOfCurrentType = Utils.now();
     }
 
     public static @Nullable PlayerTime load(@NotNull UUID uuid) {
-        Logs.warning("Wczytano czasy gracza!!!");
         try (Connection conn = Main.getInstance().getConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT t_normal, t_afk, t_incognito, normal, afk, incognito, last_save FROM st14_time WHERE uuid = ?")) {
             stmt.setString(1, uuid.toString());
@@ -80,7 +81,7 @@ public class PlayerTime {
             if (result.next()) {
                 GameTime daily = new GameTime(result.getLong("normal"), result.getLong("afk"), result.getLong("incognito"));
                 if (Utils.isDifferentDay(result.getLong("last_save"), Utils.now())) {
-                    daily = new GameTime(0, 0, 0);
+                    daily = GameTime.empty();
                 }
 
                 return new PlayerTime(
@@ -91,8 +92,8 @@ public class PlayerTime {
             }
             return new PlayerTime(
                     uuid,
-                    new GameTime(0, 0, 0),
-                    new GameTime(0, 0, 0)
+                    GameTime.empty(),
+                    GameTime.empty()
             );
         } catch (SQLException e) {
             Logs.error("An error occurred while modifying values in \"st14_time\" table in the database.", e);
@@ -106,8 +107,9 @@ public class PlayerTime {
         startOfCurrentType = 0;
         GameTime total = getTotal();
         GameTime daily = getDaily();
-        fake = new GameTime(0, 0, 0);
-        current = new GameTime(0, 0, 0);
+        fakeSession = GameTime.empty();
+        session = GameTime.empty();
+        current = GameTime.empty();
 
         try (Connection conn = Main.getInstance().getConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_time(uuid, t_normal, t_afk, t_incognito, normal, afk, incognito, last_save) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE t_normal = ?, t_afk = ?, t_incognito = ?, normal = ?, afk = ?, incognito = ?, last_save = ?")) {

@@ -92,7 +92,7 @@ public class ChatMinecraft extends ListenerAdapter {
                     "[DC] " + DiscordUtils.getName(user, event.getMember()),
                     DiscordUtils.escapeFormatting(msgContent))) {
                 for (String line : msgContent.split("\n")) {
-                    Bukkit.broadcast(Utils.getComponentByString("&a[DC] &7" + user.getName() + "&f: " + line));
+                    Bukkit.broadcast(Utils.getComponentByString("&a[DC] &7" + DiscordUtils.getName(user, event.getMember()) + "&f: " + line));
                 }
             } else {
                 DiscordUtils.sendPrivateMessage(user, "**Ups!** Napotkano błąd przy wysyłaniu twojej wiadomości. Spróbuj później.");
@@ -143,7 +143,7 @@ public class ChatMinecraft extends ListenerAdapter {
         eb.setColor(Color.YELLOW);
         PlayerTime playerTime = plugin.getTimeManager().getTime(player.getUniqueId());
         if (playerTime != null) {
-            GameTime time = playerTime.getFakeCurrent();
+            GameTime time = playerTime.getFakeSession();
             eb.setFooter("Czas gry: " + Utils.parseMillisToString(time.getNormal() + time.getAfk(), false));
         }
         TextChannel chn = DiscordUtils.getChatMinecraftChannel();
@@ -156,7 +156,7 @@ public class ChatMinecraft extends ListenerAdapter {
         PlayerTime playerTime = plugin.getTimeManager().getTime(player.getUniqueId());
         String time = "";
         if (playerTime != null) {
-            GameTime gameTime = playerTime.getCurrent();
+            GameTime gameTime = playerTime.getSession();
             time = "Czas gry: `" +
                     Utils.parseMillisToString(gameTime.getNormal() + gameTime.getAfk() + gameTime.getIncognito(), true) +
                     "` [`" +

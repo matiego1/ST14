@@ -173,7 +173,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
     @Override
     public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(Utils.getComponentByString(Prefixes.DISCORD + "&cTej komendy może użyć tylko gracz."));
+            sender.sendMessage(Utils.getComponentByString(Prefix.DISCORD + "&cTej komendy może użyć tylko gracz."));
             return 0;
         }
         if (args.length != 0) return -1;
@@ -181,7 +181,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
         UUID uuid = player.getUniqueId();
 
         Utils.async(() -> {
-            Inventory inv = GUI.createInventory(9, Prefixes.DISCORD + "Twoje konta");
+            Inventory inv = GUI.createInventory(9, Prefix.DISCORD + "Twoje konta");
             JDA jda = plugin.getJda();
             if (manager.isLinked(uuid)) {
                 UserSnowflake id = manager.getUserByPlayer(uuid);
@@ -229,7 +229,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
 
     @Override
     public void onInventoryClick(@NotNull InventoryClickEvent event) {
-        if (!GUI.checkInventory(event, Prefixes.DISCORD + "Twoje konta")) return;
+        if (!GUI.checkInventory(event, Prefix.DISCORD + "Twoje konta")) return;
 
         Player player = (Player) event.getWhoClicked();
         UUID uuid = player.getUniqueId();
@@ -239,14 +239,14 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
         Objects.requireNonNull(item); //already checked in GUI#checkInventory()
 
         if (slot == 7) {
-            player.sendMessage(Utils.getComponentByString(Prefixes.DISCORD + "Link z zaproszeniem na nasz serwer Discord: " + plugin.getConfig().getString("discord.invite-link", "&cBRAK")));
+            player.sendMessage(Utils.getComponentByString(Prefix.DISCORD + "Link z zaproszeniem na nasz serwer Discord: " + plugin.getConfig().getString("discord.invite-link", "&cBRAK")));
         } else if (slot == 1) {
             player.closeInventory();
             Utils.async(() -> {
                 if (manager.isLinked(uuid)) {
                     UserSnowflake id = manager.getUserByPlayer(uuid);
                     boolean success = manager.unlink(uuid);
-                    player.sendMessage(Utils.getComponentByString(Prefixes.DISCORD + (success ?
+                    player.sendMessage(Utils.getComponentByString(Prefix.DISCORD + (success ?
                             "Pomyślnie rozłączono twoje konto z kontem Discord" :
                             "Napotkano niespodziewany błąd. Spróbuj później"
                     )));
@@ -259,12 +259,12 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                 } else {
                     String code = plugin.getAccountsManager().getNewVerificationCode(uuid);
                     player.sendMessage(Utils.getComponentByString(
-                            Prefixes.DISCORD + "=================================\n" +
-                            Prefixes.DISCORD + "Aby dokończyć proces łączenia kont,\n" +
-                            Prefixes.DISCORD + "użyj komendy &9/accounts&b\n" +
-                            Prefixes.DISCORD + "na Discord z kodem: &9" + code + "&b.\n" +
-                            Prefixes.DISCORD + "UWAGA! Kod będzie ważny tylko 5 minut.\n" +
-                            Prefixes.DISCORD + "=================================\n"
+                            Prefix.DISCORD + "=================================\n" +
+                            Prefix.DISCORD + "Aby dokończyć proces łączenia kont,\n" +
+                            Prefix.DISCORD + "użyj komendy &9/accounts&b\n" +
+                            Prefix.DISCORD + "na Discord z kodem: &9" + code + "&b.\n" +
+                            Prefix.DISCORD + "UWAGA! Kod będzie ważny tylko 5 minut.\n" +
+                            Prefix.DISCORD + "=================================\n"
                     ));
                 }
             });

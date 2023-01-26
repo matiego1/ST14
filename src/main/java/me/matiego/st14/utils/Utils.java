@@ -172,4 +172,17 @@ public class Utils {
         }), seconds, TimeUnit.SECONDS);
     }
 
+    public static void broadcastMessage(@NotNull Player player, @NotNull Prefix prefix, @NotNull String self, @NotNull String others, @NotNull String discord) {
+        Utils.async(() -> {
+            player.sendMessage(Utils.getComponentByString(prefix + self));
+
+            Bukkit.getOnlinePlayers().stream()
+                    .filter(p -> !p.equals(player))
+                    .forEach(p -> p.sendMessage(Utils.getComponentByString(prefix + others)));
+            Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString(prefix + others));
+
+            if (Main.getInstance().getIncognitoManager().isIncognito(player.getUniqueId())) return;
+            Main.getInstance().getChatMinecraft().sendMessage(discord, prefix.getDiscord());
+        });
+    }
 }

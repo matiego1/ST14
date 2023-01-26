@@ -20,7 +20,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class TpaCommand implements CommandHandler.Minecraft {
@@ -44,16 +43,16 @@ public class TpaCommand implements CommandHandler.Minecraft {
     @Override
     public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(Utils.getComponentByString(Prefixes.TPA + "&cTej komendy może użyć tylko gracz."));
+            sender.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cTej komendy może użyć tylko gracz."));
             return -1;
         }
         if (args.length == 0) {
             Set<UUID> requests = tpa.getOrDefault(player.getUniqueId(), new HashMap<>()).keySet();
             if (requests.isEmpty()) {
-                player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "&cNie masz żadnych aktywnych próśb o teleportację."));
+                player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cNie masz żadnych aktywnych próśb o teleportację."));
                 return 2;
             }
-            Inventory inv = GUI.createInventory(9, Prefixes.TPA + "Prośby o teleportację");
+            Inventory inv = GUI.createInventory(9, Prefix.TPA + "Prośby o teleportację");
             for (UUID uuid : requests) {
                 Player p = Bukkit.getPlayer(uuid);
                 if (p != null) {
@@ -61,7 +60,7 @@ public class TpaCommand implements CommandHandler.Minecraft {
                 }
             }
             if (inv.isEmpty()) {
-                player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "&cNie masz żadnych aktywnych próśb o teleportację."));
+                player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cNie masz żadnych aktywnych próśb o teleportację."));
                 return 2;
             }
             player.openInventory(inv);
@@ -70,19 +69,19 @@ public class TpaCommand implements CommandHandler.Minecraft {
         if (args.length != 1) return -1;
         Player target = Bukkit.getPlayer(args[0]);
         if (target == null) {
-            player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "&cTen gracz nie jest online."));
+            player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cTen gracz nie jest online."));
             return 3;
         }
         if (target.equals(player)) {
-            player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "&cNie możesz teleportować się do siebie."));
+            player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cNie możesz teleportować się do siebie."));
             return 3;
         }
         if (!target.getWorld().equals(player.getWorld())) {
-            player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "&cNie możesz teleportować się do innych światów."));
+            player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cNie możesz teleportować się do innych światów."));
             return 3;
         }
         if (!plugin.getConfig().getStringList("tpa.worlds").contains(player.getWorld().getName())) {
-            sender.sendMessage(Utils.getComponentByString(Prefixes.TPA + "&cNie możesz użyć tej komendy w tym świecie."));
+            sender.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cNie możesz użyć tej komendy w tym świecie."));
             return 5;
         }
         HashMap<UUID, BukkitTask> requests = tpa.getOrDefault(target.getUniqueId(), new HashMap<>());
@@ -90,24 +89,24 @@ public class TpaCommand implements CommandHandler.Minecraft {
         while (it.hasNext()) {
             Map.Entry<UUID, BukkitTask> e = it.next();
             if (player.getUniqueId().equals(e.getKey())) {
-                player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "Anulowałeś prośbę o teleportację do tego gracza"));
+                player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Anulowałeś prośbę o teleportację do tego gracza"));
                 e.getValue().cancel();
                 it.remove();
                 return 3;
             }
         }
         if (requests.size() >= 9) {
-            player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "&cTen gracz ma za dużo aktywnych próśb o teleportację."));
+            player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cTen gracz ma za dużo aktywnych próśb o teleportację."));
             return 5;
         }
-        player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "Pomyślnie wysłano prośbę o teleportację."));
-        target.sendMessage(Utils.getComponentByString(Prefixes.TPA + "Gracz " + player.getName() + " chce się do ciebie przeteleportować. Użyj /tpa, aby mu na to pozwolić."));
+        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Pomyślnie wysłano prośbę o teleportację."));
+        target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + player.getName() + " chce się do ciebie przeteleportować. Użyj /tpa, aby mu na to pozwolić."));
         requests.put(player.getUniqueId(), Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
             HashMap<UUID, BukkitTask> r = tpa.getOrDefault(target.getUniqueId(), new HashMap<>());
             r.remove(player.getUniqueId());
             if (!r.isEmpty()) tpa.put(target.getUniqueId(), r);
             if (!player.isOnline()) return;
-            player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "Prośba o teleportację do gracza " + target.getName() + " wygasła."));
+            player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Prośba o teleportację do gracza " + target.getName() + " wygasła."));
         }, 1200));
         tpa.put(target.getUniqueId(), requests);
         return 5;
@@ -115,7 +114,7 @@ public class TpaCommand implements CommandHandler.Minecraft {
 
     @Override
     public void onInventoryClick(@NotNull InventoryClickEvent event) {
-        if (!GUI.checkInventory(event, Prefixes.TPA + "Prośby o teleportację")) return;
+        if (!GUI.checkInventory(event, Prefix.TPA + "Prośby o teleportację")) return;
 
         Player player = (Player) event.getWhoClicked();
         player.closeInventory();
@@ -123,17 +122,17 @@ public class TpaCommand implements CommandHandler.Minecraft {
 
         Player target = Bukkit.getPlayer(getItemName(event.getCurrentItem()));
         if (target == null) {
-            player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "&cTen gracz anulował prośbę o teleportację."));
+            player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cTen gracz anulował prośbę o teleportację."));
             return;
         }
         HashMap<UUID, BukkitTask> requests = tpa.getOrDefault(player.getUniqueId(), new HashMap<>());
         if (!requests.containsKey(target.getUniqueId())) {
-            player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "&cTen gracz anulował prośbę o teleportację."));
+            player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cTen gracz anulował prośbę o teleportację."));
             return;
         }
         if (!destination.getWorld().equals(target.getWorld())) {
-            player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "&cTen gracz anulował prośbę o teleportację."));
-            target.sendMessage(Utils.getComponentByString(Prefixes.TPA + "&cNie możesz przeteleportować się do " + player.getName() + ", ponieważ jest on w innym świecie."));
+            player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cTen gracz anulował prośbę o teleportację."));
+            target.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cNie możesz przeteleportować się do " + player.getName() + ", ponieważ jest on w innym świecie."));
             return;
         }
 
@@ -145,12 +144,12 @@ public class TpaCommand implements CommandHandler.Minecraft {
         }
 
         if (plugin.getTeleportsManager().isAlreadyActive(target)) {
-            player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "&cTen gracz nie może się do ciebie przeteleportować."));
+            player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cTen gracz nie może się do ciebie przeteleportować."));
             return;
         }
 
-        player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "Ten gracz za chwilę zostanie do ciebie przeteleportowany"));
-        target.sendMessage(Utils.getComponentByString(Prefixes.TPA + "Zostaniesz przeteleportowany za 5 sekund do gracza " + player.getName() + ". Nie ruszaj się!"));
+        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Ten gracz za chwilę zostanie do ciebie przeteleportowany"));
+        target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Zostaniesz przeteleportowany za 5 sekund do gracza " + player.getName() + ". Nie ruszaj się!"));
 
         double distance = target.getLocation().distance(destination);
         final double cost;
@@ -167,36 +166,36 @@ public class TpaCommand implements CommandHandler.Minecraft {
                     Economy economy = plugin.getEconomy();
                     EconomyResponse response = economy.withdrawPlayer(target, cost);
                     if (!response.transactionSuccess()) {
-                        player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
-                        target.sendMessage(Utils.getComponentByString(Prefixes.TPA + "Aby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.format(response.balance)));
+                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
+                        target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Aby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.format(response.balance)));
                         return false;
                     }
                     return true;
-                }).get(6, TimeUnit.SECONDS)) {
+                }).get()) {
                     case SUCCESS -> {
-                        player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "Gracz " + target.getName() + " przeteleportował się do ciebie."));
-                        target.sendMessage(Utils.getComponentByString(Prefixes.TPA + "Przeteleportowałeś się do gracza " + player.getName() + "."));
+                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " przeteleportował się do ciebie."));
+                        target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Przeteleportowałeś się do gracza " + player.getName() + "."));
                     }
                     case MOVE -> {
-                        player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
-                        target.sendMessage(Utils.getComponentByString(Prefixes.TPA + "Teleportowanie anulowane, poruszyłeś się."));
+                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
+                        target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Teleportowanie anulowane, poruszyłeś się."));
                     }
                     case ALREADY_ACTIVE -> {
-                        player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
-                        target.sendMessage(Utils.getComponentByString(Prefixes.TPA + "Proces teleportowania już został rozpoczęty."));
+                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
+                        target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Proces teleportowania już został rozpoczęty."));
                     }
                     case CANCELLED -> {}
                     case FAILURE -> {
-                        player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
-                        target.sendMessage(Utils.getComponentByString(Prefixes.TPA + "Napotkano błąd teleportowaniu."));
+                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
+                        target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Napotkano błąd teleportowaniu."));
                         if (!plugin.getEconomy().depositPlayer(target, cost).transactionSuccess()) {
-                            target.sendMessage(Utils.getComponentByString(Prefixes.TPA + "&c&lNapotkano błąd przy oddawaniu pieniędzy! Zgłoś się do administratora, aby je odzyskać. Przepraszamy."));
+                            target.sendMessage(Utils.getComponentByString(Prefix.TPA + "&c&lNapotkano błąd przy oddawaniu pieniędzy! Zgłoś się do administratora, aby je odzyskać. Przepraszamy."));
                             Logs.warning("Gracz " + target.getName() + " (" + target.getUniqueId() + ") stracił " + plugin.getEconomy().format(cost) + " ze swojego konta! Kwota musi być przywrócona ręcznie.");
                         }
                     }
                 }
             } catch (Exception e) {
-                player.sendMessage(Utils.getComponentByString(Prefixes.TPA + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
+                player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
                 Logs.error("An error occurred while teleporting player", e);
             }
         });
@@ -224,7 +223,7 @@ public class TpaCommand implements CommandHandler.Minecraft {
         if (requests == null) return;
         for (Map.Entry<UUID, BukkitTask> e : requests.entrySet()) {
             Player p = Bukkit.getPlayer(e.getKey());
-            if (p != null) p.sendMessage(Utils.getComponentByString(Prefixes.TPA + "Prośba o teleportację do gracza " + player.getName() + " wygasła."));
+            if (p != null) p.sendMessage(Utils.getComponentByString(Prefix.TPA + "Prośba o teleportację do gracza " + player.getName() + " wygasła."));
             e.getValue().cancel();
         }
         for (Map.Entry<UUID, HashMap<UUID, BukkitTask>> e1 : tpa.entrySet()) {

@@ -5,6 +5,7 @@ import com.neovisionaries.ws.client.DualStackMode;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import lombok.Getter;
 import me.matiego.st14.commands.*;
+import me.matiego.st14.commands.discord.AllPlayersCommand;
 import me.matiego.st14.commands.discord.FeedbackCommand;
 import me.matiego.st14.commands.discord.ListCommand;
 import me.matiego.st14.commands.discord.PingCommand;
@@ -61,12 +62,16 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private CommandManager commandManager;
     @Getter private BackpackManager backpackManager;
     @Getter private RewardsManager rewardsManager;
+    @Getter private AntyLogoutManager antyLogoutManager;
     private TabListManager tabListManager;
     private ChatReportsManager chatReportsManager;
 
     @Getter private TellCommand tellCommand;
     @Getter private TpaCommand tpaCommand;
     @Getter private SuicideCommand suicideCommand;
+    @Getter private IncognitoCommand incognitoCommand;
+
+    @Getter private GravesListener gravesListener;
 
     private JDA jda;
     private boolean isJdaEnabled = false;
@@ -76,6 +81,12 @@ public final class Main extends JavaPlugin implements Listener {
     public void onEnable() {
         instance = this;
         long time = Utils.now();
+        //TEST
+        Logs.info("getBukkitVersion: " + Bukkit.getBukkitVersion());
+        Logs.info("getVersionMessage: " + Bukkit.getVersionMessage());
+        Logs.info("getVersion: " + Bukkit.getVersion());
+        Logs.info("getMinecraftVersion: " + Bukkit.getMinecraftVersion());
+
         //Save config file
         try {
             saveDefaultConfig();
@@ -123,6 +134,7 @@ public final class Main extends JavaPlugin implements Listener {
         rewardsManager = new RewardsManager(this);
         backpackManager = new BackpackManager(this);
         chatReportsManager = new ChatReportsManager();
+        antyLogoutManager = new AntyLogoutManager(this);
 
         Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomy(), vault, ServicePriority.High);
 
@@ -133,7 +145,8 @@ public final class Main extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(new AfkListener(this), this);
         Bukkit.getPluginManager().registerEvents(new EntityListener(), this);
         Bukkit.getPluginManager().registerEvents(getTeleportsManager(), this);
-        Bukkit.getPluginManager().registerEvents(new GravesListener(), this);
+        gravesListener = new GravesListener();
+        Bukkit.getPluginManager().registerEvents(getGravesListener(), this);
 
         Bukkit.getMessenger().registerIncomingPluginChannel(this, "minecraft:brand", serverListener);
         Bukkit.getPluginManager().registerEvents(this, this);
@@ -200,8 +213,9 @@ public final class Main extends JavaPlugin implements Listener {
         tellCommand = new TellCommand();
         tpaCommand = new TpaCommand(this);
         suicideCommand = new SuicideCommand();
+        incognitoCommand = new IncognitoCommand(this);
         commandManager = new CommandManager(Arrays.asList(
-                new IncognitoCommand(this),
+                incognitoCommand,
                 new AccountsCommand(this),
                 new VersionCommand(),
                 new TimeCommand(this),
@@ -222,7 +236,8 @@ public final class Main extends JavaPlugin implements Listener {
                 //Discord commands
                 new PingCommand(),
                 new ListCommand(),
-                new FeedbackCommand()
+                new FeedbackCommand(),
+                new AllPlayersCommand()
         ));
         Bukkit.getPluginManager().registerEvents(commandManager, this);
         jda.addEventListener(commandManager);
@@ -232,6 +247,7 @@ public final class Main extends JavaPlugin implements Listener {
         getAfkManager().start();
         tabListManager.start();
         getRewardsManager().start();
+        getAntyLogoutManager().start();
         getChatMinecraft().unblock();
         Utils.registerRecipes();
         Utils.kickPlayersAtMidnightTask();
@@ -268,6 +284,7 @@ public final class Main extends JavaPlugin implements Listener {
             if (player.getOpenInventory().getTopInventory().getHolder() instanceof GUI) player.closeInventory();
         }
         //disable managers
+        if (antyLogoutManager != null) antyLogoutManager.stop();
         if (afkManager != null) afkManager.stop();
         if (tabListManager != null) tabListManager.stop();
         if (rewardsManager != null) rewardsManager.stop();
