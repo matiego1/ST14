@@ -5,6 +5,7 @@ api-version: 1.19
 author: Matiego
 description: A plugin for ST14 server
 depend: [Vault, Graves]
+softdepend: [Counting]
 load: STARTUP
 commands:
   st14:
