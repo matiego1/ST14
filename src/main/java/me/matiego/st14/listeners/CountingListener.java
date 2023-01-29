@@ -24,7 +24,7 @@ public class CountingListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onMessageSend(@NotNull MessageSendEvent event) {
-        UserSnowflake user =  event.getUserId();
+        UserSnowflake user = UserSnowflake.fromId(event.getUserId());
         ChannelData channel = event.getChannel();
         long now = Utils.now();
         Utils.async(() -> {
@@ -36,7 +36,10 @@ public class CountingListener implements Listener {
             if (data.getLimit() >= REWARD_LIMIT) return;
             if (now - data.getLast() <= 15 * 60 * 1000) return;
 
-            if (plugin.getConfig().getLongList("counting-rewards.disabled-channels").contains(channel.getChannelId())) return;
+            if (!plugin.getConfig().getBoolean("counting-rewards.enabled", true)) return;
+            if (plugin.getConfig().getLongList("counting-rewards.disabled-ids").contains(channel.getGuildId())) return;
+            if (plugin.getConfig().getLongList("counting-rewards.disabled-ids").contains(channel.getChannelId())) return;
+
             int amount = plugin.getConfig().getInt("counting-rewards.types." + channel.getType().name().toLowerCase());
             if (amount == 0) return;
 
