@@ -128,9 +128,9 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
             EmbedBuilder eb = new EmbedBuilder();
             eb.setTitle(self ? "Twoje czasy gry" : "Czasy gry " + name);
             if (self) {
-                eb.addField("Aktualny czas", time.getSession().equals(GameTime.empty()) ? "Gracz jest offline" : formatDiscord(time.getSession(), true), false);
+                eb.addField("Aktualny czas", formatDiscord(time.getSession(), true), false);
             } else {
-                eb.addField("Aktualny czas", time.getFakeSession().equals(GameTime.empty()) ? "Gracz jest offline" : formatDiscord(time.getFakeSession(), false), false);
+                eb.addField("Aktualny czas", formatDiscord(time.getFakeSession(), false), false);
             }
             eb.addField("Czas dzienny", formatDiscord(time.getDaily(), self), false);
             eb.addField("Łączny czas", formatDiscord(time.getTotal(), self), false);
@@ -142,6 +142,9 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
     }
 
     private @NotNull String formatDiscord(@NotNull GameTime time, boolean showIncognito) {
+        if (time.equals(GameTime.empty())) {
+            return "Gracz jest offline";
+        }
         String result = "Razem: `" + Utils.parseMillisToString(time.getNormal() + time.getAfk() + (showIncognito ? time.getIncognito() : 0), false) + "` w tym:\n" +
                 " - Czas zwykły: `" + Utils.parseMillisToString(time.getNormal(), false) + "`\n" +
                 " - Czas AFK: `" + Utils.parseMillisToString(time.getAfk(), false) + "`";
@@ -152,6 +155,9 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
     }
 
     private @NotNull String formatMinecraft(@NotNull GameTime time, boolean showIncognito) {
+        if (time.equals(GameTime.empty())) {
+            return "&cGracz jest offline";
+        }
         String result = Utils.parseMillisToString(time.getNormal() + time.getAfk() + (showIncognito ? time.getIncognito() : 0), false) +
                 " &6[&e" +
                 Utils.parseMillisToString(time.getNormal(), false) + " &6|&e " +

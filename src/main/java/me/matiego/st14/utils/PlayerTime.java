@@ -63,12 +63,11 @@ public class PlayerTime {
         if (type == newType) return;
         updateCurrent();
         session = GameTime.add(session, current);
-        if (newType == GameTime.Type.INCOGNITO) {
-            fakeSession = GameTime.empty();
-        } else {
-            fakeSession = session;
-        }
+        fakeSession = GameTime.add(fakeSession, current);
         current = GameTime.empty();
+        if (type == GameTime.Type.INCOGNITO || newType == GameTime.Type.INCOGNITO) {
+            fakeSession = GameTime.empty();
+        }
         type = newType;
         startOfCurrentType = Utils.now();
     }

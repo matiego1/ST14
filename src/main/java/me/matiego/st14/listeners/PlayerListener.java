@@ -282,6 +282,7 @@ public class PlayerListener implements Listener {
         }
         if (command.isBlank()) return;
         if (command.charAt(0) == '/') command = command.substring(1);
+        if (command.isBlank()) return;
 
         if (player.isOp()) {
             Logs.info("[" + player.getName() + "]: " + event.getMessage());
@@ -290,6 +291,11 @@ public class PlayerListener implements Listener {
 
         List<String> allowedCommands = plugin.getConfig().getStringList("allowed-commands");
         if (allowedCommands.isEmpty()) {
+            Logs.info("[" + player.getName() + "]: " + event.getMessage());
+            return;
+        }
+
+        if (plugin.getConfig().getStringList("allowed-commands-bypass").contains(event.getPlayer().getUniqueId().toString())) {
             Logs.info("[" + player.getName() + "]: " + event.getMessage());
             return;
         }
@@ -309,6 +315,7 @@ public class PlayerListener implements Listener {
         if (event.getPlayer().isOp()) return;
         List<String> allowedCommands = plugin.getConfig().getStringList("allowed-commands");
         if (allowedCommands.isEmpty()) return;
+        if (plugin.getConfig().getStringList("allowed-commands-bypass").contains(event.getPlayer().getUniqueId().toString())) return;
 
         Iterator<String> iterator = event.getCommands().iterator();
         while (iterator.hasNext()) {

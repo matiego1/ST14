@@ -1,6 +1,7 @@
 package me.matiego.st14;
 
 import me.matiego.st14.utils.Pair;
+import me.matiego.st14.utils.Prefix;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
@@ -71,6 +72,13 @@ public class AntyLogoutManager {
         if (!isInAntyLogout(player)) return;
         plugin.getGravesListener().unprotectNextGrave(player.getUniqueId());
         player.setHealth(0);
+        Utils.broadcastMessage(
+                player,
+                Prefix.ANTY_LOGOUT,
+                "Twój grób jest odblokowany!",
+                "Gracz " + player.getName() + " wyszedł z gry z aktywnym anty-logout'em.",
+                "Gracz **" + player.getName() + "** wyszedł z gry z aktywnym anty-logout'em"
+        );
     }
 
     public void cancelAntyLogout(@NotNull Player player) {

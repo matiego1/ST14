@@ -24,11 +24,13 @@ public class RewardsManager {
         this.plugin = plugin;
     }
 
+    //RFP = reward for playing
+
     private final Main plugin;
     private BukkitTask task;
-    private final String ERROR_MSG = "An error occurred while modifying values in \"st14_rewards\" table in the database.";
-    private final HashMap<UUID, Data> cache = new HashMap<>();
-    private final int MAX_RFP = 100; //RFP = Reward for playing
+    private final String ERROR_MSG = "An error occurred while modifying values in \"st14_rewards_rfp\" table in the database.";
+    private final HashMap<UUID, Data> cacheRFP = new HashMap<>();
+    private final int MAX_RFP = 100;
     private final long RFP_INTERVAL_MS = 300_000;
 
     public synchronized void start() {
@@ -45,7 +47,7 @@ public class RewardsManager {
                     if (playerTime == null) return;
                     GameTime time = playerTime.getDaily();
 
-                    Data data = cache.get(uuid);
+                    Data data = cacheRFP.get(uuid);
                     if (data == null) return;
                     if (data.getLast() <= 0) {
                         data.setLast(time.getNormal());
@@ -59,7 +61,7 @@ public class RewardsManager {
                     int limit = data.getLimit();
                     if (limit >= MAX_RFP) {
                         sendActionBar(player, "&cUzbierałeś dzienny limit pieniędzy za granie");
-                        cache.put(uuid, data);
+                        cacheRFP.put(uuid, data);
                         return;
                     }
 
@@ -69,7 +71,7 @@ public class RewardsManager {
 
                     if (economy.depositPlayer(player, amount).transactionSuccess()) {
                         sendActionBar(player, "&eDostałeś " + economy.format(amount) + " za " + amount + " minut gry");
-                        cache.put(uuid, data);
+                        cacheRFP.put(uuid, data);
                     }
                 });
             }
@@ -87,9 +89,9 @@ public class RewardsManager {
         }
     }
 
-    private @Nullable Data get(@NotNull UUID uuid) {
+    private @Nullable Data getRFP(@NotNull UUID uuid) {
         try (Connection conn = plugin.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT amount, last FROM st14_rewards WHERE uuid = ?")) {
+             PreparedStatement stmt = conn.prepareStatement("SELECT amount, last FROM st14_rewards_rfp WHERE uuid = ?")) {
             stmt.setString(1, uuid.toString());
             ResultSet result = stmt.executeQuery();
             if (!result.next()) return new Data(0, 0);
@@ -101,10 +103,10 @@ public class RewardsManager {
         return null;
     }
 
-    private void set(@NotNull UUID uuid, @NotNull Data data) {
+    private void setRFP(@NotNull UUID uuid, @NotNull Data data) {
         long now = Utils.now();
         try (Connection conn = plugin.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_rewards(uuid, amount, last) VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE amount = ?, last = ?")) {
+             PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_rewards_rfp(uuid, amount, last) VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE amount = ?, last = ?")) {
             stmt.setString(1, uuid.toString());
             stmt.setInt(2, data.getLimit());
             stmt.setLong(3, now);
@@ -116,23 +118,60 @@ public class RewardsManager {
         }
     }
 
+    public @Nullable Data getCounting(@NotNull UUID uuid) {
+        try (Connection conn = plugin.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT amount, last_msg, last_save FROM st14_rewards_counting WHERE uuid = ?")) {
+            stmt.setString(1, uuid.toString());
+            ResultSet result = stmt.executeQuery();
+            if (!result.next()) return new Data(0, 0);
+            if (Utils.isDifferentDay(Utils.now(), result.getLong("last_save"))) return new Data(0, 0);
+            return new Data(result.getInt("amount"), result.getLong("last_msg"));
+        } catch (SQLException e) {
+            Logs.error(ERROR_MSG, e);
+        }
+        return null;
+    }
+
+    public boolean setCounting(@NotNull UUID uuid, @NotNull Data data) {
+        long now = Utils.now();
+        try (Connection conn = plugin.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_rewards_counting(uuid, amount, last_msg, last_save) VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = ?, last_msg = ?, last_save = ?")) {
+            stmt.setString(1, uuid.toString());
+            stmt.setInt(2, data.getLimit());
+            stmt.setLong(3, data.getLast());
+            stmt.setLong(4, now);
+
+            stmt.setInt(5, data.getLimit());
+            stmt.setLong(6, data.getLast());
+            stmt.setLong(7, now);
+            stmt.execute();
+            return true;
+        } catch (SQLException e) {
+            Logs.error(ERROR_MSG, e);
+        }
+        return false;
+    }
+
     public boolean load(@NotNull UUID uuid) {
-        Data data = get(uuid);
-        if (data == null) return false;
-        cache.put(uuid, data);
+        Data rfp = getRFP(uuid);
+        if (rfp == null) return false;
+        cacheRFP.put(uuid, rfp);
         return true;
     }
 
     public void unload(@NotNull UUID uuid) {
-        Data data = cache.remove(uuid);
-        if (data == null) return;
-        set(uuid, data);
+        Data rfp = cacheRFP.remove(uuid);
+        if (rfp != null) setRFP(uuid, rfp);
     }
 
     public static boolean createTable() {
-        try (Connection conn = Main.getInstance().getConnection();
-             PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_rewards(uuid VARCHAR(36) NOT NULL, amount INT NOT NULL, last BIGINT NOT NULL, PRIMARY KEY (uuid))")) {
-            stmt.execute();
+        try (Connection conn = Main.getInstance().getConnection()) {
+            try (PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_rewards_rfp(uuid VARCHAR(36) NOT NULL, amount INT NOT NULL, last BIGINT NOT NULL, PRIMARY KEY (uuid))")) {
+                stmt.execute();
+            }
+            try (PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_rewards_counting(uuid VARCHAR(36) NOT NULL, amount INT NOT NULL, last_msg BIGINT NOT NULL, last_save BIGINT NOT NULL, PRIMARY KEY (uuid))")) {
+                stmt.execute();
+            }
             return true;
         } catch (SQLException e) {
             Logs.error("An error occurred while creating the database table \"st14_rewards\"", e);
@@ -140,7 +179,7 @@ public class RewardsManager {
         return false;
     }
 
-    private static class Data {
+    public static class Data {
         public Data(int limit, long last) {
             this.limit = limit;
             this.last = last;

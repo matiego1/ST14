@@ -151,6 +151,11 @@ public final class Main extends JavaPlugin implements Listener {
         Bukkit.getMessenger().registerIncomingPluginChannel(this, "minecraft:brand", serverListener);
         Bukkit.getPluginManager().registerEvents(this, this);
 
+        //Counting plugin
+        if (Bukkit.getPluginManager().getPlugin("Counting") != null) {
+            Bukkit.getPluginManager().registerEvents(new CountingListener(this), this);
+        }
+
         //Enable the Discord bot
         Logs.info("Enabling the Discord bot...");
         RestAction.setDefaultFailure(throwable -> Logs.error("An error occurred!", throwable));

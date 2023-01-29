@@ -248,12 +248,26 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.12.0</version>
         </dependency>
+        <!--Graves-->
         <dependency>
             <groupId>com.ranull</groupId>
             <artifactId>graves</artifactId>
             <version>4.9</version>
             <scope>system</scope>
             <systemPath>${project.basedir}\Graves-4.9.jar</systemPath>
+        </dependency>
+        <!--CountingBot-->
+        <dependency>
+            <groupId>com.github.matiego1</groupId>
+            <artifactId>CountingBot</artifactId>
+            <version>142ce09</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.bukkit</groupId>
+                    <artifactId>bukkit</artifactId>
+                </exclusion>
+            </exclusions>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
