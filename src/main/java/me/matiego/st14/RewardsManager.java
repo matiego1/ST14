@@ -28,7 +28,7 @@ public class RewardsManager {
 
     private final Main plugin;
     private BukkitTask task;
-    private final String ERROR_MSG = "An error occurred while modifying values in \"st14_rewards_rfp\" table in the database.";
+    private final String ERROR_MSG = "An error occurred while modifying values in \"st14_rewards\" table in the database.";
     private final HashMap<UUID, Data> cacheRFP = new HashMap<>();
     private final long RFP_INTERVAL_MS = 300_000;
 
@@ -142,7 +142,7 @@ public class RewardsManager {
 
     public boolean setCounting(@NotNull UUID uuid, @NotNull Data data) {
         try (Connection conn = plugin.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_rewards_counting(uuid, amount, last) VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = ?, last = ?")) {
+             PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_rewards_counting(uuid, amount, last) VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE amount = ?, last = ?")) {
             stmt.setString(1, uuid.toString());
             stmt.setDouble(2, data.getLimit());
             stmt.setLong(3, data.getLast());
