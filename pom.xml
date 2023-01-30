@@ -256,7 +256,7 @@
         <dependency>
             <groupId>com.github.matiego1</groupId>
             <artifactId>CountingBot</artifactId>
-            <version>641d9b2</version>
+            <version>4cb3b75</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.bukkit</groupId>
