@@ -185,4 +185,8 @@ public class Utils {
             Main.getInstance().getChatMinecraft().sendMessage(discord, prefix.getDiscord());
         });
     }
+
+    public static @NotNull String formatDouble(double number) {
+        return (number % 1) == 0 ? String.valueOf((int) number) : String.valueOf(number);
+    }
 }

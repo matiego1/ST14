@@ -220,6 +220,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                         for (ItemStack item : drop.values()) {
                             player.getWorld().dropItem(player.getLocation().add(0, 0.5, 0), item);
                         }
+                        Logs.info("Gracz " + player.getName() + " wypłacił " + economy.format(amount) + " ze swojego konta.");
                         player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie wypłacono &9" + economy.format(amount) + "&b z twojego konta."));
                         return List.of(AnvilGUI.ResponseAction.close());
                     })
@@ -261,6 +262,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                     }
 
                     player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie przelano " + economy.format(amount) + " graczowi " + completion.getText() + "."));
+                    Logs.info("Gracz " + player.getName() + " przelał " + economy.format(amount) + " graczowi " + completion.getText() + ".");
                     informPlayer(target, player.getName(), amount, Type.ADD);
                     return List.of(AnvilGUI.ResponseAction.close());
                 })

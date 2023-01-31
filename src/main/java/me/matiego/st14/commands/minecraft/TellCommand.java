@@ -92,6 +92,7 @@ public class TellCommand implements CommandHandler.Minecraft {
             putReply(player.getUniqueId(), receiver.getUniqueId());
             player.sendMessage(Utils.getComponentByString("&6[&cJa &6->&c " + receiver.getName() + "&6]:&r " + msg));
             receiver.sendMessage(Utils.getComponentByString("&6[&c" + player.getName() + " &6->&c Ja&6]:&r " + msg));
+            Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString("&6[&c" + player.getName() + " &6-> &c" + receiver.getName() + "&6]:&r " + msg));
             log(msg, "Wiadomość prywatna - od " + player.getName() + " do " + receiver.getName());
             return 0;
         }

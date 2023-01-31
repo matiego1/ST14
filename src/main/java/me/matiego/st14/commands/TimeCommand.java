@@ -179,7 +179,7 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
     @Override
     public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteraction event) {
         event.replyChoices(plugin.getOfflinePlayers().getNames().stream()
-                .filter(name -> name.startsWith(event.getFocusedOption().getValue()))
+                .filter(name -> name.toLowerCase().startsWith(event.getFocusedOption().getValue().toLowerCase()))
                 .map(name -> new Command.Choice(name, name))
                 .collect(Collectors.toList())
         ).queue();

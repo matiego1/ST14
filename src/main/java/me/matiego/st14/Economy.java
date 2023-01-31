@@ -68,7 +68,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
      */
     @Override
     public @NotNull String format(double amount) {
-        return Utils.round(amount, 2) + "$";
+        return Utils.formatDouble(Utils.round(amount, 2)) + "$";
     }
 
     /**

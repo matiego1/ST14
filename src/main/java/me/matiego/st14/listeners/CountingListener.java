@@ -62,7 +62,7 @@ public class CountingListener implements Listener {
         if (!plugin.getRewardsManager().setCounting(uuid, data)) return;
 
         if (plugin.getEconomy().depositPlayer(Bukkit.getOfflinePlayer(uuid), amount).transactionSuccess()) {
-            event.setDisplayName("[" + amount + "$] " + event.getDisplayName());
+            event.setDisplayName("[" + plugin.getEconomy().format(amount) + "] " + event.getDisplayName());
             Logs.info("[DEBUG] LICZENIE - gracz: " + plugin.getOfflinePlayers().getEffectiveNameById(uuid) + "; kanał: " + channel.getChannelId() + "; typ: " + channel.getType().name() + "; ilość: " + amount);
         }
     }
