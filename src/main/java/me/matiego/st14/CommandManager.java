@@ -148,7 +148,7 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
     @Override
     public void onUserContextInteraction(@NotNull UserContextInteractionEvent event) {
         User user = event.getUser();
-        String command = Command.Type.USER.name() + event.getName();
+        String command = Command.Type.USER.name() + "#" + event.getName();
 
         if (!isEnabled()) {
             event.reply("Komendy są aktualnie wyłączone. Spróbuj później.").setEphemeral(true).queue();
@@ -173,7 +173,7 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
             return;
         }
 
-        Logs.info(user.getAsTag() + " [" + user.getId() + "]: /" + command);
+        Logs.info(user.getAsTag() + " [" + user.getId() + "]: " + command);
         //execute command
         try {
             int cooldown = handler.onUserContextInteraction(event.getInteraction());
@@ -261,6 +261,6 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
         minecraftCooldown.put(command + "#" + uuid, seconds * 1000L + Utils.now());
     }
     private @NotNull String getCommandName(@NotNull CommandData data) {
-        return (data.getType() == Command.Type.SLASH ? "" : data.getType().name()) + data.getName();
+        return (data.getType() == Command.Type.SLASH ? "" : data.getType().name() + "#") + data.getName();
     }
 }

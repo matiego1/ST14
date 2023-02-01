@@ -34,7 +34,7 @@ public class VerifyCommand implements CommandHandler.Discord {
         InteractionHook hook = event.getHook();
 
         Guild guild = event.getGuild();
-        if (guild == null || plugin.getConfig().getLong("discord.guild-id") == guild.getIdLong()) {
+        if (guild == null || plugin.getConfig().getLong("discord.guild-id") != guild.getIdLong()) {
             hook.sendMessage("This interaction can only be used in a guild.").queue();
             return 0;
         }
