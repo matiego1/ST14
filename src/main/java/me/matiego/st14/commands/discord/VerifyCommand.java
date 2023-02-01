@@ -64,9 +64,9 @@ public class VerifyCommand implements CommandHandler.Discord {
                             String.join("\n", plugin.getConfig().getStringList("discord.welcome-message"))
                                     .replace("{mention}", member.getAsMention())
                     );
-                    event.reply("Success!").queue();
+                    hook.sendMessage("Success!").queue();
                 },
-                failure -> event.reply("An error occurred.").queue()
+                failure -> hook.sendMessage("An error occurred.").queue()
         );
         return 0;
     }
