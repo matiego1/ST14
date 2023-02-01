@@ -3,8 +3,8 @@ package me.matiego.st14.utils;
 import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.context.UserContextInteraction;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
-import net.dv8tion.jda.api.interactions.components.selections.StringSelectInteraction;
 import net.dv8tion.jda.api.interactions.modals.ModalInteraction;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
@@ -35,12 +35,12 @@ public interface CommandHandler {
         default int onModalInteraction(@NotNull ModalInteraction event) {
             return -1;
         }
-        default int onStringSelectInteraction(@NotNull StringSelectInteraction event) {
-            return -1;
-        }
         default int onButtonInteraction(@NotNull ButtonInteraction event) {
             return -1;
         }
         default void onCommandAutoCompleteInteraction(@Nonnull CommandAutoCompleteInteraction event) {}
+        default int onUserContextInteraction(@NotNull UserContextInteraction event) {
+            return -1;
+        }
     }
 }

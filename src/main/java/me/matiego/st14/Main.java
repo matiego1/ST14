@@ -5,10 +5,7 @@ import com.neovisionaries.ws.client.DualStackMode;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import lombok.Getter;
 import me.matiego.st14.commands.*;
-import me.matiego.st14.commands.discord.AllPlayersCommand;
-import me.matiego.st14.commands.discord.FeedbackCommand;
-import me.matiego.st14.commands.discord.ListCommand;
-import me.matiego.st14.commands.discord.PingCommand;
+import me.matiego.st14.commands.discord.*;
 import me.matiego.st14.commands.minecraft.*;
 import me.matiego.st14.listeners.*;
 import me.matiego.st14.utils.DiscordUtils;
@@ -87,10 +84,6 @@ public final class Main extends JavaPlugin implements Listener {
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
-        Logs.info("getBukkitVersion: " + Bukkit.getBukkitVersion());
-        Logs.info("getVersionMessage: " + Bukkit.getVersionMessage());
-        Logs.info("getVersion: " + Bukkit.getVersion());
-        Logs.info("getMinecraftVersion: " + Bukkit.getMinecraftVersion());
 
         //Save config file
         try {
@@ -247,7 +240,8 @@ public final class Main extends JavaPlugin implements Listener {
                 new PingCommand(),
                 new ListCommand(),
                 new FeedbackCommand(),
-                new AllPlayersCommand()
+                new AllPlayersCommand(),
+                new VerifyCommand(this)
         ));
         Bukkit.getPluginManager().registerEvents(commandManager, this);
         jda.addEventListener(commandManager);

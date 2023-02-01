@@ -7,17 +7,17 @@ import me.matiego.st14.utils.*;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.UserSnowflake;
+import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
-import net.dv8tion.jda.api.interactions.components.selections.StringSelectInteraction;
 import net.dv8tion.jda.api.interactions.modals.ModalInteraction;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -116,8 +116,6 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
             return;
         }
 
-        Logs.info(user.getAsTag() + " [" + user.getId() + "]: /" + command);
-
         //check permissions
         if (!DiscordUtils.hasRequiredPermissions(event.getChannel())) {
             event.reply("Nie mam wymaganych uprawnień na tym kanale.").setEphemeral(true).queue();
@@ -135,6 +133,8 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
             event.reply("Tej komendy możesz użyć za " + Utils.parseMillisToString(time, false) + ".").setEphemeral(true).queue();
             return;
         }
+
+        Logs.info(user.getAsTag() + " [" + user.getId() + "]: /" + command);
         //execute command
         try {
             int cooldown = handler.onSlashCommandInteraction(event.getInteraction());
@@ -146,23 +146,51 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
     }
 
     @Override
-    public void onStringSelectInteraction(@NotNull StringSelectInteractionEvent event) {
-        StringSelectInteraction interaction = event.getInteraction();
-        int cooldown = -1;
-        for (CommandHandler.Discord handler : discordCommands.values()) {
-            try {
-                cooldown = handler.onStringSelectInteraction(interaction);
-            } catch (Exception ignored) {}
-            if (interaction.isAcknowledged()) {
-                if (cooldown > 0) putCooldown(getCommandName(handler.getDiscordCommand()), event.getUser(), cooldown);
-                return;
-            }
+    public void onUserContextInteraction(@NotNull UserContextInteractionEvent event) {
+        User user = event.getUser();
+        String command = Command.Type.USER.name() + event.getName();
+
+        if (!isEnabled()) {
+            event.reply("Komendy są aktualnie wyłączone. Spróbuj później.").setEphemeral(true).queue();
+            return;
         }
-        event.reply("Nieznana komenda.").setEphemeral(true).queue();
+
+        //check permissions
+        if (event.getChannel() instanceof MessageChannelUnion messageChannel && !DiscordUtils.hasRequiredPermissions(messageChannel)) {
+            event.reply("Nie mam wymaganych uprawnień na tym kanale.").setEphemeral(true).queue();
+            return;
+        }
+        //get handler
+        CommandHandler.Discord handler = discordCommands.get(command);
+        if (handler == null) {
+            event.reply("Nieznana komenda.").setEphemeral(true).queue();
+            return;
+        }
+        //check cooldown
+        long time = getRemainingCooldown(getCommandName(handler.getDiscordCommand()), user);
+        if (time > 0) {
+            event.reply("Tej komendy możesz użyć za " + Utils.parseMillisToString(time, false) + ".").setEphemeral(true).queue();
+            return;
+        }
+
+        Logs.info(user.getAsTag() + " [" + user.getId() + "]: /" + command);
+        //execute command
+        try {
+            int cooldown = handler.onUserContextInteraction(event.getInteraction());
+            if (cooldown > 0) putCooldown(getCommandName(handler.getDiscordCommand()), user, cooldown);
+        } catch (Exception e) {
+            event.reply("Napotkano niespodziewany błąd. Spróbuj później.").setEphemeral(true).queue(success -> {}, failure -> {});
+            Logs.error("An error occurred while executing a command.", e);
+        }
     }
 
     @Override
     public void onModalInteraction(@NotNull ModalInteractionEvent event) {
+        if (!isEnabled()) {
+            event.reply("Komendy są aktualnie wyłączone. Spróbuj później.").setEphemeral(true).queue();
+            return;
+        }
+
         ModalInteraction interaction = event.getInteraction();
         int cooldown = -1;
         for (CommandHandler.Discord handler : discordCommands.values()) {
@@ -179,6 +207,11 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
 
     @Override
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
+        if (!isEnabled()) {
+            event.reply("Komendy są aktualnie wyłączone. Spróbuj później.").setEphemeral(true).queue();
+            return;
+        }
+
         ButtonInteraction interaction = event.getInteraction();
         int cooldown = -1;
         for (CommandHandler.Discord handler : discordCommands.values()) {
@@ -195,6 +228,8 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
 
     @Override
     public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
+        if (!isEnabled()) return;
+
         CommandAutoCompleteInteraction interaction = event.getInteraction();
         for (CommandHandler.Discord handler : discordCommands.values()) {
             try {

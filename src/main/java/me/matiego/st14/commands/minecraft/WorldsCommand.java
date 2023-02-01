@@ -120,10 +120,10 @@ public class WorldsCommand implements CommandHandler.Minecraft {
 
         setLastLocation(player.getUniqueId(), player.getLocation());
         Location loc = getLastLocation(player.getUniqueId(), target);
-        Location finalLoc = loc == null ? target.getSpawnLocation() : loc;
+
         Utils.async(() -> {
             try {
-                String msg = switch (plugin.getTeleportsManager().teleport(player, finalLoc, 5, () -> hasPermission(player, finalLoc.getWorld())).get()) {
+                String msg = switch (plugin.getTeleportsManager().teleport(player, loc, 5, () -> hasPermission(player, loc.getWorld())).get()) {
                     case SUCCESS -> null;
                     case MOVE -> "&dTeleportowanie anulowane, poruszyłeś się.";
                     case ALREADY_ACTIVE -> "&dProces teleportowania już został rozpoczęty.";
@@ -135,8 +135,8 @@ public class WorldsCommand implements CommandHandler.Minecraft {
                             player,
                             Prefix.WORLDS,
                             "Przeteleportowano pomyślnie.",
-                            "Gracz &1" + player.getName() + "&3 przeszedł do świata &1" + Utils.getWorldName(finalLoc.getWorld()) + "&3!",
-                            "Gracz **" + player.getName() + "** przeszedł do świata **" + Utils.getWorldName(finalLoc.getWorld()) + "**!"
+                            "Gracz &1" + player.getName() + "&3 przeszedł do świata &1" + Utils.getWorldName(loc.getWorld()) + "&3!",
+                            "Gracz **" + player.getName() + "** przeszedł do świata **" + Utils.getWorldName(loc.getWorld()) + "**!"
                     );
                     return;
                 }
@@ -153,13 +153,16 @@ public class WorldsCommand implements CommandHandler.Minecraft {
         return !plugin.getConfig().getBoolean("worlds-command." + world.getName() + ".private");
     }
 
-    private @Nullable Location getLastLocation(@NotNull UUID uuid, @NotNull World world) {
+    private @NotNull Location getLastLocation(@NotNull UUID uuid, @NotNull World world) {
+        if (plugin.getConfig().getBoolean("worlds-command." + world.getName() + ".teleport-to-spawn")) {
+            return world.getSpawnLocation();
+        }
         try (Connection conn = plugin.getConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT x, y, z, yaw, pitch FROM st14_worlds_cmd WHERE uuid = ? AND world = ?")) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, world.getUID().toString());
             ResultSet result = stmt.executeQuery();
-            if (!result.next()) return null;
+            if (!result.next()) return world.getSpawnLocation();
 
             return new Location(
                     world,
@@ -172,7 +175,7 @@ public class WorldsCommand implements CommandHandler.Minecraft {
         } catch (SQLException e) {
             Logs.error(ERROR_MSG, e);
         }
-        return null;
+        return world.getSpawnLocation();
     }
 
     private void setLastLocation(@NotNull UUID uuid, @NotNull Location loc) {
