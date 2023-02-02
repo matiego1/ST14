@@ -15,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
-import java.util.regex.Pattern;
 
 public class SayCommand implements CommandHandler.Minecraft {
     private final PluginCommand command;
@@ -41,9 +40,9 @@ public class SayCommand implements CommandHandler.Minecraft {
 
         if (!(sender instanceof Player)) {
             try {
-                if (Pattern.compile(plugin.getConfig().getString("say-command.disallowed-regex", "[^\\s\\S]*")).matcher(message).matches()) return 0;
-                if (Pattern.compile(plugin.getConfig().getString("say-command.stop-regex", "[^\\s\\S]*")).matcher(message).matches()
-                        || Pattern.compile(plugin.getConfig().getString("say-command.restart-regex", "[^\\s\\S]*")).matcher(message).matches()) {
+                if (message.matches(plugin.getConfig().getString("say-command.disallowed-regex", "[^\\s\\S]*"))) return 0;
+                if (message.matches(plugin.getConfig().getString("say-command.stop-regex", "[^\\s\\S]*"))
+                        || message.matches(plugin.getConfig().getString("say-command.restart-regex", "[^\\s\\S]*"))) {
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "st14:stop");
                     return 0;
                 }

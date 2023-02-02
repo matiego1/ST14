@@ -60,12 +60,13 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
                     sender.sendMessage(Utils.getComponentByString(Prefix.TIME + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
                     return;
                 }
+                boolean console = !(sender instanceof Player);
                 sender.sendMessage(Utils.getComponentByString(
                         Prefix.TIME + "&6==============================\n" +
                         Prefix.TIME + "&6&lCzasy gracza &6" + args[0] + "&e:\n" +
-                        Prefix.TIME + "&6Aktualny czas&e: " + formatMinecraft(time.getSession(), false) + "\n" +
-                        Prefix.TIME + "&6Czas dzienny &e: " + formatMinecraft(time.getDaily(), false) + "\n" +
-                        Prefix.TIME + "&6Łączny czas  &e: " + formatMinecraft(time.getTotal(), false) + "\n" +
+                        Prefix.TIME + "&6Aktualny czas&e: " + formatMinecraft(time.getSession(), console) + "\n" +
+                        Prefix.TIME + "&6Czas dzienny &e: " + formatMinecraft(time.getDaily(), console) + "\n" +
+                        Prefix.TIME + "&6Łączny czas  &e: " + formatMinecraft(time.getTotal(), console) + "\n" +
                         Prefix.TIME + "&6=============================="
                 ));
             });

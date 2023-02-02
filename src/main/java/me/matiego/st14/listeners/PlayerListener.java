@@ -3,6 +3,7 @@ package me.matiego.st14.listeners;
 import com.destroystokyo.paper.event.player.PlayerAdvancementCriterionGrantEvent;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import io.papermc.paper.event.player.PlayerItemFrameChangeEvent;
+import me.matiego.st14.GameManager;
 import me.matiego.st14.IncognitoManager;
 import me.matiego.st14.Main;
 import me.matiego.st14.PremiumManager;
@@ -44,6 +45,7 @@ import org.jetbrains.annotations.NotNull;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
 public class PlayerListener implements Listener {
@@ -167,11 +169,14 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
 
+        //load rewards
         Utils.async(() -> {
             if (!plugin.getRewardsManager().load(uuid)) {
                 player.sendMessage(Utils.getComponentByString("&cNapotkano niespodziewany błąd! Aby dostawać pieniądze za granie, dołącz ponownie."));
             }
         });
+        //afk
+        plugin.getAfkManager().move(player);
         //load player times
         if (!plugin.getTimeManager().join(player)) {
             player.kick(Utils.getComponentByString("&cNapotkano niespodziewany błąd przy ładowaniu twoich czasów. Spróbuj ponownie."));
@@ -192,6 +197,8 @@ public class PlayerListener implements Listener {
         event.joinMessage(Utils.getComponentByString("&eGracz " + player.getName() + " dołączył do gry"));
         plugin.getChatMinecraft().sendJoinMessage(player);
         plugin.getChatMinecraft().sendConsoleJoinMessage(player);
+        //handle game
+        plugin.getGameManager().onPlayerJoin(player);
     }
 
     @EventHandler
@@ -204,6 +211,7 @@ public class PlayerListener implements Listener {
         positionBossBars.remove(player.getUniqueId());
         plugin.getAfkManager().move(player);
         plugin.getBackpackManager().clearCache(player.getUniqueId());
+        plugin.getGameManager().onPlayerQuit(player);
         Utils.async(() -> {
             plugin.getTimeManager().quit(player);
             plugin.getRewardsManager().unload(player.getUniqueId());
@@ -231,6 +239,7 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
 
         plugin.getAntyLogoutManager().cancelAntyLogout(player);
+        plugin.getGameManager().onPlayerDeath(player);
 
         Component component = event.deathMessage();
         String msg = player.getName() + " died";
@@ -244,6 +253,9 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onPlayerChat(@NotNull AsyncChatEvent event) {
         Player player = event.getPlayer();
+
+        plugin.getAfkManager().move(player);
+
         Block block = player.getLocation().getBlock();
         final Component message = event.message().replaceText(
                 TextReplacementConfig
@@ -253,6 +265,7 @@ public class PlayerListener implements Listener {
                         .once()
                         .build()
         );
+
         event.renderer((p1, p2, p3, p4) ->
                 Utils.getComponentByString("&a[" + Utils.getWorldPrefix(player.getWorld()) + "] &f")
                 .append(player.displayName())
@@ -355,8 +368,9 @@ public class PlayerListener implements Listener {
 
     @EventHandler (priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerMove(@NotNull PlayerMoveEvent event) {
+        Player player = event.getPlayer();
+        plugin.getAfkManager().move(player);
         if (event.hasChangedBlock()) {
-            Player player = event.getPlayer();
             if (player.isGliding()) {
                 BossBar bar = positionBossBars.get(player.getUniqueId());
                 if (bar == null) {
@@ -477,11 +491,15 @@ public class PlayerListener implements Listener {
 
     @EventHandler (priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreak(@NotNull BlockBreakEvent event) {
-        String material = event.getBlock().getBlockData().getMaterial().name().toLowerCase();
-        if (material.contains("diamond") || material.contains("netherite") || material.contains("ancient_debris")) {
-            Logs.info("Gracz " + event.getPlayer().getName() + " wykopał " + material.toUpperCase() + "!");
+        String material = event.getBlock().getBlockData().getMaterial().name();
+        try {
+            if (material.matches(plugin.getConfig().getString("block-break-warn-regex", "[^\\s\\S]*"))) {
+                Logs.info("Gracz " + event.getPlayer().getName() + " wykopał " + material.toUpperCase() + "!");
+            }
+        } catch (PatternSyntaxException e) {
+            Logs.warning("block-break-warn regex's syntax is invalid");
+            e.printStackTrace();
         }
-
     }
 
     @EventHandler (ignoreCancelled = true)
@@ -503,4 +521,19 @@ public class PlayerListener implements Listener {
         plugin.getIncognitoCommand().onInventoryClose(event.getPlayer().getUniqueId());
     }
 
+    @EventHandler (priority = EventPriority.MONITOR)
+    public void onPlayerRespawn(@NotNull PlayerRespawnEvent event) {
+        plugin.getAfkManager().move(event.getPlayer());
+    }
+
+    @EventHandler (priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerChangedWorld(@NotNull PlayerChangedWorldEvent event) {
+        Player player = event.getPlayer();
+        GameManager manager = plugin.getGameManager();
+        if (event.getFrom().equals(manager.getActiveGameWorld())) {
+            manager.onPlayerQuit(player);
+        } else if (player.getWorld().equals(manager.getActiveGameWorld())) {
+            manager.onPlayerJoin(player);
+        }
+    }
 }

@@ -60,6 +60,7 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private BackpackManager backpackManager;
     @Getter private RewardsManager rewardsManager;
     @Getter private AntyLogoutManager antyLogoutManager;
+    @Getter private GameManager gameManager;
     private TabListManager tabListManager;
     private ChatReportsManager chatReportsManager;
 
@@ -133,6 +134,7 @@ public final class Main extends JavaPlugin implements Listener {
         backpackManager = new BackpackManager(this);
         chatReportsManager = new ChatReportsManager();
         antyLogoutManager = new AntyLogoutManager(this);
+        gameManager = new GameManager(this);
 
         Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomy(), vault, ServicePriority.High);
 
@@ -140,7 +142,6 @@ public final class Main extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
         final ServerListener serverListener = new ServerListener(this);
         Bukkit.getPluginManager().registerEvents(serverListener, this);
-        Bukkit.getPluginManager().registerEvents(new AfkListener(this), this);
         Bukkit.getPluginManager().registerEvents(new EntityListener(), this);
         Bukkit.getPluginManager().registerEvents(getTeleportsManager(), this);
         gravesListener = new GravesListener();
