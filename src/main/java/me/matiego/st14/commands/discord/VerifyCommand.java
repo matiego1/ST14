@@ -1,8 +1,8 @@
 package me.matiego.st14.commands.discord;
 
-import me.matiego.counting.utils.Utils;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.CommandHandler;
+import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Logs;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -30,43 +30,45 @@ public class VerifyCommand implements CommandHandler.Discord {
 
     @Override
     public int onUserContextInteraction(@NotNull UserContextInteraction event) {
+        if (!event.getName().equals(getDiscordCommand().getName())) return -1;
+
         event.deferReply(true).queue();
         InteractionHook hook = event.getHook();
 
         Guild guild = event.getGuild();
         if (guild == null || plugin.getConfig().getLong("discord.guild-id") != guild.getIdLong()) {
-            hook.sendMessage("This interaction can only be used in a guild.").queue();
+            hook.sendMessage("Nie możesz użyć tej funkcji w tym serwerze.").queue();
             return 0;
         }
 
         Member member = event.getTargetMember();
         if (member == null) {
-            hook.sendMessage("This interaction can only be used in a guild.").queue();
+            hook.sendMessage("Nie możesz użyć tej funkcji w tym serwerze.").queue();
             return 0;
         }
 
         Role role = guild.getRoleById(plugin.getConfig().getLong("discord.role-ids.verified"));
         if (role == null) {
             Logs.warning("A verified-role-id in the config file is not correct.");
-            hook.sendMessage("The `verified` role could not be loaded.").queue();
+            hook.sendMessage("Napotkano błąd przy wczytywaniu roli").queue();
             return 0;
         }
 
         if (member.getRoles().contains(role)) {
-            hook.sendMessage("This user has already been verified.").queue();
+            hook.sendMessage("Ten użytkownik już jest zweryfikowany.").queue();
             return 0;
         }
 
         guild.addRoleToMember(member, role).queue(
                 success -> {
-                    Utils.sendPrivateMessage(
+                    DiscordUtils.sendPrivateMessage(
                             member.getUser(),
                             String.join("\n", plugin.getConfig().getStringList("discord.welcome-message"))
                                     .replace("{mention}", member.getAsMention())
                     );
-                    hook.sendMessage("Success!").queue();
+                    hook.sendMessage("Sukces!").queue();
                 },
-                failure -> hook.sendMessage("An error occurred.").queue()
+                failure -> hook.sendMessage("Napotkano niespodziewany błąd.").queue()
         );
         return 0;
     }

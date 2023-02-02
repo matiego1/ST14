@@ -1,5 +1,6 @@
 package me.matiego.st14.utils;
 
+import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -41,6 +42,10 @@ public interface CommandHandler {
         default void onCommandAutoCompleteInteraction(@Nonnull CommandAutoCompleteInteraction event) {}
         default int onUserContextInteraction(@NotNull UserContextInteraction event) {
             return -1;
+        }
+
+        static boolean isCommandTypeSupported(@NotNull Command.Type type) {
+            return type == Command.Type.SLASH || type == Command.Type.USER;
         }
     }
 }

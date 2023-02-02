@@ -7,7 +7,6 @@ import me.matiego.st14.utils.*;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.UserSnowflake;
-import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -17,6 +16,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.context.UserContextInteraction;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
 import net.dv8tion.jda.api.interactions.modals.ModalInteraction;
 import org.bukkit.command.CommandExecutor;
@@ -41,6 +41,9 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
         handlers.forEach(handler -> {
             if (handler instanceof CommandHandler.Discord discord) {
                 CommandData data = discord.getDiscordCommand();
+                if (!CommandHandler.Discord.isCommandTypeSupported(data.getType())) {
+                    throw new UnsupportedOperationException("unsupported Discord command type: " + data.getType());
+                }
                 discordCommands.put(getCommandName(data), discord);
                 dc.add(data);
             }
@@ -147,41 +150,23 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
 
     @Override
     public void onUserContextInteraction(@NotNull UserContextInteractionEvent event) {
-        User user = event.getUser();
-        String command = Command.Type.USER.name() + "#" + event.getName();
-
         if (!isEnabled()) {
             event.reply("Komendy są aktualnie wyłączone. Spróbuj później.").setEphemeral(true).queue();
             return;
         }
 
-        //check permissions
-        if (event.getChannel() instanceof MessageChannelUnion messageChannel && !DiscordUtils.hasRequiredPermissions(messageChannel)) {
-            event.reply("Nie mam wymaganych uprawnień na tym kanale.").setEphemeral(true).queue();
-            return;
+        UserContextInteraction interaction = event.getInteraction();
+        int cooldown = -1;
+        for (CommandHandler.Discord handler : discordCommands.values()) {
+            try {
+                cooldown = handler.onUserContextInteraction(interaction);
+            } catch (Exception ignored) {}
+            if (interaction.isAcknowledged()) {
+                if (cooldown > 0) putCooldown(getCommandName(handler.getDiscordCommand()), event.getUser(), cooldown);
+                return;
+            }
         }
-        //get handler
-        CommandHandler.Discord handler = discordCommands.get(command);
-        if (handler == null) {
-            event.reply("Nieznana komenda.").setEphemeral(true).queue();
-            return;
-        }
-        //check cooldown
-        long time = getRemainingCooldown(getCommandName(handler.getDiscordCommand()), user);
-        if (time > 0) {
-            event.reply("Tej komendy możesz użyć za " + Utils.parseMillisToString(time, false) + ".").setEphemeral(true).queue();
-            return;
-        }
-
-        Logs.info(user.getAsTag() + " [" + user.getId() + "]: " + command);
-        //execute command
-        try {
-            int cooldown = handler.onUserContextInteraction(event.getInteraction());
-            if (cooldown > 0) putCooldown(getCommandName(handler.getDiscordCommand()), user, cooldown);
-        } catch (Exception e) {
-            event.reply("Napotkano niespodziewany błąd. Spróbuj później.").setEphemeral(true).queue(success -> {}, failure -> {});
-            Logs.error("An error occurred while executing a command.", e);
-        }
+        event.reply("Nieznana komenda.").setEphemeral(true).queue();
     }
 
     @Override
