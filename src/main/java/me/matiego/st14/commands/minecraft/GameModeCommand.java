@@ -28,10 +28,10 @@ public class GameModeCommand implements CommandHandler.Minecraft {
     public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             Bukkit.dispatchCommand(sender, "minecraft:gamemode " + String.join(" ", args));
-            return 1; //to prevent a loop if it somehow happens
+            return 1; //not zero to prevent a loop if it somehow happened
         }
         if (args.length != 0) return -1;
-        if (!Main.getInstance().getConfig().getStringList("gamemode-worlds").contains(player.getWorld().getName())) {
+        if (!player.hasPermission("st14.gamemode." + player.getWorld().getName()) && !Main.getInstance().getConfig().getStringList("gamemode-worlds").contains(player.getWorld().getName())) {
             sender.sendMessage(Utils.getComponentByString("&cNie możesz zmienić trybu gry w tym świecie."));
             return 3;
         }

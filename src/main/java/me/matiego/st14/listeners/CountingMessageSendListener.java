@@ -4,7 +4,6 @@ import me.matiego.counting.ChannelData;
 import me.matiego.counting.utils.CountingMessageSendEvent;
 import me.matiego.st14.Main;
 import me.matiego.st14.RewardsManager;
-import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.entities.UserSnowflake;
 import org.bukkit.Bukkit;
@@ -17,11 +16,10 @@ import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.UUID;
 
-public class CountingListener implements Listener {
-    public CountingListener(@NotNull Main plugin) {
+public class CountingMessageSendListener implements Listener {
+    public CountingMessageSendListener(@NotNull Main plugin) {
         this.plugin = plugin;
     }
-
     private final Main plugin;
 
     @EventHandler (ignoreCancelled = true)
@@ -63,7 +61,6 @@ public class CountingListener implements Listener {
 
         if (plugin.getEconomy().depositPlayer(Bukkit.getOfflinePlayer(uuid), amount).transactionSuccess()) {
             event.setDisplayName("[" + plugin.getEconomy().format(amount) + "] " + event.getDisplayName());
-            Logs.info("[DEBUG] LICZENIE - gracz: " + plugin.getOfflinePlayers().getEffectiveNameById(uuid) + "; kanał: " + channel.getChannelId() + "; typ: " + channel.getType().name() + "; ilość: " + amount);
         }
     }
 
@@ -74,8 +71,7 @@ public class CountingListener implements Listener {
 
     private boolean isOldMessage(@Nullable Long id) {
         if (id == null) return false;
-        long timestamp = (id >>> 22) + 1420070400000L;
-        long now = Calendar.getInstance(TimeZone.getTimeZone("GMT")).getTimeInMillis();
-        return now - timestamp >= 24L * 3600L * 1000L;
+        long different = Calendar.getInstance(TimeZone.getTimeZone("GMT")).getTimeInMillis() - ((id >>> 22) + 1420070400000L);
+        return different >= 24L * 3600L * 1000L;
     }
 }

@@ -7,6 +7,7 @@ import me.matiego.st14.utils.Logs;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
@@ -61,12 +62,10 @@ public class VerifyCommand implements CommandHandler.Discord {
 
         guild.addRoleToMember(member, role).queue(
                 success -> {
-                    DiscordUtils.sendPrivateMessage(
-                            member.getUser(),
-                            String.join("\n", plugin.getConfig().getStringList("discord.welcome-message"))
-                                    .replace("{mention}", member.getAsMention())
-                    );
-                    hook.sendMessage("Sukces!").queue();
+                    String welcomeMessage = String.join("\n", plugin.getConfig().getStringList("discord.welcome-message"))
+                            .replace("{mention}", member.getAsMention());
+                    DiscordUtils.sendPrivateMessage(member.getUser(), DiscordUtils.checkLength(welcomeMessage, Message.MAX_CONTENT_LENGTH));
+                    hook.sendMessage(DiscordUtils.checkLength("Sukces!\nWysłana wiadomość powitalna:\n" + welcomeMessage, Message.MAX_CONTENT_LENGTH)).queue();
                 },
                 failure -> hook.sendMessage("Napotkano niespodziewany błąd.").queue()
         );

@@ -31,7 +31,7 @@ public class Utils {
         try {
             Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), task);
         } catch (IllegalPluginAccessException e) {
-            Logs.warning("An error occurred while running an async task. The task will be run synchronously.");
+            Logs.warning("An error occurred while running an async task. The task will be run in the same thread.");
             task.run();
         }
     }
@@ -44,7 +44,7 @@ public class Utils {
         try {
             Bukkit.getScheduler().runTask(Main.getInstance(), task);
         } catch (IllegalPluginAccessException e) {
-            Logs.warning("An error occurred while running an sync task. The task will be run asynchronously.");
+            Logs.warning("An error occurred while running an sync task. The task will be run in the same thread.");
             task.run();
         }
     }
@@ -78,24 +78,28 @@ public class Utils {
         int x = useMilliseconds ? 1000 : 1;
         String result = "";
 
+        //months
+        int msc = (int) (time / (30L * 3600 * 24 * x));
+        time -= (long) msc * 30 * 3600 * 24 * x;
+        if (msc != 0) result += msc + "msc ";
         //days
-        int d = (int) time / (3600 * 24 * x);
+        int d = (int) (time / (3600 * 24 * x));
         time -= (long) d * 3600 * 24 * x;
         if (d != 0) result += d + "d ";
         //hours
-        int h = (int) time / (3600 * x);
+        int h = (int) (time / (3600 * x));
         time -= (long) h * 3600 * x;
         if (h != 0) result += h + "h ";
         //minutes
-        int m = (int) time / (60 * x);
+        int m = (int) (time / (60 * x));
         time -= (long) m * 60 * x;
         if (m != 0) result += m + "m ";
         //seconds
-        int s = (int) time / x;
+        int s = (int) (time / x);
         time -= (long) s * x;
         if (s != 0) result += s + "s ";
         //milliseconds
-        int ms = (int) time;
+        int ms = (int) (time);
         if (ms != 0) result += ms + "ms ";
 
         if (result.isEmpty()) return useMilliseconds ? "0ms" : "0s";

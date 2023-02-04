@@ -32,9 +32,7 @@ public class PremiumManager {
     }
 
     public int getRemainingTime(@NotNull UUID uuid) {
-        long end = getEnd(uuid), now = Utils.now();
-        if (now > end) return 0;
-        return (int) (end - now);
+        return (int) Math.max(0, getEnd(uuid) - Utils.now());
     }
     public long getEnd(@NotNull UUID uuid) {
         try (Connection conn = plugin.getConnection();

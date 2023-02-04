@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 import java.time.Instant;
 
-public class DiscordListener extends ListenerAdapter {
+public class DiscordMessageReceivedListener extends ListenerAdapter {
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         Message msg = event.getMessage();

@@ -26,12 +26,6 @@ public class AntyLogoutManager {
     private final int TIME_SECONDS = 15;
     private final HashMap<UUID, Pair<UUID, Integer>> logout = new HashMap<>();
 
-    public @NotNull String getActionBar(int time) {
-        return ACTION_BAR
-                .replaceFirst("X", time >= 10 ? String.valueOf(time / 10) : "")
-                .replaceFirst("X", String.valueOf(time % 10));
-    }
-
     public void start() {
         stop();
         task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
@@ -70,7 +64,7 @@ public class AntyLogoutManager {
 
     public void quit(@NotNull Player player) {
         if (!isInAntyLogout(player)) return;
-        plugin.getGravesListener().unprotectNextGrave(player.getUniqueId());
+        plugin.getGraveCreateListener().unprotectNextGrave(player.getUniqueId());
         player.setHealth(0);
         Utils.broadcastMessage(
                 player,
@@ -91,7 +85,8 @@ public class AntyLogoutManager {
         if (!plugin.getConfig().getStringList("anty-logout.worlds").contains(player.getWorld().getName())) return;
         List<String> entities = plugin.getConfig().getStringList("anty-logout.entities");
         if (!entities.isEmpty() && !entities.contains(entity.getType().toString())) return;
-        if (entity instanceof Projectile projectile && projectile.getShooter() instanceof LivingEntity livingEntity) {
+        if (entity instanceof Projectile projectile) {
+            if (!(projectile.getShooter() instanceof LivingEntity livingEntity)) return;
             entity = livingEntity;
         }
         logout.put(player.getUniqueId(), new Pair<>(entity.getUniqueId(), TIME_SECONDS));
@@ -107,5 +102,11 @@ public class AntyLogoutManager {
             if (e.getValue().getFirst().equals(entity.getUniqueId())) return Bukkit.getPlayer(e.getKey());
         }
         return null;
+    }
+
+    private @NotNull String getActionBar(int time) {
+        return ACTION_BAR
+                .replaceFirst("X", time >= 10 ? String.valueOf(time / 10) : "")
+                .replaceFirst("X", String.valueOf(time % 10));
     }
 }

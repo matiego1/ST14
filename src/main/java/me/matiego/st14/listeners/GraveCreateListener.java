@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.UUID;
 
-public class GravesListener implements Listener {
+public class GraveCreateListener implements Listener {
 
     private final HashMap<UUID, Long> graves = new HashMap<>();
 

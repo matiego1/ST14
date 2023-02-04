@@ -37,10 +37,7 @@ import java.awt.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
@@ -61,6 +58,7 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private RewardsManager rewardsManager;
     @Getter private AntyLogoutManager antyLogoutManager;
     @Getter private GameManager gameManager;
+    private ListenersManager listenersManager;
     private TabListManager tabListManager;
     private ChatReportsManager chatReportsManager;
 
@@ -69,7 +67,10 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private SuicideCommand suicideCommand;
     @Getter private IncognitoCommand incognitoCommand;
 
-    @Getter private GravesListener gravesListener;
+    @Getter private PlayerBedEnterListener playerBedEnterListener;
+    @Getter private PlayerQuitListener playerQuitListener;
+    @Getter private PlayerMoveListener playerMoveListener;
+    @Getter private GraveCreateListener graveCreateListener;
 
     private JDA jda;
     private boolean isJdaEnabled = false;
@@ -135,24 +136,52 @@ public final class Main extends JavaPlugin implements Listener {
         chatReportsManager = new ChatReportsManager();
         antyLogoutManager = new AntyLogoutManager(this);
         gameManager = new GameManager(this);
+        listenersManager = new ListenersManager(this);
 
         Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomy(), vault, ServicePriority.High);
 
         //Register listeners
-        Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
-        final ServerListener serverListener = new ServerListener(this);
-        Bukkit.getPluginManager().registerEvents(serverListener, this);
-        Bukkit.getPluginManager().registerEvents(new EntityListener(), this);
-        Bukkit.getPluginManager().registerEvents(getTeleportsManager(), this);
-        gravesListener = new GravesListener();
-        Bukkit.getPluginManager().registerEvents(getGravesListener(), this);
-
-        Bukkit.getMessenger().registerIncomingPluginChannel(this, "minecraft:brand", serverListener);
-        Bukkit.getPluginManager().registerEvents(this, this);
+        playerBedEnterListener = new PlayerBedEnterListener();
+        playerQuitListener = new PlayerQuitListener(this);
+        playerMoveListener = new PlayerMoveListener(this);
+        graveCreateListener = new GraveCreateListener();
+        listenersManager.registerListeners(
+                new AsyncChatListener(this),
+                new AsyncPlayerPreLoginListener(this),
+                new BlockBreakListener(this),
+                new EntityChangeBlockListener(),
+                new EntityDamageByEntityListener(this),
+                new EntityDeathListener(this),
+                new EntityExplodeListener(this),
+                new EntityPortalListener(this),
+                graveCreateListener,
+                new GS4QueryListener(this),
+                new InventoryCloseListener(this),
+                new PlayerAdvancementCriterionGrantListener(),
+                new PlayerAdvancementDoneListener(),
+                playerBedEnterListener,
+                new PlayerBedLeaveListener(this),
+                new PlayerChangedWorldListener(this),
+                new PlayerCommandPreprocessListener(this),
+                new PlayerCommandSendListener(this),
+                new PlayerDeathListener(this),
+                new PlayerInteractListener(this),
+                new PlayerItemFrameChangeListener(this),
+                new PlayerJoinListener(this),
+                new PlayerLoginEventListener(this),
+                playerMoveListener,
+                new PlayerPortalListener(this),
+                playerQuitListener,
+                new PlayerRespawnListener(this),
+                new PlayerTeleportListener(),
+                new ServerCommandListener(),
+                new ServerListPingListener(this)
+        );
+        listenersManager.registerListener("minecraft:brand", new PluginMessageReceivedListener(this));
 
         //Counting plugin
         if (Bukkit.getPluginManager().getPlugin("Counting") != null) {
-            Bukkit.getPluginManager().registerEvents(new CountingListener(this), this);
+            listenersManager.registerListener(new CountingMessageSendListener(this));
         }
 
         //Enable the Discord bot
@@ -190,7 +219,7 @@ public final class Main extends JavaPlugin implements Listener {
                     .disableCache(DiscordUtils.getDisabledCacheFlag())
                     .setActivity(Activity.playing("Serwer ST14"))
                     .addEventListeners(
-                            new DiscordListener(),
+                            new DiscordMessageReceivedListener(),
                             getChatMinecraft()
                     )
                     .build();

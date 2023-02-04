@@ -31,7 +31,7 @@ public class SuicideCommand implements CommandHandler.Minecraft {
             sender.sendMessage(Utils.getComponentByString(Prefix.SUICIDE + "Tej komendy może użyć tylko gracz"));
             return 0;
         }
-        Main.getInstance().getGravesListener().unprotectNextGrave(player.getUniqueId());
+        Main.getInstance().getGraveCreateListener().unprotectNextGrave(player.getUniqueId());
         player.setHealth(0);
 
         Utils.broadcastMessage(

@@ -12,16 +12,13 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 
 public class TeleportsManager implements Listener {
-    HashMap<UUID, Pair<BukkitTask, CompletableFuture<Response>>> tasks = new HashMap<>();
-    HashMap<UUID, BlockLocation> location = new HashMap<>();
+    private final HashMap<UUID, Pair<BukkitTask, CompletableFuture<Response>>> tasks = new HashMap<>();
+    private final HashMap<UUID, BlockLocation> location = new HashMap<>();
 
     public synchronized boolean isAlreadyActive(@NotNull Player player) {
         return tasks.get(player.getUniqueId()) != null;
@@ -29,7 +26,7 @@ public class TeleportsManager implements Listener {
 
     public synchronized @NotNull CompletableFuture<Response> teleport(@NotNull Player player, @NotNull Location loc, int time, @NotNull Callable<Boolean> teleportWhenReady) {
         CompletableFuture<Response> future = new CompletableFuture<>();
-        if (tasks.get(player.getUniqueId()) != null) {
+        if (isAlreadyActive(player)) {
             future.complete(Response.ALREADY_ACTIVE);
             return future;
         }
