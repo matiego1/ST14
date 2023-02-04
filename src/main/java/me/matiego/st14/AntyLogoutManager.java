@@ -83,6 +83,7 @@ public class AntyLogoutManager {
 
     public void putAntyLogout(@NotNull Player player, @NotNull Entity entity) {
         if (!plugin.getConfig().getStringList("anty-logout.worlds").contains(player.getWorld().getName())) return;
+        if (player.getUniqueId().equals(entity.getUniqueId())) return;
         List<String> entities = plugin.getConfig().getStringList("anty-logout.entities");
         if (!entities.isEmpty() && !entities.contains(entity.getType().toString())) return;
         if (entity instanceof Projectile projectile) {
