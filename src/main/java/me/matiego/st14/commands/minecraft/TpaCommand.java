@@ -148,9 +148,6 @@ public class TpaCommand implements CommandHandler.Minecraft {
             return;
         }
 
-        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Ten gracz za chwilę zostanie do ciebie przeteleportowany"));
-        target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Zostaniesz przeteleportowany za 5 sekund do gracza " + player.getName() + ". Nie ruszaj się!"));
-
         double distance = target.getLocation().distance(destination);
         final double cost;
         if (plugin.getConfig().getStringList("tpa.free-worlds").contains(destination.getWorld().getName())) {
@@ -159,18 +156,23 @@ public class TpaCommand implements CommandHandler.Minecraft {
             cost = Utils.round(plugin.getConfig().getDouble("tpa.cost") * (distance / 16), 2);
         }
 
+        Economy economy = plugin.getEconomy();
+        if (cost != 0 && !economy.has(player, cost)) {
+            target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Aby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.getBalance(player) + "."));
+        }
+
+        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Ten gracz za chwilę zostanie do ciebie przeteleportowany"));
+        target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Zostaniesz przeteleportowany za 5 sekund do gracza " + player.getName() + ". Nie ruszaj się!"));
+
         Utils.async(() -> {
             try {
                 switch (plugin.getTeleportsManager().teleport(target, destination, 5, () -> {
                     if (cost == 0) return true;
-                    Economy economy = plugin.getEconomy();
                     EconomyResponse response = economy.withdrawPlayer(target, cost);
-                    if (!response.transactionSuccess()) {
-                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
-                        target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Aby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.format(response.balance)));
-                        return false;
-                    }
-                    return true;
+                    if (response.transactionSuccess()) return true;
+                    player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
+                    target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Aby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.format(response.balance) + "."));
+                    return false;
                 }).get()) {
                     case SUCCESS -> {
                         player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " przeteleportował się do ciebie."));

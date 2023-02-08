@@ -68,6 +68,12 @@ commands:
   suicide:
     permission: st14.suicide
     usage: 'Poprawne użycie: /suicide'
+  coordinates:
+    permission: st14.coordinates
+    usage: 'Poprawne użycie: /coordinates <gracz>'
+  spawn:
+    permission: st14.spawn
+    usage: 'Poprawne użycie /spawn'
 permissions:
   st14.st14:
     default: op
@@ -102,4 +108,8 @@ permissions:
   st14.backpack:
     default: true
   st14.suicide:
+    default: true
+  st14.coordinates:
+    default: op
+  st14.spawn:
     default: true

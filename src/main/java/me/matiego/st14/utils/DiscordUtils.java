@@ -7,9 +7,7 @@ import com.google.common.collect.Sets;
 import me.matiego.st14.Main;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
@@ -257,5 +255,17 @@ public class DiscordUtils {
             string = string.replace(c, "\\" + c);
         }
         return string;
+    }
+
+    public static @Nullable Member retrieveMember(@NotNull Guild guild, @NotNull UserSnowflake user) {
+        Member member = null;
+        try {
+            member = guild.retrieveMemberById(user.getIdLong()).complete();
+        } catch (Exception ignored) {}
+        return member;
+    }
+
+    public static boolean hasRole(@NotNull Member member, long role) {
+        return member.getRoles().stream().map(ISnowflake::getIdLong).anyMatch(id -> role == id);
     }
 }

@@ -98,7 +98,7 @@ public class AccountsManager {
         if (NonPremiumUtils.isNonPremiumUuid(uuid) && NonPremiumUtils.getIdByNonPremiumUuid(uuid) != id.getIdLong()) {
             throw new IllegalArgumentException("tried to link a non-premium uuid to another Discord account");
         }
-        if (hasBannedRole(id)) return false;
+        if (checkRoles(id)) return false;
         if (!modifyRole(id, true)) return false;
         try (Connection conn = plugin.getConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_accounts(uuid, id) VALUES (?, ?) ON DUPLICATE KEY UPDATE uuid = ?, id = ?")) {
@@ -141,7 +141,7 @@ public class AccountsManager {
         if (NonPremiumUtils.isNonPremiumUuid(uuid)) return false;
         UserSnowflake id = getUserByPlayer(uuid);
         if (id != null) {
-            if (!modifyRole(id, false)) return  false;
+            modifyRole(id, false);
             modifyNickname(id, null);
         }
         try (Connection conn = plugin.getConnection();
@@ -180,23 +180,18 @@ public class AccountsManager {
         return false;
     }
 
-    private boolean hasBannedRole(@NotNull UserSnowflake id) {
+    private boolean checkRoles(@NotNull UserSnowflake id) {
         JDA jda = plugin.getJda();
         if (jda == null) return false;
 
         Guild guild = jda.getGuildById(plugin.getConfig().getLong("discord.guild-id"));
         if (guild == null) return false;
 
-        Role role = guild.getRoleById(plugin.getConfig().getLong("discord.role-ids.banned"));
-        if (role == null) {
-            Logs.warning("A banned-role-id in the config file is not correct.");
-            return false;
-        }
-
-        Member member = guild.retrieveMember(id).complete();
+        Member member = DiscordUtils.retrieveMember(guild, id);
         if (member == null) return false;
 
-        return member.getRoles().contains(role);
+        if (!DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.banned"))) return false;
+        return DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.verified"));
     }
 
     private boolean modifyRole(@NotNull UserSnowflake id, boolean add) {
@@ -215,10 +210,14 @@ public class AccountsManager {
             return false;
         }
 
-        if (add) {
-            guild.addRoleToMember(id, role).queue();
-        } else {
-            guild.removeRoleFromMember(id, role).queue();
+        try {
+            if (add) {
+                guild.addRoleToMember(id, role).queue();
+            } else {
+                guild.removeRoleFromMember(id, role).queue();
+            }
+        } catch (Exception e) {
+            return false;
         }
         return true;
     }

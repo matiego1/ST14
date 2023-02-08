@@ -24,7 +24,8 @@ public class ListCommand implements CommandHandler.Discord {
                         new OptionData(OptionType.STRING, "incognito", "czy wiadomość ma być widoczna tylko dla ciebie", false)
                                 .addChoice("Tak", "True")
                                 .addChoice("Nie", "False")
-                );
+                )
+                .setGuildOnly(true);
     }
 
     @Override

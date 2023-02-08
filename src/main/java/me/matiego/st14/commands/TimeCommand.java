@@ -28,7 +28,7 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
     private final PluginCommand command;
     public TimeCommand(@NotNull Main plugin) {
         this.plugin = plugin;
-        command = Main.getInstance().getCommand("time");
+        command = plugin.getCommand("time");
         if (command == null) {
             Logs.warning("The command /time does not exist in the plugin.yml file and cannot be registered.");
         }
@@ -102,7 +102,8 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
                         new OptionData(OptionType.STRING, "incognito", "czy wiadomość ma być widoczna tylko dla ciebie", false)
                                 .addChoice("Tak", "True")
                                 .addChoice("Nie", "False")
-                );
+                )
+                .setGuildOnly(true);
     }
 
     @Override

@@ -4,6 +4,7 @@ import me.matiego.st14.Main;
 import me.matiego.st14.utils.CommandHandler;
 import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Utils;
+import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
@@ -47,6 +48,7 @@ public class ReplyCommand implements CommandHandler.Minecraft {
         manager.putReply(player.getUniqueId(), receiver.getUniqueId());
         player.sendMessage(Utils.getComponentByString("&6[&cJa &6->&c " + receiver.getName() + "&6]:&r " + msg));
         receiver.sendMessage(Utils.getComponentByString("&6[&c" + player.getName() + " &6->&c Ja&6]:&r " + msg));
+        Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString("&6[&c" + player.getName() + " &6-> &c" + receiver.getName() + "&6]:&r " + msg));
         manager.log(msg, "Wiadomość prywatna - od " + player.getName() + " do " + receiver.getName());
         return 0;
     }

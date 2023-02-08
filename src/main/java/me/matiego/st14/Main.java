@@ -61,6 +61,7 @@ public final class Main extends JavaPlugin implements Listener {
     private ListenersManager listenersManager;
     private TabListManager tabListManager;
     private ChatReportsManager chatReportsManager;
+    private DidYouKnowManager didYouKnowManager;
 
     @Getter private TellCommand tellCommand;
     @Getter private TpaCommand tpaCommand;
@@ -137,6 +138,7 @@ public final class Main extends JavaPlugin implements Listener {
         antyLogoutManager = new AntyLogoutManager(this);
         gameManager = new GameManager(this);
         listenersManager = new ListenersManager(this);
+        didYouKnowManager = new DidYouKnowManager(this);
 
         Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomy(), vault, ServicePriority.High);
 
@@ -253,6 +255,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new VersionCommand(),
                 new TimeCommand(this),
                 new EconomyCommand(this),
+                new CoordinatesCommand(this),
                 //Minecraft commands
                 new SayCommand(this),
                 new St14Command(),
@@ -263,6 +266,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new WorldsCommand(this),
                 new StopCommand(),
                 new BackpackCommand(this),
+                new SpawnCommand(this),
                 tellCommand,
                 tpaCommand,
                 suicideCommand,
@@ -283,6 +287,7 @@ public final class Main extends JavaPlugin implements Listener {
         getRewardsManager().start();
         getAntyLogoutManager().start();
         getChatMinecraft().unblock();
+        didYouKnowManager.start();
         Utils.registerRecipes();
         Utils.kickPlayersAtMidnightTask();
 
@@ -326,6 +331,7 @@ public final class Main extends JavaPlugin implements Listener {
         if (teleportsManager != null) teleportsManager.cancelAll();
         if (economy != null) economy.setEnabled(false);
         if (chatReportsManager != null) chatReportsManager.stop();
+        if (didYouKnowManager != null) didYouKnowManager.stop();
         //unregister all events
         HandlerList.unregisterAll((Plugin) this);
         //disable Discord bot

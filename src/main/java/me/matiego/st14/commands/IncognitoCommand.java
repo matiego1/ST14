@@ -51,7 +51,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
 
     @Override
     public @NotNull CommandData getDiscordCommand() {
-        return Commands.slash("incognito", "Zarządzaj statusem incognito twojego konta minecraft");
+        return Commands.slash("incognito", "Zarządzaj statusem incognito twojego konta minecraft").setGuildOnly(true);
     }
 
     @Override

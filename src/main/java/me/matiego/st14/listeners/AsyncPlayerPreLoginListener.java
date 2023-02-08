@@ -2,13 +2,13 @@ package me.matiego.st14.listeners;
 
 import me.matiego.st14.IncognitoManager;
 import me.matiego.st14.Main;
+import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Prefix;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.UserSnowflake;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -31,11 +31,16 @@ public class AsyncPlayerPreLoginListener implements Listener {
     @EventHandler
     public void onAsyncPlayerPreLogin(@NotNull AsyncPlayerPreLoginEvent event) {
         UUID uuid = event.getUniqueId();
-        //check if login is successfully
+        //check whitelist & bans
         if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) return;
         if (Bukkit.hasWhitelist() && Bukkit.getWhitelistedPlayers().stream()
                 .map(OfflinePlayer::getUniqueId)
                 .noneMatch(u -> u.equals(uuid))) {
+            return;
+        }
+        if (Bukkit.getBannedPlayers().stream()
+                .map(OfflinePlayer::getUniqueId)
+                .anyMatch(uuid::equals)) {
             return;
         }
         //check (real) time
@@ -44,18 +49,18 @@ public class AsyncPlayerPreLoginListener implements Listener {
             disallow(event, "&cNa serwer możesz ponownie dołączyć 3 sekundy po północy. Przepraszamy.");
         }
 
-        //refresh offline players names
+        //check player's nick length
         if (event.getName().length() > 36) {
             disallow(event, "&cTwój nick jest za długi! Może mieć maksymalnie 36 znaków.");
             return;
         }
-        plugin.getOfflinePlayers().refresh(uuid, event.getName());
         //check if Discord bot is online
         JDA jda = plugin.getJda();
         if (jda == null) {
             disallow(event, Prefix.DISCORD + "&cBot na Discord jest offline! Nie możesz dołączyć do serwera.");
             return;
         }
+        //check tps
         if (Utils.getTps() < 15.0 && !plugin.getPremiumManager().isSuperPremium(uuid)) {
             disallow(event, "&cSerwer jest przeciążony - TPS spadły poniżej 15\nSpróbuj dołączyć później\n&7Przepraszamy");
             return;
@@ -77,20 +82,18 @@ public class AsyncPlayerPreLoginListener implements Listener {
             Logs.warning("A guild id in the config file is not correct.");
             return;
         }
-        Member member = guild.retrieveMember(id).complete();
+        Member member = DiscordUtils.retrieveMember(guild, id);
         if (member == null) {
             disallow(event, Prefix.DISCORD + "Wygląda na to, że nie ma cię na naszym serwerze Discord! Dołącz do niego, aby grać na tym serwerze.");
             return;
         }
-        Role role = guild.getRoleById(plugin.getConfig().getLong("discord.role-ids.player"));
-        if (role == null) {
-            Logs.warning("A player-role-id in the config file is not correct.");
-            return;
-        }
-        if (!member.getRoles().contains(role)) {
+        if (DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.player")) ||
+                !DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.verified"))) {
             plugin.getAccountsManager().unlink(uuid);
             disallow(event, Prefix.DISCORD + "Twoje konto zostało rozłączone przed administratora. Dołącz ponownie, aby je połączyć.");
         }
+        //refresh player name
+        plugin.getOfflinePlayers().refresh(uuid, event.getName());
     }
     private void disallow(@NotNull AsyncPlayerPreLoginEvent event, @NotNull String msg) {
         event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Utils.getComponentByString(msg));

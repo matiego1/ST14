@@ -43,7 +43,8 @@ public class VersionCommand implements CommandHandler.Discord, CommandHandler.Mi
                         new OptionData(OptionType.STRING, "incognito", "czy wiadomość ma być widoczna tylko dla ciebie", false)
                                 .addChoice("Tak", "True")
                                 .addChoice("Nie", "False")
-                );
+                )
+                .setGuildOnly(true);
     }
 
     @Override

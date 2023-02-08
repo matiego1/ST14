@@ -51,7 +51,8 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                 .addOptions(
                         new OptionData(OptionType.STRING, "code", "twój kod weryfikacyjny", false)
                                 .setRequiredLength(6, 6)
-                );
+                )
+                .setGuildOnly(true);
     }
 
     @Override

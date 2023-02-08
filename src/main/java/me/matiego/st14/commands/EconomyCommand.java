@@ -276,7 +276,8 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                         new OptionData(OptionType.STRING, "incognito", "czy wiadomość ma być widoczna tylko dla ciebie", false)
                                 .addChoice("Tak", "True")
                                 .addChoice("Nie", "False")
-                );
+                )
+                .setGuildOnly(true);
     }
 
     @Override

@@ -22,7 +22,7 @@ import java.util.Objects;
 public class FeedbackCommand implements Discord {
     @Override
     public @NotNull CommandData getDiscordCommand() {
-        return Commands.slash("feedback", "Zgłoś błąd, napisz propozycję lub podziel się swoją opinią");
+        return Commands.slash("feedback", "Zgłoś błąd, napisz propozycję lub podziel się swoją opinią").setGuildOnly(true);
     }
 
     @Override
