@@ -74,7 +74,7 @@ public class GameModeCommand implements CommandHandler.Minecraft {
                 player,
                 Prefix.GAMEMODE,
                 "&aPomyślnie zmieniono twój tryb gry na &2" + name + "&a.",
-                "&aGracz &2" + player.getName() + "&a zmienił swój tryb gry na &2" + name + "&a w &2" + Utils.getWorldName(player.getWorld()) + "&a.",
+                "&aGracz &2" + player.getName() + "&a zmienił swój tryb gry na &2" + name + "&a w świecie &2" + Utils.getWorldName(player.getWorld()) + "&a.",
                 "**[" + Utils.getWorldName(player.getWorld()) + "]** Gracz **" + player.getName() + "** zmienił swój tryb gry na **" + name + "**."
         );
     }

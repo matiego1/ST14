@@ -109,9 +109,8 @@ public class TellCommand implements CommandHandler.Minecraft {
     }
 
     public void log(@NotNull String msg, @Nullable Player sender, @Nullable Player receiver) {
-        String senderName = sender == null ? "&4[admin]" : sender.getName();
-        String receiverName = receiver == null ? "&4[receiver]" : receiver.getName();
-
+        String senderName = sender == null ? "[admin]" : sender.getName();
+        String receiverName = receiver == null ? "[receiver]" : receiver.getName();
         Logs.info("[" + senderName + " -> " + receiverName +"]: " + msg);
     }
 
