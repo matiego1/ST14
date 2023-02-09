@@ -25,6 +25,7 @@ public class PlayerMoveListener implements Listener {
     public void onPlayerMove(@NotNull PlayerMoveEvent event) {
         Player player = event.getPlayer();
         plugin.getAfkManager().move(player);
+        plugin.getTeleportsManager().onMove(player);
         if (event.hasChangedBlock()) {
             if (player.isGliding()) {
                 BossBar bar = positionBossBars.get(player.getUniqueId());

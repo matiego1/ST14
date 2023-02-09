@@ -112,7 +112,6 @@ public class Utils {
 
     public static void deleteOldLogFiles() {
         Utils.async(() -> {
-            Logs.info("Starting cleaning up old server logs...");
             List<File> files = new ArrayList<>();
 
             try {
@@ -138,9 +137,7 @@ public class Utils {
                     }
                 } catch (Exception ignored) {}
             }
-            if (deletedFiles == 0) {
-                Logs.info("No log file has been deleted.");
-            } else {
+            if (deletedFiles > 0) {
                 Logs.info("Successfully deleted " + deletedFiles + " log file(s)!");
             }
         });

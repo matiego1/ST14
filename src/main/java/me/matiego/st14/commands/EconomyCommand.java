@@ -109,6 +109,18 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                     sender.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd."));
                     return;
                 }
+
+                Logs.info(
+                        "Administrator " +
+                        switch (args[0]) {
+                            case "add" -> "zwiększył";
+                            case "remove" -> "zmniejszył";
+                            case "set" -> "ustawił";
+                            default -> null;
+                        } +
+                        " stan konta gracza " + args[1] + " o/na " + economy.format(amount) + "."
+                );
+
                 sender.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie zmieniono saldo konta gracza " + args[1] + " (" + uuid +") na " + economy.format(response.balance)));
                 informPlayer(
                         uuid,
@@ -204,6 +216,9 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                         if (amount <= 0d) {
                             return List.of(AnvilGUI.ResponseAction.replaceInputText("Podaj liczbę!"));
                         }
+                        if (amount >= 500d) {
+                            return List.of(AnvilGUI.ResponseAction.replaceInputText("Za duża kwota!"));
+                        }
                         amount = Utils.round(amount, 2);
 
                         Economy economy = plugin.getEconomy();
@@ -220,7 +235,9 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                         for (ItemStack item : drop.values()) {
                             player.getWorld().dropItem(player.getLocation().add(0, 0.5, 0), item);
                         }
-                        Logs.info("Gracz " + player.getName() + " wypłacił " + economy.format(amount) + " ze swojego konta.");
+
+                        Logs.info("Gracz " + player.getName() + " wypłacił " + economy.format(amount) + " ze swojego konta. (Na ziemi? " + (drop.isEmpty() ? "Nie" : "Tak") + ")");
+
                         player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie wypłacono &9" + economy.format(amount) + "&b z twojego konta."));
                         return List.of(AnvilGUI.ResponseAction.close());
                     })
@@ -261,8 +278,9 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                         return List.of(AnvilGUI.ResponseAction.close());
                     }
 
-                    player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie przelano " + economy.format(amount) + " graczowi " + completion.getText() + "."));
                     Logs.info("Gracz " + player.getName() + " przelał " + economy.format(amount) + " graczowi " + completion.getText() + ".");
+
+                    player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie przelano " + economy.format(amount) + " graczowi " + completion.getText() + "."));
                     informPlayer(target, player.getName(), amount, Type.ADD);
                     return List.of(AnvilGUI.ResponseAction.close());
                 })

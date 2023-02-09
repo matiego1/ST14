@@ -177,6 +177,7 @@ public class TpaCommand implements CommandHandler.Minecraft {
                     case SUCCESS -> {
                         player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " przeteleportował się do ciebie."));
                         target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Przeteleportowałeś się do gracza " + player.getName() + "."));
+                        Logs.info("Gracz " + player.getName() + " przeteleportował do gracza " + target.getName() + ".");
                     }
                     case MOVE -> {
                         player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
@@ -185,6 +186,10 @@ public class TpaCommand implements CommandHandler.Minecraft {
                     case ALREADY_ACTIVE -> {
                         player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
                         target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Proces teleportowania już został rozpoczęty."));
+                    }
+                    case DISABLED -> {
+                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
+                        target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Teleportowanie anulowane."));
                     }
                     case CANCELLED -> {}
                     case FAILURE -> {

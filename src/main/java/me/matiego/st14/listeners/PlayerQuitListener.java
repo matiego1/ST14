@@ -31,6 +31,7 @@ public class PlayerQuitListener implements Listener {
         plugin.getAfkManager().move(player);
         plugin.getBackpackManager().clearCache(player.getUniqueId());
         plugin.getGameManager().onPlayerQuit(player);
+        plugin.getTeleportsManager().onPlayerQuit(player);
         Utils.async(() -> {
             plugin.getTimeManager().quit(player);
             plugin.getRewardsManager().unload(player.getUniqueId());

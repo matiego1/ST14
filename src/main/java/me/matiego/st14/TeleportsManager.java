@@ -5,18 +5,17 @@ import me.matiego.st14.utils.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 
-public class TeleportsManager implements Listener {
+public class TeleportsManager {
     private final HashMap<UUID, Pair<BukkitTask, CompletableFuture<Response>>> tasks = new HashMap<>();
     private final HashMap<UUID, BlockLocation> location = new HashMap<>();
 
@@ -49,7 +48,8 @@ public class TeleportsManager implements Listener {
                                 result.complete(Response.CANCELLED);
                                 return;
                             }
-                            if (!location.get(player.getUniqueId()).equals(player.getLocation())) {
+                            BlockLocation previousLocation = location.remove(player.getUniqueId());
+                            if (previousLocation == null || !previousLocation.equals(player.getLocation())) {
                                 result.complete(Response.MOVE);
                                 return;
                             }
@@ -62,9 +62,7 @@ public class TeleportsManager implements Listener {
         return future;
     }
 
-    @EventHandler
-    public void onPlayerMove(@NotNull PlayerMoveEvent event) {
-        Player player = event.getPlayer();
+    public void onMove(@NotNull Player player) {
         UUID uuid = player.getUniqueId();
 
         BlockLocation loc = location.get(uuid);
@@ -73,17 +71,19 @@ public class TeleportsManager implements Listener {
 
         Pair<BukkitTask, CompletableFuture<Response>> task = tasks.remove(uuid);
         if (task == null) return;
+        location.remove(uuid);
 
         task.getFirst().cancel();
         task.getSecond().complete(Response.MOVE);
-        location.remove(uuid);
     }
 
-    @EventHandler
-    public void onPlayerQuit(@NotNull PlayerQuitEvent event) {
-        Pair<BukkitTask, CompletableFuture<Response>> task = tasks.remove(event.getPlayer().getUniqueId());
-        location.remove(event.getPlayer().getUniqueId());
+    public void onPlayerQuit(@NotNull Player player) {
+        UUID uuid = player.getUniqueId();
+
+        Pair<BukkitTask, CompletableFuture<Response>> task = tasks.remove(uuid);
         if (task == null) return;
+        location.remove(uuid);
+
         task.getFirst().cancel();
         task.getSecond().complete(Response.MOVE);
     }
@@ -94,7 +94,7 @@ public class TeleportsManager implements Listener {
             Pair<BukkitTask, CompletableFuture<Response>> cur = it.next().getValue();
             it.remove();
             cur.getFirst().cancel();
-            cur.getSecond().complete(Response.FAILURE);
+            cur.getSecond().complete(Response.DISABLED);
         }
         location.clear();
     }
@@ -104,6 +104,7 @@ public class TeleportsManager implements Listener {
         ALREADY_ACTIVE,
         MOVE,
         CANCELLED,
+        DISABLED,
         FAILURE
     }
 

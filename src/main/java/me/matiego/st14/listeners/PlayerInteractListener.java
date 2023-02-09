@@ -1,11 +1,11 @@
 package me.matiego.st14.listeners;
 
 import me.matiego.st14.Main;
+import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Prefix;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -55,11 +55,12 @@ public class PlayerInteractListener implements Listener {
             return;
         }
 
-        EconomyResponse response = plugin.getEconomy().depositPlayer(player, amount);
-        if (!response.transactionSuccess()) {
+        if (!plugin.getEconomy().depositPlayer(player, amount).transactionSuccess()) {
             player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Napotkano niespodziewany błąd. Spróbuj później."));
             return;
         }
+
+        Logs.info("Gracz " + player.getName() + " wpłacił banknot o wartości " + plugin.getEconomy().format(amount));
 
         player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie wpłacono pieniądze na twoje konto!"));
         player.getInventory().getItemInMainHand().setAmount(player.getInventory().getItemInMainHand().getAmount() - 1);

@@ -38,13 +38,15 @@ public class CoordinatesCommand implements CommandHandler.Minecraft, CommandHand
 
     @Override
     public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
+        if (args.length != 1) return -1;
+
         Player player = Bukkit.getPlayer(args[0]);
         if (player == null) {
-            sender.sendMessage("&cTen gracz nie jest online!");
+            sender.sendMessage(Utils.getComponentByString("&cTen gracz nie jest online!"));
             return 0;
         }
 
-        sender.sendMessage("&aKoordynaty gracza &2" + player.getName() + "&a: &2" + getCoordinates(player));
+        sender.sendMessage(Utils.getComponentByString("&aKoordynaty gracza &2" + player.getName() + "&a: &2" + getCoordinates(player)));
         return 0;
     }
 

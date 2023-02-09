@@ -21,11 +21,10 @@ public class BlockBreakListener implements Listener {
         String material = event.getBlock().getBlockData().getMaterial().name();
         try {
             if (material.matches(plugin.getConfig().getString("block-break-warn-regex", "[^\\s\\S]*"))) {
-                Logs.info("Gracz " + event.getPlayer().getName() + " wykopał " + material.toUpperCase() + "!");
+                Logs.info("Gracz " + event.getPlayer().getName() + " wykopał " + material + ".");
             }
         } catch (PatternSyntaxException e) {
-            Logs.warning("block-break-warn regex's syntax is invalid");
-            e.printStackTrace();
+            Logs.warning("block-break-warn regex's syntax is invalid", e);
         }
     }
 }

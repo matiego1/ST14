@@ -87,7 +87,7 @@ public class AsyncPlayerPreLoginListener implements Listener {
             disallow(event, Prefix.DISCORD + "Wygląda na to, że nie ma cię na naszym serwerze Discord! Dołącz do niego, aby grać na tym serwerze.");
             return;
         }
-        if (DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.player")) ||
+        if (!DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.player")) ||
                 !DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.verified"))) {
             plugin.getAccountsManager().unlink(uuid);
             disallow(event, Prefix.DISCORD + "Twoje konto zostało rozłączone przed administratora. Dołącz ponownie, aby je połączyć.");

@@ -28,6 +28,12 @@ public class GS4QueryListener implements Listener {
             if (player == null) return;
             if (plugin.getIncognitoManager().isIncognito(player.getUniqueId())) it.remove();
         }
-        event.setResponse(response.toBuilder().clearPlayers().clearPlugins().currentPlayers(list.size()).players(list).build());
+        event.setResponse(response.toBuilder()
+                .clearPlayers()
+                .clearPlugins()
+                .currentPlayers(list.size())
+                .players(list)
+                .build()
+        );
     }
 }

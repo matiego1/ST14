@@ -12,11 +12,9 @@ import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.GUI;
 import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Utils;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.session.ShutdownEvent;
 import net.dv8tion.jda.api.exceptions.InvalidTokenException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -33,11 +31,12 @@ import org.bukkit.scheduler.BukkitWorker;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.awt.*;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.Instant;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
@@ -234,16 +233,12 @@ public final class Main extends JavaPlugin implements Listener {
             return;
         }
 
-        Logs.info("Plugin enabled! Took " + (Utils.now() - time) + " ms.");
+        //this message shouldn't be sent to Discord
+        getLogger().info("Plugin enabled! Took " + (Utils.now() - time) + " ms.");
     }
 
     private void onDiscordBotEnable() {
-        EmbedBuilder eb = new EmbedBuilder();
-        eb.setDescription("Bot has been enabled!");
-        eb.setTimestamp(Instant.now());
-        eb.setColor(Color.GREEN);
-        Logs.discord(eb.build());
-
+        Logs.info("Discord bot enabled!");
         //register commands
         tellCommand = new TellCommand();
         tpaCommand = new TpaCommand(this);
@@ -261,7 +256,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new St14Command(),
                 new DifficultyCommand(),
                 new GameModeCommand(),
-                new ReplyCommand(),
+                new ReplyCommand(this),
                 new McreloadCommand(),
                 new WorldsCommand(this),
                 new StopCommand(),
@@ -309,7 +304,6 @@ public final class Main extends JavaPlugin implements Listener {
                 else if (response == Updates.Response.NEWER) it.remove();
             }
             updates.log(versions);
-            updates.logDiscord(versions);
         });
     }
 
@@ -336,14 +330,7 @@ public final class Main extends JavaPlugin implements Listener {
         HandlerList.unregisterAll((Plugin) this);
         //disable Discord bot
         if (jda != null) {
-            EmbedBuilder eb = new EmbedBuilder();
-            eb.setDescription("Bot has been disabled!");
-            eb.setTimestamp(Instant.now());
-            eb.setColor(Color.RED);
-            TextChannel chn = DiscordUtils.getConsoleChannel();
-            if (chn != null) {
-                chn.sendMessageEmbeds(eb.build()).complete();
-            }
+            Logs.info("Shutting down Discord bot...");
 
             isJdaEnabled = false;
             jda.getEventManager().getRegisteredListeners().forEach(listener -> jda.getEventManager().unregister(listener));

@@ -1,7 +1,6 @@
 package me.matiego.st14;
 
 import me.matiego.st14.utils.*;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -14,12 +13,10 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.awt.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -116,25 +113,18 @@ public class AccountsManager {
             String playerName = plugin.getOfflinePlayers().getEffectiveNameById(uuid);
             JDA jda = plugin.getJda();
             if (jda == null) {
-                logLink(playerName, id.getId());
+                Logs.info(playerName + " has linked his account with Discord account " + id.getId());
             } else {
-                jda.retrieveUserById(id.getId()).queue(user -> logLink(playerName, user == null ? id.getId() : user.getAsTag()));
+                jda.retrieveUserById(id.getId()).queue(
+                        user -> Logs.info(playerName + " has linked his account with Discord account " + user.getAsTag()),
+                        failure -> Logs.info(playerName + " has linked his account with Discord account " + id.getId())
+                );
             }
             return true;
         } catch (SQLException e) {
             Logs.error(ERROR_MSG, e);
         }
         return false;
-    }
-
-    private void logLink(@NotNull String player, @NotNull String user) {
-        EmbedBuilder eb = new EmbedBuilder();
-        eb.setTimestamp(Instant.now());
-        eb.setColor(Color.BLUE);
-        eb.setFooter("Information");
-        eb.setDescription("`" + player + "` has linked his account with Discord account `" + user + "`");
-        Logs.discord(eb.build());
-        Logs.info(player + " has linked his account with Discord account " + user);
     }
 
     public boolean unlink(@NotNull UUID uuid) {
@@ -150,23 +140,13 @@ public class AccountsManager {
             if (stmt.executeUpdate() > 0) {
                 Player player = Bukkit.getPlayer(uuid);
                 if (player != null && isRequired(uuid)) Utils.sync(() -> player.kick(Utils.getComponentByString(Prefix.DISCORD + "Twoje konto zostało rozłączone z kontem Discord!")));
-                logUnlink(plugin.getOfflinePlayers().getEffectiveNameById(uuid));
+                Logs.info(plugin.getOfflinePlayers().getEffectiveNameById(uuid) + " has unlinked his account.");
                 return true;
             }
         } catch (SQLException e) {
             Logs.error(ERROR_MSG, e);
         }
         return false;
-    }
-
-    private void logUnlink(@NotNull String player) {
-        EmbedBuilder eb = new EmbedBuilder();
-        eb.setTimestamp(Instant.now());
-        eb.setColor(Color.BLUE);
-        eb.setFooter("Information");
-        eb.setDescription("`" + player + "` has unlinked his account.");
-        Logs.discord(eb.build());
-        Logs.info(player + " has unlinked his account.");
     }
 
     public static boolean createTable() {

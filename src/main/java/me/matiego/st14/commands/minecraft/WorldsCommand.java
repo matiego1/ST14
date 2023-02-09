@@ -128,6 +128,7 @@ public class WorldsCommand implements CommandHandler.Minecraft {
                     case MOVE -> "&dTeleportowanie anulowane, poruszyłeś się.";
                     case ALREADY_ACTIVE -> "&dProces teleportowania już został rozpoczęty.";
                     case CANCELLED -> "&dNie masz uprawnień, aby przenieść się do tego świata.";
+                    case DISABLED -> "&dTeleportowanie anulowane.";
                     case FAILURE -> "&dNapotkano niespodziewany błąd. Spróbuj ponownie.";
                 };
                 if (msg == null) {

@@ -2,11 +2,8 @@ package me.matiego.st14.commands.minecraft;
 
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.CommandHandler;
-import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Utils;
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
@@ -15,8 +12,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.awt.*;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,8 +52,9 @@ public class TellCommand implements CommandHandler.Minecraft {
     }
 
     @Override
-    public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
+    public int onCommand(@NotNull CommandSender commandSender, @NotNull String[] args) {
         if (args.length < 2) return -1;
+
         StringBuilder builder = new StringBuilder();
         for (int i = 1; i < args.length; i++) {
             builder.append(args[i]).append(" ");
@@ -66,15 +62,15 @@ public class TellCommand implements CommandHandler.Minecraft {
         String msg = builder.toString();
         msg = msg.substring(0, msg.length() - 1).replace("&", "");
 
-        if (sender instanceof Player player) {
-            Block block = player.getLocation().getBlock();
-            msg = msg.replace("[here]", "[" + Utils.getWorldName(player.getWorld()) + ": " + block.getX() + ", " + block.getY() + ", " + block.getZ() + "]");
+        if (commandSender instanceof Player sender) {
+            Block block = sender.getLocation().getBlock();
+            msg = msg.replace("[here]", "[" + Utils.getWorldName(block.getWorld()) + ": " + block.getX() + ", " + block.getY() + ", " + block.getZ() + "]");
 
             if (args[0].equalsIgnoreCase("[admin]")) {
-                removeReply(player.getUniqueId());
-                player.sendMessage(Utils.getComponentByString("&6[&cJa &6->&4 [admin]&6]:&r " + msg));
-                Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString("&6[&c" + player.getName() + " &6->&4 [admin]&6]:&r " + msg));
-                log(msg, "Wiadomość prywatna - od " + player.getName());
+                removeReply(sender.getUniqueId());
+
+                log(msg, sender, null);
+                sender.sendMessage(Utils.getComponentByString("&6[&cJa &6->&4 [admin]&6]:&r " + msg));
                 return 0;
             }
 
@@ -83,39 +79,42 @@ public class TellCommand implements CommandHandler.Minecraft {
                 sender.sendMessage(Utils.getComponentByString("&cTen gracz nie jest online."));
                 return 0;
             }
-            if (receiver.equals(player)) {
-                putReply(player.getUniqueId(), player.getUniqueId());
+
+            putReply(sender.getUniqueId(), receiver.getUniqueId());
+
+            if (receiver.equals(sender)) {
                 receiver.sendMessage(Utils.getComponentByString("&6[&cJa&6]:&r " + msg));
                 return 0;
             }
 
-            putReply(player.getUniqueId(), receiver.getUniqueId());
-            player.sendMessage(Utils.getComponentByString("&6[&cJa &6->&c " + receiver.getName() + "&6]:&r " + msg));
-            receiver.sendMessage(Utils.getComponentByString("&6[&c" + player.getName() + " &6->&c Ja&6]:&r " + msg));
-            Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString("&6[&c" + player.getName() + " &6-> &c" + receiver.getName() + "&6]:&r " + msg));
-            log(msg, "Wiadomość prywatna - od " + player.getName() + " do " + receiver.getName());
+            log(msg, sender, receiver);
+
+            sender.sendMessage(Utils.getComponentByString("&6[&cJa &6->&c " + receiver.getName() + "&6]:&r " + msg));
+            receiver.sendMessage(Utils.getComponentByString("&6[&c" + sender.getName() + " &6->&c Ja&6]:&r " + msg));
+
             return 0;
         }
 
         Player receiver = Bukkit.getPlayer(args[0]);
         if (receiver == null) {
-            sender.sendMessage(Utils.getComponentByString("&cTen gracz nie jest online."));
+            commandSender.sendMessage(Utils.getComponentByString("&cTen gracz nie jest online."));
             return 0;
         }
+
         removeReply(receiver.getUniqueId());
-        sender.sendMessage(Utils.getComponentByString("&6[&4[admin] &6->&c " + receiver.getName() + "&6]:&r " + msg));
+
+        log(msg, null, receiver);
         receiver.sendMessage(Utils.getComponentByString("&6[&4[admin] &6->&c Ja&6]:&r " + msg));
         return 0;
     }
 
-    public void log(@NotNull String msg, @NotNull String footer) {
-        EmbedBuilder eb = new EmbedBuilder();
-        eb.setDescription(DiscordUtils.checkLength(msg, MessageEmbed.DESCRIPTION_MAX_LENGTH));
-        eb.setFooter(footer);
-        eb.setColor(Color.GRAY);
-        eb.setTimestamp(Instant.now());
-        Logs.discord(eb.build());
+    public void log(@NotNull String msg, @Nullable Player sender, @Nullable Player receiver) {
+        String senderName = sender == null ? "&4[admin]" : sender.getName();
+        String receiverName = receiver == null ? "&4[receiver]" : receiver.getName();
+
+        Logs.info("[" + senderName + " -> " + receiverName +"]: " + msg);
     }
+
 
     @Override
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args) {

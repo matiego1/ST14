@@ -1,6 +1,5 @@
 package me.matiego.st14;
 
-import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import org.bukkit.Bukkit;
@@ -53,12 +52,12 @@ public class DidYouKnowManager {
     }
 
     private void broadcast(@NotNull String message) {
-        Bukkit.broadcast(Utils.getComponentByString("&3&l=== Czy wiesz, że... ===\n&b" + message + "\n&3&l===---===---==="));
+        Bukkit.broadcast(Utils.getComponentByString("&3&l=== Czy wiesz, że... ===\n&b" + message));
 
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("Czy wiesz, że...");
         eb.setDescription(message);
         eb.setColor(Color.PINK);
-        Logs.discord(eb.build());
+        plugin.getChatMinecraft().sendMessageEmbed(eb.build());
     }
 }

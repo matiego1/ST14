@@ -47,8 +47,7 @@ public class SayCommand implements CommandHandler.Minecraft {
                     return 0;
                 }
             } catch (Exception e) {
-                Logs.warning("An error occurred while matching the /say message to the regex. Is the regex valid?");
-                e.printStackTrace();
+                Logs.warning("An error occurred while matching the /say message to the regex. Is the regex valid?", e);
             }
         }
 
