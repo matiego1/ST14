@@ -2,9 +2,11 @@ package me.matiego.st14.commands.discord;
 
 import me.matiego.st14.utils.CommandHandler.Discord;
 import me.matiego.st14.utils.DiscordUtils;
-import me.matiego.st14.utils.Logs;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -46,6 +48,7 @@ public class FeedbackCommand implements Discord {
     @Override
     public int onModalInteraction(@NotNull ModalInteraction event) {
         if (!event.getModalId().equals("feedback-modal")) return 0;
+        InteractionHook hook = event.getHook();
         String subject = Objects.requireNonNull(event.getValue("subject")).getAsString();
         String description = Objects.requireNonNull(event.getValue("description")).getAsString();
 
@@ -57,7 +60,20 @@ public class FeedbackCommand implements Discord {
         eb.setFooter(event.getUser().getAsTag());
 
         event.deferReply(true).queue();
-        Logs.discord(eb.build()).thenAcceptAsync(b -> event.getHook().sendMessage(b ? "Dziękujemy za twoją opinię!" : "Napotkano niespodziewany błąd.").queue());
-        return 15;
+
+        String message = "Napotkano niespodziewany błąd.\nWiadomość, którą chciałeś wysłać:\n```\n%s\n```";
+        String param = DiscordUtils.checkLength(subject + "\n" + description, Message.MAX_CONTENT_LENGTH - message.length() - 5);
+        String errorMessage = DiscordUtils.checkLength(message.formatted(param), Message.MAX_CONTENT_LENGTH);
+
+        TextChannel chn = DiscordUtils.getConsoleChannel();
+        if (chn == null) {
+            hook.sendMessage(errorMessage).queue();
+            return 5;
+        }
+        chn.sendMessageEmbeds(eb.build()).queue(
+                success -> hook.sendMessage("Dziękujemy za twoją opinię!").queue(),
+                failure -> hook.sendMessage(errorMessage).queue()
+        );
+        return 30;
     }
 }

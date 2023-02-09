@@ -20,13 +20,14 @@ public class Logs {
         plugin = Main.getInstance();
     }
 
-    /**
-     * Sends a normal message to the console.
-     * @param message the message to send
-     */
     public static void info(@NotNull String message) {
         plugin.getLogger().info(message);
         discord(message);
+    }
+
+    public static void infoWithBlock(@NotNull String message) {
+        plugin.getLogger().info(message);
+        discordWithBlock(message);
     }
 
     /**
@@ -54,7 +55,7 @@ public class Logs {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.YELLOW);
         eb.setDescription(DiscordUtils.checkLength(stringWriter.toString(), MessageEmbed.DESCRIPTION_MAX_LENGTH));
-        discord("WARNING", message, eb.build());
+        discord("__WARNING__", message, eb.build());
     }
 
     /**
@@ -82,16 +83,23 @@ public class Logs {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.RED);
         eb.setDescription(DiscordUtils.checkLength(stringWriter.toString(), MessageEmbed.DESCRIPTION_MAX_LENGTH));
-        discord("ERROR", message, eb.build());
+        discord("__ERROR__", message, eb.build());
     }
 
     public static void discord(@NotNull String message) {
         discord("INFO", message, null);
     }
+
+    private static void discordWithBlock(@NotNull String message) {
+        TextChannel chn = DiscordUtils.getConsoleChannel();
+        if (chn == null) return;
+        chn.sendMessage(DiscordUtils.checkLength("**[<t:" + (Utils.now() / 1000) + ":T> INFO]:** " + message, Message.MAX_CONTENT_LENGTH)).complete();
+    }
+
     private static void discord(@NotNull String type, @NotNull String message, @Nullable MessageEmbed embed) {
         TextChannel chn = DiscordUtils.getConsoleChannel();
         if (chn == null) return;
-        MessageCreateAction action = chn.sendMessage(DiscordUtils.checkLength("[<t:" + (Utils.now() / 1000) + ":T> " + type + "]: " + message, Message.MAX_CONTENT_LENGTH));
+        MessageCreateAction action = chn.sendMessage(DiscordUtils.checkLength("**[<t:" + (Utils.now() / 1000) + ":T> " + type + "]:** " + message, Message.MAX_CONTENT_LENGTH));
         if (embed != null) {
             action.setEmbeds(embed);
         }

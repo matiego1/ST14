@@ -233,12 +233,10 @@ public final class Main extends JavaPlugin implements Listener {
             return;
         }
 
-        //this message shouldn't be sent to Discord
-        getLogger().info("Plugin enabled! Took " + (Utils.now() - time) + " ms.");
+        Logs.info("Plugin enabled! Took " + (Utils.now() - time) + " ms.");
     }
 
     private void onDiscordBotEnable() {
-        Logs.info("Discord bot enabled!");
         //register commands
         tellCommand = new TellCommand();
         tpaCommand = new TpaCommand(this);
@@ -272,7 +270,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new AllPlayersCommand(),
                 new VerifyCommand(this)
         ));
-        Bukkit.getPluginManager().registerEvents(commandManager, this);
+        listenersManager.registerListener(commandManager);
         jda.addEventListener(commandManager);
 
         chatReportsManager.start();
@@ -330,7 +328,7 @@ public final class Main extends JavaPlugin implements Listener {
         HandlerList.unregisterAll((Plugin) this);
         //disable Discord bot
         if (jda != null) {
-            Logs.info("Shutting down Discord bot...");
+            Logs.infoWithBlock("Shutting down Discord bot...");
 
             isJdaEnabled = false;
             jda.getEventManager().getRegisteredListeners().forEach(listener -> jda.getEventManager().unregister(listener));

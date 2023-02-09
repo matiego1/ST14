@@ -68,6 +68,11 @@ public class SpawnCommand implements CommandHandler.Minecraft {
         Location spawn = player.getWorld().getSpawnLocation();
 
         double distance = player.getLocation().distance(spawn);
+        if (distance <= plugin.getConfig().getInt("spawn.min", 0)) {
+            player.sendMessage(Utils.getComponentByString("&cJesteś za blisko spawnu!"));
+            return 3;
+        }
+
         final double cost;
         if (plugin.getConfig().getStringList("spawn.free-worlds").contains(player.getWorld().getName())) {
             cost = 0;
@@ -113,6 +118,6 @@ public class SpawnCommand implements CommandHandler.Minecraft {
             }
         });
 
-        return 10;
+        return 30;
     }
 }
