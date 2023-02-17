@@ -73,7 +73,7 @@ public class RewardsManager {
                     data.setLimit(limit);
 
                     if (economy.depositPlayer(player, amount).transactionSuccess()) {
-                        sendActionBar(player, "&eDostałeś " + economy.format(amount) + " za " + amount + " minut gry");
+                        sendActionBar(player, "&eDostałeś " + economy.format(amount) + " za " + (difference * RFP_INTERVAL_MS / 1000 / 60) + " minut gry");
                         cacheRFP.put(uuid, data);
                     }
                 });
