@@ -150,6 +150,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new AsyncChatListener(this),
                 new AsyncPlayerPreLoginListener(this),
                 new BlockBreakListener(this),
+                new BlockPlaceListener(),
                 new EntityChangeBlockListener(),
                 new EntityDamageByEntityListener(this),
                 new EntityDeathListener(this),

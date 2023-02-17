@@ -7,9 +7,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
+import org.bukkit.inventory.ShapelessRecipe;
+import org.bukkit.inventory.recipe.CraftingBookCategory;
 import org.bukkit.plugin.IllegalPluginAccessException;
 import org.jetbrains.annotations.NotNull;
 
@@ -145,12 +148,19 @@ public class Utils {
 
     public static void registerRecipes() {
         //Name tag
-        NamespacedKey key = new NamespacedKey(Main.getInstance(), "name_tag");
-        ShapedRecipe recipe = new ShapedRecipe(key, new ItemStack(Material.NAME_TAG));
-        recipe.shape("  S", " P ", "P  ");
-        recipe.setIngredient('S', Material.STRING);
-        recipe.setIngredient('P', Material.PAPER);
-        Bukkit.addRecipe(recipe);
+        ShapedRecipe nameTag = new ShapedRecipe(new NamespacedKey(Main.getInstance(), "name_tag"), new ItemStack(Material.NAME_TAG));
+        nameTag.shape("  S", " P ", "P  ");
+        nameTag.setIngredient('S', Material.STRING);
+        nameTag.setIngredient('P', Material.PAPER);
+        nameTag.setCategory(CraftingBookCategory.MISC);
+        Bukkit.addRecipe(nameTag);
+        //Wool to strings
+        ItemStack fourStrings = new ItemStack(Material.STRING);
+        fourStrings.setAmount(4);
+        ShapelessRecipe woolToStrings = new ShapelessRecipe(new NamespacedKey(Main.getInstance(), "wool_to_strings"), fourStrings);
+        woolToStrings.addIngredient(Material.WHITE_WOOL);
+        woolToStrings.setCategory(CraftingBookCategory.MISC);
+        Bukkit.addRecipe(woolToStrings);
     }
 
     public static boolean isDifferentDay(long date1, long date2) {
@@ -182,6 +192,7 @@ public class Utils {
                     .forEach(p -> p.sendMessage(Utils.getComponentByString(prefix + others)));
             Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString(prefix + others));
 
+            Logs.discord(discord);
             if (Main.getInstance().getIncognitoManager().isIncognito(player.getUniqueId())) return;
             Main.getInstance().getChatMinecraft().sendMessage(discord, prefix.getDiscord());
         });
@@ -189,5 +200,16 @@ public class Utils {
 
     public static @NotNull String formatDouble(double number) {
         return (number % 1) == 0 ? String.valueOf((int) number) : String.valueOf(number);
+    }
+
+
+    public static boolean doesBlockContactPortalBlock(@NotNull Block block) {
+        World world = block.getWorld();
+        int x = block.getX(), y = block.getY(), z = block.getZ();
+        if (world.getBlockAt(x + 1, y, z).getType() == Material.NETHER_PORTAL) return true;
+        if (world.getBlockAt(x - 1, y, z).getType() == Material.NETHER_PORTAL) return true;
+        if (world.getBlockAt(x, y, z + 1).getType() == Material.NETHER_PORTAL) return true;
+        return world.getBlockAt(x, y, z - 1).getType() == Material.NETHER_PORTAL;
+
     }
 }

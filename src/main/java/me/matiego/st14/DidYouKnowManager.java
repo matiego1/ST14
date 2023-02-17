@@ -3,6 +3,7 @@ package me.matiego.st14;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,7 +35,7 @@ public class DidYouKnowManager {
         task = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
             if (lastIndex >= messages.size()) lastIndex = 0;
 
-            if (!Bukkit.getOnlinePlayers().isEmpty()) {
+            if (shouldNotBroadcastMessage()) {
                 broadcast(messages.get(lastIndex));
             }
 
@@ -49,6 +50,13 @@ public class DidYouKnowManager {
             task.cancel();
             task = null;
         }
+    }
+
+    private boolean shouldNotBroadcastMessage() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (!plugin.getIncognitoManager().isIncognito(player.getUniqueId())) return true;
+        }
+        return false;
     }
 
     private void broadcast(@NotNull String message) {

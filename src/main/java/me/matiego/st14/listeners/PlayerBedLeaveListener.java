@@ -1,8 +1,8 @@
 package me.matiego.st14.listeners;
 
 import me.matiego.st14.Main;
+import me.matiego.st14.utils.Prefix;
 import me.matiego.st14.utils.Utils;
-import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -23,11 +23,13 @@ public class PlayerBedLeaveListener implements Listener {
         World world = event.getBed().getWorld();
         plugin.getPlayerBedEnterListener().clearSleepingInWorld(world);
         if (world.getTime() != 0) return;
-        Bukkit.getOnlinePlayers().stream()
-                .filter(p -> p.getWorld().equals(world))
-                .forEach(p -> p.sendMessage(Utils.getComponentByString("&eGracz &6" + player.getName() + "&e poszedł spać. Słodkich snów!")));
-        if (!plugin.getIncognitoManager().isIncognito(player.getUniqueId())) {
-            plugin.getChatMinecraft().sendMessage("**[" + Utils.getWorldName(world) + "]** Gracz **" + player.getName() + "** poszedł spać. Słodkich snów!", "Przesypianie nocy");
-        }
+
+        Utils.broadcastMessage(
+                player,
+                Prefix.SLEEPING_THROUGH_NIGHT,
+                "&eGracz &6" + player.getName() + "&e poszedł spać. Słodkich snów!",
+                "&eGracz &6" + player.getName() + "&e poszedł spać. Słodkich snów!",
+                "**[" + Utils.getWorldName(world) + "]** Gracz **" + player.getName() + "** poszedł spać. Słodkich snów!"
+        );
     }
 }

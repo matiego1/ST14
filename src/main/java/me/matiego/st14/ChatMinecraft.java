@@ -171,6 +171,8 @@ public class ChatMinecraft extends ListenerAdapter {
     }
 
     public void sendDeathMessage(@NotNull String message, @NotNull Player... players) {
+        Logs.discord(message);
+
         for (Player player : players) {
             if (plugin.getIncognitoManager().isIncognito(player.getUniqueId())) return;
         }
@@ -184,22 +186,26 @@ public class ChatMinecraft extends ListenerAdapter {
     }
 
     public void sendChatMessage(@NotNull String message, @NotNull Player player) {
+        Logs.discord(message);
+
         if (plugin.getIncognitoManager().isIncognito(player.getUniqueId())) return;
-        DiscordUtils.sendWebhook(
+        Utils.async(() -> DiscordUtils.sendWebhook(
                 plugin.getConfig().getString("discord.webhook-urls.chat-minecraft", ""),
                 Utils.getSkinUrl(player.getUniqueId()),
                 "[" + Utils.getWorldPrefix(player.getWorld()) + "] " + player.getName(),
                 DiscordUtils.escapeFormatting(DiscordUtils.checkLength(message, Message.MAX_CONTENT_LENGTH))
-        );
+        ));
     }
 
     public void sendMessage(@NotNull String message, @NotNull String name) {
-        DiscordUtils.sendWebhook(
+        Logs.discord(message);
+
+        Utils.async(() -> DiscordUtils.sendWebhook(
                 plugin.getConfig().getString("discord.webhook-urls.chat-minecraft", ""),
                 DiscordUtils.getBotIcon(),
                 name,
                 DiscordUtils.checkLength(message, Message.MAX_CONTENT_LENGTH)
-        );
+        ));
     }
 
     public void sendMessageEmbed(@NotNull MessageEmbed embed) {

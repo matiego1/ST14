@@ -15,8 +15,13 @@ public class EntityPortalListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onEntityPortal(@NotNull EntityPortalEvent event) {
-        if (event.getPortalType() == PortalType.ENDER && plugin.getConfig().getBoolean("block-end")) {
-            event.setCancelled(true);
+        String world = event.getFrom().getWorld().getName();
+        if (event.getPortalType() == PortalType.ENDER && plugin.getConfig().getStringList("allow-end-portals").contains(world)) {
+            return;
         }
+        if (event.getPortalType() == PortalType.NETHER && plugin.getConfig().getStringList("allow-nether-portals").contains(world)) {
+            return;
+        }
+        event.setCancelled(true);
     }
 }

@@ -69,7 +69,7 @@ public class BackpackCommand implements CommandHandler.Minecraft, Listener {
         return 8;
     }
 
-    @EventHandler (ignoreCancelled = true)
+    @EventHandler(ignoreCancelled = true)
     public void onInventoryCloseEvent(@NotNull InventoryCloseEvent event) {
         if (!(event.getView().getTopInventory().getHolder() instanceof GUI)) return;
         if (!LegacyComponentSerializer.legacyAmpersand().serialize(event.getView().title()).equals("&3Twój plecak")) return;

@@ -37,13 +37,17 @@ public class TabListManager {
     private synchronized @NotNull String formatTps(double tps) {
         tps = Utils.round(tps, 2);
         if (tps >= 19d) {
-            log15 = false;
-            log10 = false;
+            if (log15 || log10) {
+                Logs.info("TPS są powyżej 19.");
+            }
+            log10 = log15 = false;
             return "&a" + tps;
         }
         if (tps >= 15d) {
-            log15 = false;
-            log10 = false;
+            if (log15 || log10) {
+                Logs.info("TPS są powyżej 15.");
+            }
+            log10 = log15 = false;
             return "&e" + tps;
         }
         if (tps >= 10d) {

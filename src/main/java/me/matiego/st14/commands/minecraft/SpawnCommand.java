@@ -97,7 +97,7 @@ public class SpawnCommand implements CommandHandler.Minecraft {
                     return false;
                 }).get()) {
                     case SUCCESS -> {
-                        player.sendMessage(Utils.getComponentByString("&aPomyślnie przeteleportowano na spawn."));
+                        player.sendMessage(Utils.getComponentByString("&aPomyślnie przeteleportowano na spawn" + " za " + economy.format(cost)));
                         Logs.info("Gracz " + player.getName() + " przeteleportował się na spawn.");
                     }
                     case MOVE -> player.sendMessage(Utils.getComponentByString("&cTeleportowanie anulowane, poruszyłeś się"));

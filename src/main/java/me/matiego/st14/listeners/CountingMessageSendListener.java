@@ -22,7 +22,7 @@ public class CountingMessageSendListener implements Listener {
     }
     private final Main plugin;
 
-    @EventHandler (ignoreCancelled = true)
+    @EventHandler(ignoreCancelled = true)
     public void onCountingMessageSend(@NotNull CountingMessageSendEvent event) {
         long now = Utils.now();
         long user = event.getUserId();

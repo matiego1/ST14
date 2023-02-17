@@ -35,7 +35,7 @@ public class PlayerItemFrameChangeListener implements Listener {
                 lastItemFrameRotation.put(player.getUniqueId(), now);
 
                 now -= last;
-                if (now <= 0 || now > 10_000) {
+                if (now <= 0 || now > 5_000) {
                     event.setCancelled(true);
                     player.sendMessage(Utils.getComponentByString("&cAby obrócić ten przedmiot, kliknij ponownie!"));
                 }

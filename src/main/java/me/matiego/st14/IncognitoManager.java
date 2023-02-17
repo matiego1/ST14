@@ -44,6 +44,7 @@ public class IncognitoManager {
                 if (time != null) time.setType(GameTime.Type.INCOGNITO);
             }
             incognito.add(uuid);
+            Logs.info("Gracz " + plugin.getOfflinePlayers().getEffectiveNameById(uuid) + " jest incognito.");
         } else {
             if (player != null) {
                 plugin.getChatMinecraft().sendFakeJoinMessage(player);
@@ -56,6 +57,7 @@ public class IncognitoManager {
                 if (time != null) time.setType(plugin.getAfkManager().isAfk(player) ? GameTime.Type.AFK : GameTime.Type.NORMAL);
             }
             incognito.remove(uuid);
+            Logs.info("Gracz " + plugin.getOfflinePlayers().getEffectiveNameById(uuid) + " nie jest już incognito.");
         }
     }
 

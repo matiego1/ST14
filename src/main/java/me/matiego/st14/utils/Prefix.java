@@ -15,7 +15,8 @@ public enum Prefix {
     SUICIDE("&4[&cSamobójstwa&4]&c ", "Samobójstwa"),
     DIFFICULTY("", "Poziom trudności"),
     GAMEMODE("", "Tryb gry"),
-    ANTY_LOGOUT("&4[&cANTY-LOGOUT&4]&c ", "Anty-logout");
+    ANTY_LOGOUT("&4[&cANTY-LOGOUT&4]&c ", "Anty-logout"),
+    SLEEPING_THROUGH_NIGHT("", "Przesypianie nocy");
 
     @Getter private final String minecraft;
     @Getter private final String discord;

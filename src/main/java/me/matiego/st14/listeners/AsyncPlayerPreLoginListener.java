@@ -99,7 +99,7 @@ public class AsyncPlayerPreLoginListener implements Listener {
         event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Utils.getComponentByString(msg));
     }
 
-    @EventHandler (priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onAsyncPlayerPreLoginMonitor(@NotNull AsyncPlayerPreLoginEvent event) {
         if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) return;
         IncognitoManager manager = plugin.getIncognitoManager();

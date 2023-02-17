@@ -2,6 +2,7 @@ package me.matiego.st14.listeners;
 
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.Utils;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerPortalEvent;
@@ -16,9 +17,15 @@ public class PlayerPortalListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerPortal(@NotNull PlayerPortalEvent event) {
-        if (event.getCause() == PlayerTeleportEvent.TeleportCause.END_PORTAL && plugin.getConfig().getBoolean("block-end")) {
-            event.setCancelled(true);
-            event.getPlayer().sendActionBar(Utils.getComponentByString("&cEnd jest zablokowany"));
+        String world = event.getFrom().getWorld().getName();
+        Player player = event.getPlayer();
+        if (event.getCause() == PlayerTeleportEvent.TeleportCause.END_PORTAL && plugin.getConfig().getStringList("allow-end-portals").contains(world)) {
+            return;
         }
+        if (event.getCause() == PlayerTeleportEvent.TeleportCause.NETHER_PORTAL && plugin.getConfig().getStringList("allow-nether-portals").contains(world)) {
+            return;
+        }
+        event.setCancelled(true);
+        player.sendActionBar(Utils.getComponentByString("&cNie możesz skorzystać z tego portalu."));
     }
 }

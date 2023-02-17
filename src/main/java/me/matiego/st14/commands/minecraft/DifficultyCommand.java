@@ -42,7 +42,7 @@ public class DifficultyCommand implements CommandHandler.Minecraft {
         inv.setItem(4, GUI.createGuiItem(Material.YELLOW_WOOL, "&eNormalny", "Kliknij, aby ustawić"));
         inv.setItem(6, GUI.createGuiItem(Material.RED_WOOL, "&cTrudny", "Kliknij, aby ustawić"));
         player.openInventory(inv);
-        return 3;
+        return 60;
     }
 
     @Override

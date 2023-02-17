@@ -94,7 +94,14 @@ public class PremiumManager {
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (!player.isOnline()) return;
             player.kick(Utils.getComponentByString(Prefix.PREMIUM + "Zostałeś wyrzucony z serwera, żeby zrobić miejsce graczowi z wyższym priorytetem. Wybór padł na ciebie, ponieważ grałeś dzisiaj najdłużej."));
-            plugin.getChatMinecraft().sendMessage("Gracz **" + player.getName() + "** został wyrzucony z serwera, żeby zrobić miejsce graczowi z wyższym priorytetem.", Prefix.PREMIUM.getDiscord());
+
+            Utils.broadcastMessage(
+                    player,
+                    Prefix.PREMIUM,
+                    "Za chwilę zostaniesz wyrzucony...",
+                    "Gracz " + player.getName() + " został wyrzucony z serwera, żeby zrobić miejsce graczowi z wyższym priorytetem.",
+                    "Gracz **" + player.getName() + "** został wyrzucony z serwera, żeby zrobić miejsce graczowi z wyższym priorytetem."
+            );
         }, 200);
     }
 
