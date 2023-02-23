@@ -43,7 +43,7 @@ public class AsyncPlayerPreLoginListener implements Listener {
                 .anyMatch(uuid::equals)) {
             return;
         }
-        //check (real) time
+        //check real time
         int seconds = LocalDateTime.now().toLocalTime().toSecondOfDay();
         if (seconds >= 24 * 60 * 60 - 7 || seconds <= 3) {
             disallow(event, "&cNa serwer możesz ponownie dołączyć 3 sekundy po północy. Przepraszamy.");
@@ -69,7 +69,7 @@ public class AsyncPlayerPreLoginListener implements Listener {
         if (!plugin.getAccountsManager().isRequired(uuid)) return;
         UserSnowflake id = plugin.getAccountsManager().getUserByPlayer(uuid);
         if (id == null) {
-            String code = plugin.getAccountsManager().getNewVerificationCode(uuid);
+            String code = plugin.getAccountsManager().getNewVerificationCode(uuid, event.getName());
             disallow(event, Prefix.DISCORD + "\n" +
                     "Nie połączyłeś konta Discord z twoim kontem minecraft!\n\n" +
                     "Użyj komendy &9/accounts &bna Discord\n" +

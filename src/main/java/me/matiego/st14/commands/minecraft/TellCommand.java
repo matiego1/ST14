@@ -19,13 +19,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class TellCommand implements CommandHandler.Minecraft {
-    private final PluginCommand command;
-    public TellCommand() {
-        command = Main.getInstance().getCommand("tell");
+    public TellCommand(@NotNull Main plugin) {
+        command = plugin.getCommand("tell");
         if (command == null) {
             Logs.warning("The command /tell does not exist in the plugin.yml file and cannot be registered.");
         }
     }
+    private final PluginCommand command;
 
     private final HashMap<UUID, UUID> reply = new HashMap<>();
 
@@ -110,7 +110,7 @@ public class TellCommand implements CommandHandler.Minecraft {
 
     public void log(@NotNull String msg, @Nullable Player sender, @Nullable Player receiver) {
         String senderName = sender == null ? "[admin]" : sender.getName();
-        String receiverName = receiver == null ? "[receiver]" : receiver.getName();
+        String receiverName = receiver == null ? "[admin]" : receiver.getName();
         Logs.info("[" + senderName + " -> " + receiverName +"]: " + msg);
     }
 

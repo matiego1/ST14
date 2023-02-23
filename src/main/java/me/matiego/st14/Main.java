@@ -15,9 +15,7 @@ import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.events.session.ShutdownEvent;
 import net.dv8tion.jda.api.exceptions.InvalidTokenException;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.bukkit.Bukkit;
@@ -56,7 +54,9 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private BackpackManager backpackManager;
     @Getter private RewardsManager rewardsManager;
     @Getter private AntyLogoutManager antyLogoutManager;
-    @Getter private GameManager gameManager;
+    @Getter private MiniGameManager miniGameManager;
+    @Getter private BanknoteManager banknoteManager;
+    @Getter private WorldsLastLocation worldsLastLocation;
     private ListenersManager listenersManager;
     private TabListManager tabListManager;
     private ChatReportsManager chatReportsManager;
@@ -135,9 +135,11 @@ public final class Main extends JavaPlugin implements Listener {
         backpackManager = new BackpackManager(this);
         chatReportsManager = new ChatReportsManager();
         antyLogoutManager = new AntyLogoutManager(this);
-        gameManager = new GameManager(this);
+        miniGameManager = new MiniGameManager(this);
         listenersManager = new ListenersManager(this);
         didYouKnowManager = new DidYouKnowManager(this);
+        banknoteManager = new BanknoteManager(this);
+        worldsLastLocation = new WorldsLastLocation(this);
 
         Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomy(), vault, ServicePriority.High);
 
@@ -150,6 +152,8 @@ public final class Main extends JavaPlugin implements Listener {
                 new AsyncChatListener(this),
                 new AsyncPlayerPreLoginListener(this),
                 new BlockBreakListener(this),
+                new BlockFormListener(),
+                new BlockPistonExtendListener(),
                 new BlockPlaceListener(),
                 new EntityChangeBlockListener(),
                 new EntityDamageByEntityListener(this),
@@ -163,6 +167,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new PlayerAdvancementDoneListener(),
                 playerBedEnterListener,
                 new PlayerBedLeaveListener(this),
+                new PlayerBucketEmptyListener(),
                 new PlayerChangedWorldListener(this),
                 new PlayerCommandPreprocessListener(this),
                 new PlayerCommandSendListener(this),
@@ -177,7 +182,9 @@ public final class Main extends JavaPlugin implements Listener {
                 new PlayerRespawnListener(this),
                 new PlayerTeleportListener(),
                 new ServerCommandListener(),
-                new ServerListPingListener(this)
+                new ServerListPingListener(this),
+                new StructureGrowListener()
+
         );
         listenersManager.registerListener("minecraft:brand", new PluginMessageReceivedListener(this));
 
@@ -239,36 +246,37 @@ public final class Main extends JavaPlugin implements Listener {
 
     private void onDiscordBotEnable() {
         //register commands
-        tellCommand = new TellCommand();
+        tellCommand = new TellCommand(this);
         tpaCommand = new TpaCommand(this);
-        suicideCommand = new SuicideCommand();
+        suicideCommand = new SuicideCommand(this);
         incognitoCommand = new IncognitoCommand(this);
         commandManager = new CommandManager(Arrays.asList(
                 incognitoCommand,
                 new AccountsCommand(this),
-                new VersionCommand(),
+                new VersionCommand(this),
                 new TimeCommand(this),
                 new EconomyCommand(this),
                 new CoordinatesCommand(this),
                 //Minecraft commands
                 new SayCommand(this),
-                new St14Command(),
-                new DifficultyCommand(),
-                new GameModeCommand(),
+                new St14Command(this),
+                new DifficultyCommand(this),
+                new GameModeCommand(this),
                 new ReplyCommand(this),
-                new McreloadCommand(),
+                new McreloadCommand(this),
                 new WorldsCommand(this),
-                new StopCommand(),
+                new StopCommand(this),
                 new BackpackCommand(this),
                 new SpawnCommand(this),
+                new MiniGameCommand(this),
                 tellCommand,
                 tpaCommand,
                 suicideCommand,
                 //Discord commands
                 new PingCommand(),
-                new ListCommand(),
+                new ListCommand(this),
                 new FeedbackCommand(),
-                new AllPlayersCommand(),
+                new AllPlayersCommand(this),
                 new VerifyCommand(this)
         ));
         listenersManager.registerListener(commandManager);
@@ -311,6 +319,10 @@ public final class Main extends JavaPlugin implements Listener {
         long time = Utils.now();
         //disable commands
         if (commandManager != null) commandManager.setEnabled(false);
+        //stop minigame
+        if (miniGameManager != null) {
+            miniGameManager.stopGame();
+        }
         //close all plugin's inventories
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (player.getOpenInventory().getTopInventory().getHolder() instanceof GUI) player.closeInventory();
@@ -333,23 +345,12 @@ public final class Main extends JavaPlugin implements Listener {
 
             isJdaEnabled = false;
             jda.getEventManager().getRegisteredListeners().forEach(listener -> jda.getEventManager().unregister(listener));
-            CompletableFuture<Void> shutdownTask = new CompletableFuture<>();
-            jda.addEventListener(new ListenerAdapter() {
-                @Override
-                public void onShutdown(@NotNull ShutdownEvent event) {
-                    shutdownTask.complete(null);
-                }
-            });
-            jda.shutdown();
+
             try {
-                shutdownTask.get(5, TimeUnit.SECONDS);
-                Logs.info("Successfully shut down the Discord bot.");
+                disableDiscordBot();
             } catch (Exception e) {
-                Logs.warning("Discord bot took too long to shut down, skipping. Ignore any errors from this point.");
+                Logs.error("An error occurred while shutting down Discord bot.", e);
             }
-            jda = null;
-            if (callbackThreadPool != null) callbackThreadPool.shutdownNow();
-            callbackThreadPool = null;
         }
         //end all tasks
         Bukkit.getScheduler().cancelTasks(this);
@@ -358,7 +359,7 @@ public final class Main extends JavaPlugin implements Listener {
                 Logs.error("Task with id " + task.getTaskId() + " has not been canceled. Interrupting...");
                 try {
                     task.getThread().interrupt();
-                }catch (Exception ignored) {}
+                } catch (Exception ignored) {}
             }
         }
         //close MySQL connection
@@ -366,6 +367,20 @@ public final class Main extends JavaPlugin implements Listener {
 
         Logs.info("Plugin disabled! Took " + (Utils.now() - time) + " ms.");
         instance = null;
+    }
+
+    private void disableDiscordBot() throws Exception {
+        if (jda == null) return;
+        jda.shutdown();
+        if (jda.awaitShutdown(5, TimeUnit.SECONDS)) return;
+        Logs.warning("Discord bot took too long to shut down, skipping.");
+        jda.shutdownNow();
+        if (jda.awaitShutdown(3, TimeUnit.SECONDS)) return;
+        jda = null;
+
+        if (callbackThreadPool == null) return;
+        callbackThreadPool.shutdownNow();
+        callbackThreadPool = null;
     }
 
     public @NotNull Connection getConnection() throws SQLException {

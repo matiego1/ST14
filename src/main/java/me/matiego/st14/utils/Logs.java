@@ -36,7 +36,7 @@ public class Logs {
      */
     public static void warning(@NotNull String message) {
         plugin.getLogger().warning(message);
-        discord("WARNING", message, null);
+        discord("__WARNING__", message, null);
     }
 
     /**
@@ -64,7 +64,7 @@ public class Logs {
      */
     public static void error(@NotNull String message) {
         plugin.getLogger().severe(message);
-        discord("ERROR", message, null);
+        discord("__ERROR__", message, null);
     }
 
     /**

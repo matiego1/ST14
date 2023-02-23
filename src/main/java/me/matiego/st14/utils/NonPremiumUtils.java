@@ -5,8 +5,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 public class NonPremiumUtils {
-    //can't be used with the Floodgate plugin!
-    private static final long MOST_SIGNIFICANT_BITS = 0;
+    //Floodgate use 0, so I believe 1 should be fine
+    private static final long MOST_SIGNIFICANT_BITS = 1;
     public static boolean isNonPremiumUuid(@NotNull UUID uuid) {
         return uuid.getMostSignificantBits() == MOST_SIGNIFICANT_BITS;
     }

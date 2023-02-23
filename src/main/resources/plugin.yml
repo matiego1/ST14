@@ -74,6 +74,9 @@ commands:
   spawn:
     permission: st14.spawn
     usage: 'Poprawne użycie /spawn'
+  minigame:
+    permission: st14.minigame
+    usage: 'Poprawne użycie /minigame'
 permissions:
   st14.st14:
     default: op
@@ -112,4 +115,6 @@ permissions:
   st14.coordinates:
     default: op
   st14.spawn:
+    default: true
+  st14.minigame:
     default: true

@@ -19,7 +19,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class GUI implements InventoryHolder {
-
     private GUI(int slots, @NotNull String title) {
         inventory = Bukkit.createInventory(this, slots, Utils.getComponentByString(title));
     }

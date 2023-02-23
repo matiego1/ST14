@@ -1,6 +1,7 @@
 package me.matiego.st14.listeners;
 
 import me.matiego.st14.Main;
+import me.matiego.st14.utils.NonPremiumUtils;
 import me.matiego.st14.utils.Prefix;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.entity.Player;
@@ -50,6 +51,10 @@ public class PlayerJoinListener implements Listener {
         plugin.getChatMinecraft().sendJoinMessage(player);
         plugin.getChatMinecraft().sendConsoleJoinMessage(player);
         //handle game
-        plugin.getGameManager().onPlayerJoin(player);
+        plugin.getMiniGameManager().onPlayerJoin(player);
+        //non-premium warning
+        if (NonPremiumUtils.isNonPremiumUuid(uuid)) {
+            player.sendMessage(Utils.getComponentByString("&eSystem umożliwiający grę graczom non-premium jest w wersji BETA. Zgłaszaj wszystkie napotkane błędy!"));
+        }
     }
 }

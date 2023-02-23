@@ -12,13 +12,15 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public class St14Command implements CommandHandler.Minecraft {
-    private final PluginCommand command;
-    public St14Command() {
-        command = Main.getInstance().getCommand("st14");
+    public St14Command(@NotNull Main plugin) {
+        this.plugin = plugin;
+        command = plugin.getCommand("st14");
         if (command == null) {
             Logs.warning("The command /st14 does not exist in the plugin.yml file and cannot be registered.");
         }
     }
+    private final Main plugin;
+    private final PluginCommand command;
 
     @Override
     public @Nullable PluginCommand getMinecraftCommand() {
@@ -30,7 +32,7 @@ public class St14Command implements CommandHandler.Minecraft {
         if (args.length != 1) return -1;
         if (!args[0].equalsIgnoreCase("reload")) return -1;
 
-        Main.getInstance().reloadConfig();
+        plugin.reloadConfig();
         sender.sendMessage(Utils.getComponentByString("&aSuccessfully reloaded config."));
         return 3;
     }

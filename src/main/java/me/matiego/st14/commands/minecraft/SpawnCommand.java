@@ -55,7 +55,7 @@ public class SpawnCommand implements CommandHandler.Minecraft {
 
         if (args.length != 0) return -1;
 
-        if (!plugin.getConfig().getStringList("spawn.worlds").contains(player.getWorld().getName())) {
+        if (Utils.checkIfCanNotExecuteCommandInWorld(player, "spawn", '.')) {
             player.sendMessage(Utils.getComponentByString("&cNie możesz użyć tej komendy w tym świecie."));
             return 3;
         }
@@ -76,13 +76,16 @@ public class SpawnCommand implements CommandHandler.Minecraft {
         final double cost;
         if (plugin.getConfig().getStringList("spawn.free-worlds").contains(player.getWorld().getName())) {
             cost = 0;
+        } else if (player.hasPermission("st14.spawn." + player.getWorld().getName())) {
+            cost = 0;
         } else {
             cost = Utils.round(plugin.getConfig().getDouble("spawn.cost") * (distance / 16), 2);
         }
 
         Economy economy = plugin.getEconomy();
         if (cost != 0 && !economy.has(player, cost)) {
-            player.sendMessage(Utils.getComponentByString("Aby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.getBalance(player) + "."));
+            player.sendMessage(Utils.getComponentByString("&aAby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.getBalance(player) + "."));
+            return 3;
         }
 
         player.sendMessage(Utils.getComponentByString("&aZa chwilę zostaniesz przeteleportowany na spawn. Nie ruszaj się!"));
@@ -104,6 +107,7 @@ public class SpawnCommand implements CommandHandler.Minecraft {
                     case ALREADY_ACTIVE -> player.sendMessage(Utils.getComponentByString("&cProces teleportowania już został rozpoczęty."));
                     case DISABLED -> player.sendMessage(Utils.getComponentByString("&cTeleportowanie anulowane."));
                     case CANCELLED -> {}
+                    case ANTY_LOGOUT -> player.sendMessage(Utils.getComponentByString("&cNie możesz się teleportować z aktywnym anty-logoutem."));
                     case FAILURE -> {
                         player.sendMessage(Utils.getComponentByString("&cNapotkano niespodziewany błąd."));
                         if (!economy.depositPlayer(player, cost).transactionSuccess()) {

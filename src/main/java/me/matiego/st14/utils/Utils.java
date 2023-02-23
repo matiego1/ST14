@@ -155,9 +155,7 @@ public class Utils {
         nameTag.setCategory(CraftingBookCategory.MISC);
         Bukkit.addRecipe(nameTag);
         //Wool to strings
-        ItemStack fourStrings = new ItemStack(Material.STRING);
-        fourStrings.setAmount(4);
-        ShapelessRecipe woolToStrings = new ShapelessRecipe(new NamespacedKey(Main.getInstance(), "wool_to_strings"), fourStrings);
+        ShapelessRecipe woolToStrings = new ShapelessRecipe(new NamespacedKey(Main.getInstance(), "wool_to_strings"), new ItemStack(Material.STRING, 4));
         woolToStrings.addIngredient(Material.WHITE_WOOL);
         woolToStrings.setCategory(CraftingBookCategory.MISC);
         Bukkit.addRecipe(woolToStrings);
@@ -192,8 +190,10 @@ public class Utils {
                     .forEach(p -> p.sendMessage(Utils.getComponentByString(prefix + others)));
             Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString(prefix + others));
 
-            Logs.discord(discord);
-            if (Main.getInstance().getIncognitoManager().isIncognito(player.getUniqueId())) return;
+            if (Main.getInstance().getIncognitoManager().isIncognito(player.getUniqueId())) {
+                Logs.discord(discord);
+                return;
+            }
             Main.getInstance().getChatMinecraft().sendMessage(discord, prefix.getDiscord());
         });
     }
@@ -210,6 +210,14 @@ public class Utils {
         if (world.getBlockAt(x - 1, y, z).getType() == Material.NETHER_PORTAL) return true;
         if (world.getBlockAt(x, y, z + 1).getType() == Material.NETHER_PORTAL) return true;
         return world.getBlockAt(x, y, z - 1).getType() == Material.NETHER_PORTAL;
+    }
 
+    public static boolean checkIfCanNotExecuteCommandInWorld(@NotNull Player player, @NotNull String command) {
+        return checkIfCanNotExecuteCommandInWorld(player, command, '-');
+    }
+    public static boolean checkIfCanNotExecuteCommandInWorld(@NotNull Player player, @NotNull String command, char configPathSeparator) {
+        if (player.isOp()) return false;
+        if (player.hasPermission("st14." + command + "." + player.getWorld().getName())) return false;
+        return !Main.getInstance().getConfig().getStringList(command + configPathSeparator + "worlds").contains(player.getWorld().getName());
     }
 }

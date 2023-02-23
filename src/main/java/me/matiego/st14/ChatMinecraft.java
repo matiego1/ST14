@@ -91,6 +91,7 @@ public class ChatMinecraft extends ListenerAdapter {
                     DiscordUtils.getAvatar(user, event.getMember()),
                     "[DC] " + DiscordUtils.getName(user, event.getMember()),
                     DiscordUtils.escapeFormatting(msgContent))) {
+                Logs.discord("**[DC]** " + DiscordUtils.getName(user, event.getMember()) + ": " + DiscordUtils.escapeFormatting(msgContent));
                 for (String line : msgContent.split("\n")) {
                     Bukkit.broadcast(Utils.getComponentByString("&a[DC] &7" + DiscordUtils.getName(user, event.getMember()) + "&f: " + line));
                 }
@@ -186,7 +187,7 @@ public class ChatMinecraft extends ListenerAdapter {
     }
 
     public void sendChatMessage(@NotNull String message, @NotNull Player player) {
-        Logs.discord(message);
+        Logs.discord("**[" + Utils.getWorldPrefix(player.getWorld()) + "]** " + player.getName() + ": " + DiscordUtils.escapeFormatting(message));
 
         if (plugin.getIncognitoManager().isIncognito(player.getUniqueId())) return;
         Utils.async(() -> DiscordUtils.sendWebhook(

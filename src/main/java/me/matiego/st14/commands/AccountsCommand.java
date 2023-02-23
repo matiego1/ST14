@@ -35,15 +35,15 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class AccountsCommand implements CommandHandler.Discord, CommandHandler.Minecraft {
-    private final Main plugin;
-    private final PluginCommand command;
     public AccountsCommand(@NotNull Main plugin) {
         this.plugin = plugin;
-        command = Main.getInstance().getCommand("accounts");
+        command = plugin.getCommand("accounts");
         if (command == null) {
             Logs.warning("The command /accounts does not exist in the plugin.yml file and cannot be registered.");
         }
     }
+    private final Main plugin;
+    private final PluginCommand command;
 
     @Override
     public @NotNull CommandData getDiscordCommand() {
@@ -74,18 +74,19 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                     hook.sendMessage("Twoje konto już jest połączone z kontem minecraft.").queue();
                     return;
                 }
-                UUID uuid = manager.checkVerificationCode(code);
-                if (uuid == null) {
+                Pair<UUID, String> pair = manager.checkVerificationCode(code);
+                if (pair == null) {
                     hook.sendMessage("Twój kod jest niepoprawny. Aby wygenerować nowy, dołącz do serwera.").queue();
                     return;
                 }
+                UUID uuid = pair.getFirst();
                 if (manager.isLinked(uuid)) {
                     hook.sendMessage("To konto minecraft już jest połączone z jakimś kontem Discord.").queue();
                     return;
                 }
                 if (manager.link(uuid, user)) {
                     hook.sendMessage("Pomyślnie połączono twoje konta!").queue();
-                    MessageEmbed embed = getEmbed(user);
+                    MessageEmbed embed = getEmbed(user, pair.getSecond());
                     if (embed == null) {
                         DiscordUtils.sendPrivateMessage(user, "Twoje konto zostało połączone z kontem minecraft! Niestety z powodu niespodziewanego błędu nie możemy dostarczyć Ci więcej informacji.");
                         return;
@@ -115,7 +116,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                 hook.sendMessage("Twoje konto nie jest jeszcze połączone z kontem minecraft! Aby je połączyć, użyj komendy `/accounts` w grze.").queue();
                 return;
             }
-            MessageEmbed embed = getEmbed(user);
+            MessageEmbed embed = getEmbed(user, "???");
             if (embed == null) {
                 hook.sendMessage("Twoje konto jest połączone z kontem minecraft! Niestety z powodu niespodziewanego błędu nie możemy dostarczyć Ci więcej informacji. Spróbuj później.").queue();
                 return;
@@ -130,12 +131,13 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
         return 3;
     }
 
-    private @Nullable MessageEmbed getEmbed(@NotNull UserSnowflake id) {
+    private @Nullable MessageEmbed getEmbed(@NotNull UserSnowflake id, @NotNull String playerNameFallback) {
         UUID uuid = plugin.getAccountsManager().getPlayerByUser(id);
         if (uuid == null) return null;
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("Twoje konto minecraft:");
-        eb.setDescription("**Nick:** `" + plugin.getOfflinePlayers().getEffectiveNameById(uuid) + "`\n**UUID:** `" + uuid + "`");
+        String playerName = plugin.getOfflinePlayers().getNameById(uuid);
+        eb.setDescription("**Nick:** `" + (playerName == null ? playerNameFallback : playerName) + "`\n**UUID:** `" + uuid + "`");
         eb.setColor(Color.BLUE);
         eb.setTimestamp(Instant.now());
         eb.setThumbnail(Utils.getSkinUrl(uuid));
@@ -258,7 +260,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                     if (user == null) return;
                     DiscordUtils.sendPrivateMessage(user, "Twoje konto zostało rozłączone z kontem minecraft!");
                 } else {
-                    String code = plugin.getAccountsManager().getNewVerificationCode(uuid);
+                    String code = plugin.getAccountsManager().getNewVerificationCode(uuid, player.getName());
                     player.sendMessage(Utils.getComponentByString(
                             Prefix.DISCORD + "=================================\n" +
                             Prefix.DISCORD + "Aby dokończyć proces łączenia kont,\n" +

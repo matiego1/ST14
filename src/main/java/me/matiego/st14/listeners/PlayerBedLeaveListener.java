@@ -27,8 +27,8 @@ public class PlayerBedLeaveListener implements Listener {
         Utils.broadcastMessage(
                 player,
                 Prefix.SLEEPING_THROUGH_NIGHT,
-                "&eGracz &6" + player.getName() + "&e poszedł spać. Słodkich snów!",
-                "&eGracz &6" + player.getName() + "&e poszedł spać. Słodkich snów!",
+                "&6[" + Utils.getWorldName(world) + "] &eGracz &6" + player.getName() + "&e poszedł spać. Słodkich snów!",
+                "&6[" + Utils.getWorldName(world) + "] &eGracz &6" + player.getName() + "&e poszedł spać. Słodkich snów!",
                 "**[" + Utils.getWorldName(world) + "]** Gracz **" + player.getName() + "** poszedł spać. Słodkich snów!"
         );
     }

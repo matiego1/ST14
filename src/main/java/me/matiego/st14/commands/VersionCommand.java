@@ -16,13 +16,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class VersionCommand implements CommandHandler.Discord, CommandHandler.Minecraft {
-    private final PluginCommand command;
-    public VersionCommand() {
-        command = Main.getInstance().getCommand("version");
+    public VersionCommand(@NotNull Main plugin) {
+        this.plugin = plugin;
+        command = plugin.getCommand("version");
         if (command == null) {
             Logs.warning("The command /version does not exist in the plugin.yml file and cannot be registered.");
         }
     }
+    private final Main plugin;
+    private final PluginCommand command;
 
     @Override
     public @Nullable PluginCommand getMinecraftCommand() {
@@ -56,6 +58,7 @@ public class VersionCommand implements CommandHandler.Discord, CommandHandler.Mi
     }
 
     private @NotNull String getVersion() {
-        return Main.getInstance().getDescription().getVersion();
+        //noinspection deprecation
+        return plugin.getDescription().getVersion();
     }
 }

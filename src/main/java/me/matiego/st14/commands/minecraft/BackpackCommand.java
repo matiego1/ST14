@@ -5,20 +5,15 @@ import me.matiego.st14.utils.CommandHandler;
 import me.matiego.st14.utils.GUI;
 import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Utils;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class BackpackCommand implements CommandHandler.Minecraft, Listener {
@@ -28,7 +23,6 @@ public class BackpackCommand implements CommandHandler.Minecraft, Listener {
         if (command == null) {
             Logs.warning("The command /backpack does not exist in the plugin.yml file and cannot be registered.");
         }
-        Bukkit.getPluginManager().registerEvents(this, plugin);
     }
     private final PluginCommand command;
     private final Main plugin;
@@ -45,7 +39,7 @@ public class BackpackCommand implements CommandHandler.Minecraft, Listener {
             return 0;
         }
 
-        if (!Main.getInstance().getConfig().getStringList("backpack-worlds").contains(player.getWorld().getName())) {
+        if (Utils.checkIfCanNotExecuteCommandInWorld(player, "backpack")) {
             sender.sendMessage(Utils.getComponentByString("&cNie możesz użyć tej komendy w tym świecie."));
             return 3;
         }
@@ -68,20 +62,4 @@ public class BackpackCommand implements CommandHandler.Minecraft, Listener {
         player.openInventory(inv);
         return 8;
     }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onInventoryCloseEvent(@NotNull InventoryCloseEvent event) {
-        if (!(event.getView().getTopInventory().getHolder() instanceof GUI)) return;
-        if (!LegacyComponentSerializer.legacyAmpersand().serialize(event.getView().title()).equals("&3Twój plecak")) return;
-
-        Player player = (Player) event.getPlayer();
-        Inventory inv = event.getInventory();
-        List<ItemStack> items = Arrays.asList(inv.getContents());
-
-        if (plugin.getBackpackManager().saveBackpack(player.getUniqueId(), items)) return;
-
-        player.sendMessage(Utils.getComponentByString("&cNapotkano niespodziewany błąd przy zapisywaniu twojego plecaka! Zgłoś się do administratora, aby odzyskać swoje przedmioty!"));
-        Logs.warning("Gracz " + player.getName() + " (" + player.getUniqueId() + ") stracił przedmioty z plecaka! Muszą być przywrócone ręcznie. Base64: `" + GUI.itemsToString(items) + "`");
-    }
-
 }

@@ -14,13 +14,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class DifficultyCommand implements CommandHandler.Minecraft {
-    private final PluginCommand command;
-    public DifficultyCommand() {
-        command = Main.getInstance().getCommand("difficulty");
+    public DifficultyCommand(@NotNull Main plugin) {
+        command = plugin.getCommand("difficulty");
         if (command == null) {
             Logs.warning("The command /difficulty does not exist in the plugin.yml file and cannot be registered.");
         }
     }
+    private final PluginCommand command;
+
     @Override
     public @Nullable PluginCommand getMinecraftCommand() {
         return command;
@@ -33,7 +34,7 @@ public class DifficultyCommand implements CommandHandler.Minecraft {
             return 0;
         }
         if (args.length != 0) return -1;
-        if (!Main.getInstance().getConfig().getStringList("difficulty-worlds").contains(player.getWorld().getName())) {
+        if (Utils.checkIfCanNotExecuteCommandInWorld(player, "difficulty")) {
             sender.sendMessage(Utils.getComponentByString("&cNie możesz zmienić poziomu trudności w tym świecie."));
             return 3;
         }

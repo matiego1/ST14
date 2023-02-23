@@ -29,6 +29,10 @@ public class TeleportsManager {
             future.complete(Response.ALREADY_ACTIVE);
             return future;
         }
+        if (Main.getInstance().getAntyLogoutManager().isInAntyLogout(player)) {
+            future.complete(Response.ANTY_LOGOUT);
+            return future;
+        }
         location.put(player.getUniqueId(), BlockLocation.parseLocation(player.getLocation()));
         tasks.put(player.getUniqueId(), new Pair<>(
                 Bukkit.getScheduler().runTaskLater(
@@ -45,7 +49,7 @@ public class TeleportsManager {
                                 return;
                             }
                             if (Main.getInstance().getAntyLogoutManager().isInAntyLogout(player)) {
-                                result.complete(Response.CANCELLED);
+                                result.complete(Response.ANTY_LOGOUT);
                                 return;
                             }
                             BlockLocation previousLocation = location.remove(player.getUniqueId());
@@ -105,6 +109,7 @@ public class TeleportsManager {
         MOVE,
         CANCELLED,
         DISABLED,
+        ANTY_LOGOUT,
         FAILURE
     }
 

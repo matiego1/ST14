@@ -53,6 +53,8 @@ public class SayCommand implements CommandHandler.Minecraft {
 
         Bukkit.broadcast(Utils.getComponentByString("&2[&aSerwer&2]:&r " + message));
 
+        Logs.discord("**[Serwer]:**" + message);
+
         EmbedBuilder eb = new EmbedBuilder();
         eb.setDescription(DiscordUtils.checkLength(message, MessageEmbed.DESCRIPTION_MAX_LENGTH));
         eb.setColor(Color.GREEN);

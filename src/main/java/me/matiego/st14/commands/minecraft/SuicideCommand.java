@@ -12,12 +12,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class SuicideCommand implements CommandHandler.Minecraft {
-    public SuicideCommand() {
-        command = Main.getInstance().getCommand("suicide");
+    public SuicideCommand(@NotNull Main plugin) {
+        this.plugin = plugin;
+        command = plugin.getCommand("suicide");
         if (command == null) {
             Logs.warning("The command /suicide does not exist in the plugin.yml file and cannot be registered.");
         }
     }
+    private final Main plugin;
     private final PluginCommand command;
 
     @Override
@@ -31,7 +33,13 @@ public class SuicideCommand implements CommandHandler.Minecraft {
             sender.sendMessage(Utils.getComponentByString(Prefix.SUICIDE + "Tej komendy może użyć tylko gracz"));
             return 0;
         }
-        Main.getInstance().getGraveCreateListener().unprotectNextGrave(player.getUniqueId());
+
+        if (Utils.checkIfCanNotExecuteCommandInWorld(player, "suicide")) {
+            player.sendMessage(Utils.getComponentByString("&cNie możesz użyć tej komendy w tym świecie."));
+            return 3;
+        }
+
+        plugin.getGraveCreateListener().unprotectNextGrave(player.getUniqueId());
         player.setHealth(0);
 
         Utils.broadcastMessage(

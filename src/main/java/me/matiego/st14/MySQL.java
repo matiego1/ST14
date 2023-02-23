@@ -2,7 +2,6 @@ package me.matiego.st14;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import me.matiego.st14.commands.minecraft.WorldsCommand;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.Connection;
@@ -64,7 +63,7 @@ public class MySQL {
         if (!IncognitoManager.createTable()) return false;
         if (!TimeManager.createTable()) return false;
         if (!PremiumManager.createTable()) return false;
-        if (!WorldsCommand.createTable()) return false;
+        if (!WorldsLastLocation.createTable()) return false;
         if (!BackpackManager.createTable()) return false;
         if (!RewardsManager.createTable()) return false;
         return AccountsManager.createTable();

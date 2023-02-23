@@ -31,15 +31,15 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.Discord {
-    private final PluginCommand command;
-    private final Main plugin;
     public EconomyCommand(@NotNull Main plugin) {
         this.plugin = plugin;
-        command = Main.getInstance().getCommand("economy");
+        command = plugin.getCommand("economy");
         if (command == null) {
             Logs.warning("The command /economy does not exist in the plugin.yml file and cannot be registered.");
         }
     }
+    private final PluginCommand command;
+    private final Main plugin;
 
     @Override
     public @Nullable PluginCommand getMinecraftCommand() {
@@ -87,7 +87,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
 
                 double amount;
                 try {
-                    amount = Double.parseDouble(args[2]);
+                    amount = Utils.round(Double.parseDouble(args[2]), 2);
                 } catch (Exception e) {
                     sender.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cPodaj poprawną ilość pieniędzy."));
                     return;
@@ -96,7 +96,6 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                     sender.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNie można ustawić ujemnej wartości."));
                     return;
                 }
-                amount = Utils.round(amount, 2);
 
                 EconomyResponse response = switch (args[0]) {
                     case "add" -> economy.depositPlayer(Bukkit.getOfflinePlayer(uuid), amount);
@@ -137,10 +136,12 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
             return 0;
         } else {
             if (args.length != 0) return -1;
-            if (!Main.getInstance().getConfig().getStringList("economy-worlds").contains(player.getWorld().getName())) {
+
+            if (Utils.checkIfCanNotExecuteCommandInWorld(player, "economy")) {
                 Utils.async(() -> player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Saldo twojego konta: &9" + plugin.getEconomy().format(plugin.getEconomy().getBalance(player)))));
                 return 5;
             }
+
             Inventory inv = GUI.createInventory(9, Prefix.ECONOMY + "Twoje konto");
             inv.setItem(0, GUI.createGuiItem(Material.DISPENSER, "&9Przelew", "&bPrzelej pieniądze innemu graczowi"));
             inv.setItem(1, GUI.createGuiItem(Material.PAPER, "&9Wypłata", "&bWypłać pieniądze w postaci banknotu"));
@@ -181,7 +182,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                     .onComplete(completion -> {
                         double amount;
                         try {
-                            amount = Double.parseDouble(completion.getText());
+                            amount = Utils.round(Double.parseDouble(completion.getText()), 2);
                         } catch (Exception e) {
                             return List.of(AnvilGUI.ResponseAction.replaceInputText("Podaj liczbę!"));
                         }
@@ -209,7 +210,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                     .onComplete(completion -> {
                         double amount;
                         try {
-                            amount = Double.parseDouble(completion.getText());
+                            amount = Utils.round(Double.parseDouble(completion.getText()), 2);
                         } catch (Exception e) {
                             return List.of(AnvilGUI.ResponseAction.replaceInputText("Podaj liczbę!"));
                         }
@@ -231,7 +232,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                             return List.of(AnvilGUI.ResponseAction.close());
                         }
 
-                        HashMap<Integer, ItemStack> drop = player.getInventory().addItem(GUI.createGuiItem(Material.PAPER, "&9Banknot", "&bKliknij PPM, trzymając w ręku,", "&baby wpłacić", "&bWartość: &9" + economy.format(amount)));
+                        HashMap<Integer, ItemStack> drop = player.getInventory().addItem(plugin.getBanknoteManager().createBanknote(amount));
                         for (ItemStack item : drop.values()) {
                             player.getWorld().dropItem(player.getLocation().add(0, 0.5, 0), item);
                         }

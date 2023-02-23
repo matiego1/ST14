@@ -17,6 +17,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ListCommand implements CommandHandler.Discord {
+    public ListCommand(@NotNull Main plugin) {
+        this.plugin = plugin;
+    }
+    private final Main plugin;
+    
     @Override
     public @NotNull CommandData getDiscordCommand() {
         return Commands.slash("list", "Wyświetla listę graczy online")
@@ -32,7 +37,7 @@ public class ListCommand implements CommandHandler.Discord {
     public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
         boolean ephemeral = event.getOption("incognito", "False", OptionMapping::getAsString).equals("True");
         List<String> players = new ArrayList<>();
-        IncognitoManager manager = Main.getInstance().getIncognitoManager();
+        IncognitoManager manager = plugin.getIncognitoManager();
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (!manager.isIncognito(player.getUniqueId())) {
                 players.add("- " + player.getName());

@@ -39,7 +39,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
     private final PluginCommand command;
     public IncognitoCommand(@NotNull Main plugin) {
         this.plugin = plugin;
-        command = Main.getInstance().getCommand("incognito");
+        command = plugin.getCommand("incognito");
         if (command == null) {
             Logs.warning("The command /incognito does not exist in the plugin.yml file and cannot be registered.");
         }

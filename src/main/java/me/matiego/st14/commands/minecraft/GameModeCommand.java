@@ -12,13 +12,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class GameModeCommand implements CommandHandler.Minecraft {
-    private final PluginCommand command;
-    public GameModeCommand() {
-        command = Main.getInstance().getCommand("gamemode");
+    public GameModeCommand(@NotNull Main plugin) {
+        command = plugin.getCommand("gamemode");
         if (command == null) {
             Logs.warning("The command /gamemode does not exist in the plugin.yml file and cannot be registered.");
         }
     }
+    private final PluginCommand command;
+
     @Override
     public @Nullable PluginCommand getMinecraftCommand() {
         return command;
@@ -31,7 +32,7 @@ public class GameModeCommand implements CommandHandler.Minecraft {
             return 1; //not zero to prevent a loop if it somehow happened
         }
         if (args.length != 0) return -1;
-        if (!player.hasPermission("st14.gamemode." + player.getWorld().getName()) && !Main.getInstance().getConfig().getStringList("gamemode-worlds").contains(player.getWorld().getName())) {
+        if (Utils.checkIfCanNotExecuteCommandInWorld(player, "gamemode")) {
             sender.sendMessage(Utils.getComponentByString("&cNie możesz zmienić trybu gry w tym świecie."));
             return 3;
         }

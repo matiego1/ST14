@@ -12,13 +12,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class StopCommand implements CommandHandler.Minecraft {
-    private final PluginCommand command;
-    public StopCommand() {
-        command = Main.getInstance().getCommand("stop");
+    public StopCommand(@NotNull Main plugin) {
+        this.plugin = plugin;
+        command = plugin.getCommand("stop");
         if (command == null) {
             Logs.warning("The command /stop does not exist in the plugin.yml file and cannot be registered.");
         }
     }
+    private final Main plugin;
+    private final PluginCommand command;
     private boolean isStoping = false;
 
     @Override
@@ -48,7 +50,7 @@ public class StopCommand implements CommandHandler.Minecraft {
 
         Bukkit.broadcast(Utils.getComponentByString("&c&lSerwer zostanie wyłączony za 5 sekund!"));
 
-        Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
             Bukkit.broadcast(Utils.getComponentByString("&c&lWyłączanie serwera..."));
 
             shutdown();
@@ -61,6 +63,6 @@ public class StopCommand implements CommandHandler.Minecraft {
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.kick(Utils.getComponentByString("&cWyłączenie serwera. Zapraszamy później!"));
         }
-        Bukkit.getScheduler().runTaskLater(Main.getInstance(), Bukkit::shutdown, 1);
+        Bukkit.getScheduler().runTaskLater(plugin, Bukkit::shutdown, 1);
     }
 }

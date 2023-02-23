@@ -25,7 +25,8 @@ public class DidYouKnowManager {
         stop();
 
         messages = plugin.getConfig().getStringList("did-you-know.messages");
-        if (messages.size() == 0) return;
+        if (messages.isEmpty()) return;
+
         if (plugin.getConfig().getBoolean("did-you-know.shuffle", true)) {
             Collections.shuffle(messages);
         }
@@ -33,15 +34,16 @@ public class DidYouKnowManager {
         long period = Math.max(60L, plugin.getConfig().getLong("did-you-know.period-seconds")) * 20;
 
         task = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
+            if (shouldNotBroadcastMessage()) return;
+
             if (lastIndex >= messages.size()) lastIndex = 0;
 
-            if (shouldNotBroadcastMessage()) {
-                broadcast(messages.get(lastIndex));
-            }
+            broadcast(messages.get(lastIndex));
 
             if (++lastIndex >= messages.size()) {
                 lastIndex = 0;
             }
+
         }, 20, period);
     }
 
@@ -54,9 +56,9 @@ public class DidYouKnowManager {
 
     private boolean shouldNotBroadcastMessage() {
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (!plugin.getIncognitoManager().isIncognito(player.getUniqueId())) return true;
+            if (!plugin.getIncognitoManager().isIncognito(player.getUniqueId())) return false;
         }
-        return false;
+        return true;
     }
 
     private void broadcast(@NotNull String message) {

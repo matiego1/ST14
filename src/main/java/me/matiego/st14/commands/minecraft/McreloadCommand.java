@@ -11,13 +11,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class McreloadCommand implements CommandHandler.Minecraft {
-    private final PluginCommand command;
-    public McreloadCommand() {
-        command = Main.getInstance().getCommand("mcreload");
+    public McreloadCommand(@NotNull Main plugin) {
+        command = plugin.getCommand("mcreload");
         if (command == null) {
             Logs.warning("The command /mcreload does not exist in the plugin.yml file and cannot be registered.");
         }
     }
+    private final PluginCommand command;
+
     @Override
     public @Nullable PluginCommand getMinecraftCommand() {
         return command;

@@ -23,8 +23,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class TpaCommand implements CommandHandler.Minecraft {
-    private final PluginCommand command;
-    private final Main plugin;
     public TpaCommand(@NotNull Main plugin) {
         command = plugin.getCommand("tpa");
         this.plugin = plugin;
@@ -32,7 +30,8 @@ public class TpaCommand implements CommandHandler.Minecraft {
             Logs.warning("The command /tpa does not exist in the plugin.yml file and cannot be registered.");
         }
     }
-
+    private final PluginCommand command;
+    private final Main plugin;
     private final HashMap<UUID, HashMap<UUID, BukkitTask>> tpa = new HashMap<>();
 
     @Override
@@ -46,6 +45,12 @@ public class TpaCommand implements CommandHandler.Minecraft {
             sender.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cTej komendy może użyć tylko gracz."));
             return -1;
         }
+
+        if (Utils.checkIfCanNotExecuteCommandInWorld(player, "tpa")) {
+            sender.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cNie możesz użyć tej komendy w tym świecie."));
+            return 5;
+        }
+
         if (args.length == 0) {
             Set<UUID> requests = tpa.getOrDefault(player.getUniqueId(), new HashMap<>()).keySet();
             if (requests.isEmpty()) {
@@ -66,24 +71,25 @@ public class TpaCommand implements CommandHandler.Minecraft {
             player.openInventory(inv);
             return 3;
         }
+
         if (args.length != 1) return -1;
+
         Player target = Bukkit.getPlayer(args[0]);
         if (target == null) {
             player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cTen gracz nie jest online."));
             return 3;
         }
+
         if (target.equals(player)) {
             player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cNie możesz teleportować się do siebie."));
             return 3;
         }
+
         if (!target.getWorld().equals(player.getWorld())) {
             player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cNie możesz teleportować się do innych światów."));
             return 3;
         }
-        if (!plugin.getConfig().getStringList("tpa.worlds").contains(player.getWorld().getName())) {
-            sender.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cNie możesz użyć tej komendy w tym świecie."));
-            return 5;
-        }
+
         HashMap<UUID, BukkitTask> requests = tpa.getOrDefault(target.getUniqueId(), new HashMap<>());
         Iterator<Map.Entry<UUID, BukkitTask>> it = requests.entrySet().iterator();
         while (it.hasNext()) {
@@ -95,13 +101,15 @@ public class TpaCommand implements CommandHandler.Minecraft {
                 return 3;
             }
         }
+
         if (requests.size() >= 9) {
             player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cTen gracz ma za dużo aktywnych próśb o teleportację."));
             return 5;
         }
+
         player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Pomyślnie wysłano prośbę o teleportację."));
         target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + player.getName() + " chce się do ciebie przeteleportować. Użyj /tpa, aby mu na to pozwolić."));
-        requests.put(player.getUniqueId(), Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+        requests.put(player.getUniqueId(), Bukkit.getScheduler().runTaskLater(plugin, () -> {
             HashMap<UUID, BukkitTask> r = tpa.getOrDefault(target.getUniqueId(), new HashMap<>());
             r.remove(player.getUniqueId());
             if (!r.isEmpty()) tpa.put(target.getUniqueId(), r);
@@ -159,6 +167,7 @@ public class TpaCommand implements CommandHandler.Minecraft {
         Economy economy = plugin.getEconomy();
         if (cost != 0 && !economy.has(player, cost)) {
             target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Aby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.getBalance(player) + "."));
+            return;
         }
 
         player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Ten gracz za chwilę zostanie do ciebie przeteleportowany"));
@@ -182,6 +191,10 @@ public class TpaCommand implements CommandHandler.Minecraft {
                     case MOVE -> {
                         player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
                         target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Teleportowanie anulowane, poruszyłeś się."));
+                    }
+                    case ANTY_LOGOUT -> {
+                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
+                        target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Nie możesz teleportować się z aktywnym anty-logoutem."));
                     }
                     case ALREADY_ACTIVE -> {
                         player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));

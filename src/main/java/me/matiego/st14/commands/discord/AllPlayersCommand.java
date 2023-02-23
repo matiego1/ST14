@@ -14,6 +14,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AllPlayersCommand implements CommandHandler.Discord {
+    public AllPlayersCommand(@NotNull Main plugin) {
+        this.plugin = plugin;
+    }
+    private final Main plugin;
+
     @Override
     public @NotNull CommandData getDiscordCommand() {
         return Commands.slash("all-players", "Wyświetl listę wszystkich graczy")
@@ -29,7 +34,7 @@ public class AllPlayersCommand implements CommandHandler.Discord {
     public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
         boolean ephemeral = event.getOption("incognito", "False", OptionMapping::getAsString).equals("True");
         List<String> players = new ArrayList<>();
-        for (String name : Main.getInstance().getOfflinePlayers().getNames()) {
+        for (String name : plugin.getOfflinePlayers().getNames()) {
             players.add("- " + name);
         }
         if (players.isEmpty()) {

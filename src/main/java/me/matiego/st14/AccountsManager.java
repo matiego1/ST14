@@ -29,22 +29,22 @@ public class AccountsManager {
     private final String ERROR_MSG = "An error occurred while modifying values in \"st14_accounts\" table in the database.";
     @SuppressWarnings("SpellCheckingInspection")
     private final String CODE_CHARS = "ABCDEFGHIJKLMNPQRSTUVWXYZ123456789";
-    private final HashMap<String, Pair<UUID, Long>> verificationCodes = new HashMap<>();
+    private final HashMap<String, Pair<Pair<UUID, String>, Long>> verificationCodes = new HashMap<>();
 
-    public synchronized @NotNull String getNewVerificationCode(@NotNull UUID uuid) {
+    public synchronized @NotNull String getNewVerificationCode(@NotNull UUID uuid, @NotNull String name) {
         String code = RandomStringUtils.random(6, CODE_CHARS);
         int x = 0;
         while (verificationCodes.get(code) != null) {
             code = RandomStringUtils.random(6, CODE_CHARS);
             if (x++ > 100) throw new RuntimeException("infinite loop");
         }
-        verificationCodes.entrySet().removeIf(e -> e.getValue().getFirst().equals(uuid));
-        verificationCodes.put(code, new Pair<>(uuid, Utils.now()));
+        verificationCodes.entrySet().removeIf(e -> e.getValue().getFirst().getFirst().equals(uuid));
+        verificationCodes.put(code, new Pair<>(new Pair<>(uuid, name), Utils.now()));
         return code;
     }
 
-    public synchronized @Nullable UUID checkVerificationCode(@NotNull String code) {
-        Pair<UUID, Long> pair = verificationCodes.remove(code);
+    public synchronized @Nullable Pair<UUID, String> checkVerificationCode(@NotNull String code) {
+        Pair<Pair<UUID, String>, Long> pair = verificationCodes.remove(code);
         if (pair == null) return null;
         if (Utils.now() - pair.getSecond() > 300_000) return null;
         return pair.getFirst();
