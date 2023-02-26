@@ -80,7 +80,6 @@ public class MiniGamesManager {
     }
 
 
-
     public void onPlayerJoin(@NotNull Player player) {
         setEditorMode(player, false);
         if (!MiniGamesUtils.isInMinigameWorldOrLobby(player)) return;
@@ -157,9 +156,9 @@ public class MiniGamesManager {
                 Node node = Node.builder(permission).build();
                 NodeMap data = user.data();
                 if (data.contains(node, NodeEqualityPredicate.ONLY_KEY).asBoolean()) {
-                    data.add(node);
-                } else {
                     data.remove(node);
+                } else {
+                    data.add(node);
                 }
             });
         } catch (Exception ignored) {}
