@@ -321,7 +321,7 @@ public final class Main extends JavaPlugin implements Listener {
         if (commandManager != null) commandManager.setEnabled(false);
         //stop minigame
         if (miniGameManager != null) {
-            miniGameManager.stopGame();
+            miniGameManager.stopMiniGame();
         }
         //close all plugin's inventories
         for (Player player : Bukkit.getOnlinePlayers()) {

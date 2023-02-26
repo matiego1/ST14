@@ -116,7 +116,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                 hook.sendMessage("Twoje konto nie jest jeszcze połączone z kontem minecraft! Aby je połączyć, użyj komendy `/accounts` w grze.").queue();
                 return;
             }
-            MessageEmbed embed = getEmbed(user, "???");
+            MessageEmbed embed = getEmbed(user, "[Dołącz do gry, aby wyświetlić]");
             if (embed == null) {
                 hook.sendMessage("Twoje konto jest połączone z kontem minecraft! Niestety z powodu niespodziewanego błędu nie możemy dostarczyć Ci więcej informacji. Spróbuj później.").queue();
                 return;

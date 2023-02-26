@@ -1,5 +1,6 @@
 package me.matiego.st14.minigames;
 
+import me.matiego.st14.BossBarTimer;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Prefix;
@@ -8,14 +9,12 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
-import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,12 +27,14 @@ public abstract class MiniGame {
     }
     protected final Main plugin;
     protected final int gameTimeInSeconds;
-    protected boolean isGameStarted = false;
+    protected boolean isMiniGameStarted = false;
+    protected boolean lobby = true;
     private final Set<BukkitTask> tasks = new HashSet<>();
     private final HashMap<Player, PlayerStatus> players = new HashMap<>();
+    protected BossBarTimer timer;
 
     protected synchronized void changePlayerStatus(@NotNull Player player, @NotNull PlayerStatus status) {
-        if (status == PlayerStatus.NOT_IN_GAME) {
+        if (status == PlayerStatus.NOT_IN_MINI_GAME) {
             players.remove(player);
         } else {
             players.put(player, status);
@@ -41,7 +42,7 @@ public abstract class MiniGame {
     }
 
     protected synchronized @NotNull PlayerStatus getPlayerStatus(@NotNull Player player) {
-        return players.getOrDefault(player, PlayerStatus.NOT_IN_GAME);
+        return players.getOrDefault(player, PlayerStatus.NOT_IN_MINI_GAME);
     }
 
     protected synchronized void runTaskLater(@NotNull Runnable task, long delay) {
@@ -74,7 +75,30 @@ public abstract class MiniGame {
         }
     }
 
-    public synchronized boolean isInGame(@NotNull Player player) {
+    protected boolean endGameIfLessThanTwoPlayersLeft() {
+        List<Player> players = getPlayersInMiniGame();
+        if (players.size() <= 1) {
+            String winner = (players.isEmpty() ? "???" : players.get(0).getName());
+            scheduleStopMiniGameAndSendReason("Koniec minigry! Wygrywa gracz &d" + winner, "&dKoniec minigry", "");
+            plugin.getChatMinecraft().sendMessage("Gracz **" + winner + "** wygrywa minigrę **" + getMiniGameName() + "**!", Prefix.MINI_GAMES.getDiscord());
+            return true;
+        }
+        return false;
+    }
+
+    protected void scheduleStopMiniGameAndSendReason(@NotNull String message, @NotNull String title, @NotNull String subtitle) {
+        broadcastMessage(message);
+        showTitle(title, subtitle);
+
+        if (timer != null) timer.stopTimerAndHideBossBar();
+
+        lobby = true;
+
+        cancelAllTasks();
+        runTaskLater(this::stopMiniGame, 100);
+    }
+
+    public synchronized boolean isInMiniGame(@NotNull Player player) {
         return players.containsKey(player);
     }
 
@@ -82,16 +106,31 @@ public abstract class MiniGame {
         return players.keySet().stream().toList();
     }
 
-    public synchronized @NotNull List<Player> getPlayersInGame() {
-        return players.keySet().stream().filter(player -> getPlayerStatus(player) == PlayerStatus.IN_GAME).toList();
+    public synchronized @NotNull List<Player> getPlayersInMiniGame() {
+        return players.keySet().stream().filter(player -> getPlayerStatus(player) == PlayerStatus.IN_MINI_GAME).toList();
     }
 
     public synchronized boolean isStarted() {
-        return isGameStarted;
+        return isMiniGameStarted;
     }
 
-    public abstract void startGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException;
-    public abstract void stopGame(@Nonnull CommandSender sender);
+    public void stopMiniGame() {
+        if (!isMiniGameStarted) return;
+
+        broadcastMessage("Minigra zakończona!");
+        showTitle("&dMinigra zakończona!", "");
+
+        if (timer != null) timer.stopTimerAndHideBossBar();
+        cancelAllTasks();
+
+        getPlayers().forEach(MiniGamesUtils::teleportToLobby);
+
+        isMiniGameStarted = false;
+    }
+
+
+    protected abstract @NotNull String getMiniGameName();
+    public abstract void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException;
     public abstract void onPlayerJoin(@NotNull Player player);
     public abstract void onPlayerQuit(@NotNull Player player);
     public abstract void onPlayerDeath(@NotNull Player player);
@@ -100,8 +139,8 @@ public abstract class MiniGame {
     public abstract @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount();
 
     protected enum PlayerStatus {
-        IN_GAME,
+        IN_MINI_GAME,
         SPECTATOR,
-        NOT_IN_GAME
+        NOT_IN_MINI_GAME
     }
 }

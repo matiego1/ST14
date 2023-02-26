@@ -13,7 +13,7 @@ public class BossBarTimer {
         this.name = name;
         this.timeInSeconds = timeInSeconds;
 
-        bossBar = BossBar.bossBar(Utils.getComponentByString("&cOczekiwanie na rozpoczęcie..."), 1, color, BossBar.Overlay.PROGRESS);
+        bossBar = BossBar.bossBar(Utils.getComponentByString(""), 1, color, BossBar.Overlay.PROGRESS);
     }
     private final Main plugin;
     private final String name;
@@ -39,7 +39,7 @@ public class BossBarTimer {
                 bossBar.name(Utils.getComponentByString(message));
                 bossBar.progress(progress);
             });
-        }, 20, 20);
+        }, 0, 20);
     }
 
     public void stopTimerAndHideBossBar() {
@@ -61,11 +61,7 @@ public class BossBarTimer {
     }
 
     private @NotNull String getMessage() {
-        long left = end - Utils.now();
-        if (left < 0) {
-            return "&cOdliczanie zakończone!";
-        }
-        return name + " za " +Utils.parseMillisToString(left, false);
+        return name + " za " + Utils.parseMillisToString(Math.max(0, end - Utils.now()), false);
     }
 
     private float getProgress() {

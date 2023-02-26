@@ -42,21 +42,15 @@ public class MiniGameCommand implements CommandHandler.Minecraft {
         MiniGameManager manager = plugin.getMiniGameManager();
 
         if (args.length == 1) {
-            if (sender instanceof Player player && !player.hasPermission("st14.minigame.admin")) return -1;
-            switch (args[0].toLowerCase()) {
-                case "stop" -> {
-                    if (manager.getActiveMiniGame() == null) {
-                        sender.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Żadna minigra nie jest rozpoczęta."));
-                        return 0;
-                    }
-                    sender.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Zatrzymywanie..."));
-                    manager.stopGame(sender);
-                    return 1;
-                }
-                case "regen" -> {
-                    sender.sendMessage("Już wkrótce!");
+            if (sender instanceof Player player && !player.hasPermission("st14.minigame.admin") && !player.isOp()) return -1;
+            if (args[0].equalsIgnoreCase("stop")) {
+                if (manager.getActiveMiniGame() == null) {
+                    sender.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Żadna minigra nie jest rozpoczęta."));
                     return 0;
                 }
+                sender.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Zatrzymywanie..."));
+                manager.stopMiniGame();
+                return 1;
             }
             return -1;
         }
@@ -84,7 +78,9 @@ public class MiniGameCommand implements CommandHandler.Minecraft {
                     type.getGuiMaterial(),
                     "&9" + type.getName(),
                     "&eKliknij, aby rozpocząć!",
-                    "&eMaksymalny czas gry: &d" + Utils.parseMillisToString(type.getGameTimeInSeconds() * 1000L, false)
+                    "&eMaksymalny czas gry: &d" + Utils.parseMillisToString(type.getGameTimeInSeconds() * 1000L, false),
+                    "",
+                    (type.isMiniGameEnabled() ? "" : "&4Ta gra jest wyłączona")
             ));
         }
         if (inv.isEmpty()) {
@@ -144,7 +140,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft {
             return;
         }
 
-        if (!manager.startGame(miniGame, players, player)) {
+        if (!manager.startMiniGame(miniGame, players, player)) {
             player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Napotkano niespodziewany błąd."));
         }
     }

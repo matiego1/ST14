@@ -15,11 +15,11 @@ import java.util.concurrent.CompletableFuture;
 
 public class MiniGamesUtils {
     public static @Nullable World getLobbyWorld() {
-        return Bukkit.getWorld(Main.getInstance().getConfig().getString("games.lobby-world", ""));
+        return Bukkit.getWorld(Main.getInstance().getConfig().getString("minigames.world", ""));
     }
 
     public static boolean isInMinigameWorldOrLobby(@NotNull Player player) {
-        return player.getWorld().equals(getLobbyWorld()) || player.getWorld().equals(Main.getInstance().getMiniGameManager().getActiveGameWorld());
+        return player.getWorld().equals(getLobbyWorld()) || player.getWorld().equals(Main.getInstance().getMiniGameManager().getActiveMiniGameWorld());
     }
 
     public static void teleportToLobby(@NotNull Player player) {
@@ -28,14 +28,14 @@ public class MiniGamesUtils {
 
         if (!isInMinigameWorldOrLobby(player)) return;
 
-        player.setBedSpawnLocation(world.getSpawnLocation());
+        player.setBedSpawnLocation(world.getSpawnLocation(), true);
 
-        player.teleportAsync(world.getSpawnLocation()).thenAcceptAsync(result -> {
+        player.teleportAsync(world.getSpawnLocation()).thenAcceptAsync(result -> Utils.sync(() -> {
             if (!result) return;
             healPlayer(player, GameMode.ADVENTURE);
             player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, Integer.MAX_VALUE, 255, false, false, false));
             player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, Integer.MAX_VALUE, 255, false, false, false));
-        });
+        }));
     }
 
     public static void healPlayer(@NotNull Player player, @NotNull GameMode gamemode) {
@@ -75,5 +75,24 @@ public class MiniGamesUtils {
         world.setGameRule(GameRule.FALL_DAMAGE, false);
         world.setGameRule(GameRule.FIRE_DAMAGE, true);
         world.setPVP(false);
+    }
+
+    public static @Nullable Location getLocationFromConfig(@NotNull World world, @NotNull String path) {
+        String value = Main.getInstance().getConfig().getString(path);
+        if (value == null) return null;
+
+        String[] values = value.split(";");
+        if (values.length != 3) return null;
+
+        int x, y, z;
+        try {
+            x = Integer.parseInt(values[0]);
+            y = Integer.parseInt(values[1]);
+            z = Integer.parseInt(values[2]);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+
+        return new Location(world, x, y, z, 0, 0);
     }
 }

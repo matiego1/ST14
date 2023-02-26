@@ -95,7 +95,7 @@ public class AccountsManager {
         if (NonPremiumUtils.isNonPremiumUuid(uuid) && NonPremiumUtils.getIdByNonPremiumUuid(uuid) != id.getIdLong()) {
             throw new IllegalArgumentException("tried to link a non-premium uuid to another Discord account");
         }
-        if (checkRoles(id)) return false;
+        if (!checkRoles(id)) return false;
         if (!modifyRole(id, true)) return false;
         try (Connection conn = plugin.getConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_accounts(uuid, id) VALUES (?, ?) ON DUPLICATE KEY UPDATE uuid = ?, id = ?")) {
@@ -170,7 +170,7 @@ public class AccountsManager {
         Member member = DiscordUtils.retrieveMember(guild, id);
         if (member == null) return false;
 
-        if (!DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.banned"))) return false;
+        if (DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.banned"))) return false;
         return DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.verified"));
     }
 

@@ -19,9 +19,9 @@ public class PlayerChangedWorldListener implements Listener {
     public void onPlayerChangedWorld(@NotNull PlayerChangedWorldEvent event) {
         Player player = event.getPlayer();
         MiniGameManager manager = plugin.getMiniGameManager();
-        if (event.getFrom().equals(manager.getActiveGameWorld())) {
+        if (event.getFrom().equals(manager.getActiveMiniGameWorld())) {
             manager.onPlayerQuit(player);
-        } else if (player.getWorld().equals(manager.getActiveGameWorld())) {
+        } else if (player.getWorld().equals(manager.getActiveMiniGameWorld())) {
             manager.onPlayerJoin(player);
         }
     }

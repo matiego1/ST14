@@ -2,12 +2,11 @@ package me.matiego.st14;
 
 import lombok.Getter;
 import lombok.Synchronized;
-import me.matiego.st14.utils.Logs;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGamesUtils;
+import me.matiego.st14.utils.Logs;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
@@ -24,11 +23,11 @@ public class MiniGameManager {
     @Getter (onMethod_ = {@Synchronized}) private MiniGame activeMiniGame = null;
     private BukkitTask task = null;
 
-    public synchronized @Nullable World getActiveGameWorld() {
+    public synchronized @Nullable World getActiveMiniGameWorld() {
         return activeMiniGame == null ? null : activeMiniGame.getWorld();
     }
 
-    public synchronized boolean startGame(@NotNull MiniGame miniGame, @NotNull Set<Player> players, @NotNull Player sender) {
+    public synchronized boolean startMiniGame(@NotNull MiniGame miniGame, @NotNull Set<Player> players, @NotNull Player sender) {
         if (players.size() < miniGame.getMinimumPlayersAmount()) return false;
         if (players.size() > miniGame.getMaximumPlayersAmount()) return false;
         if (!players.contains(sender)) return false;
@@ -36,7 +35,7 @@ public class MiniGameManager {
         activeMiniGame = miniGame;
 
         try {
-            activeMiniGame.startGame(players, sender);
+            activeMiniGame.startMiniGame(players, sender);
         } catch (Exception e) {
             Logs.error("An error occurred while starting the game: " + e.getMessage(), e);
             activeMiniGame = null;
@@ -53,16 +52,13 @@ public class MiniGameManager {
                 MiniGamesUtils.setLobbyRules();
             }
         }, 20, 20);
-        return false;
+        return true;
     }
 
-    public void stopGame() {
-        stopGame(Bukkit.getConsoleSender());
-    }
-    public void stopGame(@NotNull CommandSender sender) {
+    public void stopMiniGame() {
         if (activeMiniGame == null) return;
         try {
-            activeMiniGame.stopGame(sender);
+            activeMiniGame.stopMiniGame();
             if (task != null) {
                 task.cancel();
             }
@@ -76,29 +72,29 @@ public class MiniGameManager {
 
 
     public void onPlayerJoin(@NotNull Player player) {
-        if (!MiniGamesUtils.isInMinigameWorldOrLobby(player)) return;
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (!MiniGamesUtils.isInMinigameWorldOrLobby(player)) return;
 
-        MiniGame miniGame = getActiveMiniGame();
-        if (miniGame == null) {
-            MiniGamesUtils.teleportToLobby(player);
-            return;
-        }
-        if (miniGame.isInGame(player)) return;
+            MiniGame miniGame = getActiveMiniGame();
+            if (miniGame == null) {
+                MiniGamesUtils.teleportToLobby(player);
+                return;
+            }
+            if (miniGame.isInMiniGame(player)) return;
 
-        try {
-            miniGame.onPlayerJoin(player);
-        } catch (Exception e) {
-            Logs.error("An error occurred while handling the game", e);
-            MiniGamesUtils.teleportToLobby(player);
-        }
+            try {
+                miniGame.onPlayerJoin(player);
+            } catch (Exception e) {
+                Logs.error("An error occurred while handling the game", e);
+                MiniGamesUtils.teleportToLobby(player);
+            }
+        }, 1);
     }
 
     public void onPlayerQuit(@NotNull Player player) {
-        if (!MiniGamesUtils.isInMinigameWorldOrLobby(player)) return;
-
         MiniGame miniGame = getActiveMiniGame();
         if (miniGame == null) return;
-        if (!miniGame.isInGame(player)) return;
+        if (!miniGame.isInMiniGame(player)) return;
 
         try {
             miniGame.onPlayerQuit(player);
@@ -112,7 +108,7 @@ public class MiniGameManager {
 
         MiniGame miniGame = getActiveMiniGame();
         if (miniGame == null) return;
-        if (!miniGame.isInGame(player)) return;
+        if (!miniGame.isInMiniGame(player)) return;
 
         try {
             miniGame.onPlayerDeath(player);
