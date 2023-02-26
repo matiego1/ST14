@@ -57,6 +57,12 @@ public class MiniGameCommand implements CommandHandler.Minecraft {
                 }
                 case "editor" -> {
                     if (!(sender instanceof Player player)) return -1;
+
+                    if (!MiniGamesUtils.isInMinigameWorldOrLobby(player)) {
+                        player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Nie możesz użyć tej komendy w tym świecie."));
+                        return 3;
+                    }
+
                     manager.setEditorMode(player, !manager.isInEditorMode(player));
                     return 10;
                 }
