@@ -74,6 +74,7 @@ public class MiniGamesUtils {
         world.setGameRule(GameRule.DO_ENTITY_DROPS, false);
         world.setGameRule(GameRule.FALL_DAMAGE, false);
         world.setGameRule(GameRule.FIRE_DAMAGE, true);
+        world.setGameRule(GameRule.NATURAL_REGENERATION, true);
         world.setPVP(false);
     }
 

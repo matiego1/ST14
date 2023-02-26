@@ -6,7 +6,6 @@ import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGameException;
 import me.matiego.st14.minigames.MiniGamesUtils;
-import me.matiego.st14.utils.Prefix;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.*;
@@ -28,7 +27,7 @@ public class SnowballsBattleMiniGame extends MiniGame {
     }
 
     @Override
-    protected @NotNull String getMiniGameName() {
+    public @NotNull String getMiniGameName() {
         return "Bitwa na śnieżki";
     }
 
@@ -67,13 +66,7 @@ public class SnowballsBattleMiniGame extends MiniGame {
         world.setGameRule(GameRule.FIRE_DAMAGE, false);
         world.setGameRule(GameRule.NATURAL_REGENERATION, false);
 
-        Utils.broadcastMessage(
-                sender,
-                Prefix.MINI_GAMES,
-                "Rozpocząłeś minigrę &d" + getMiniGameName(),
-                "Gracz " + sender.getName() + " rozpoczął minigrę &d" + getMiniGameName(),
-                "Gracz **" + sender.getName() + "** rozpoczął minigrę **" + getMiniGameName() + "**"
-        );
+        broadcastMiniGameStartMessage(sender);
 
         for (Player player : players) {
             changePlayerStatus(player, PlayerStatus.SPECTATOR);
@@ -86,15 +79,7 @@ public class SnowballsBattleMiniGame extends MiniGame {
                 return;
             }
 
-            broadcastMessage("&dRozpoczynanie minigry za...");
-
-            runTaskLater(() -> broadcastMessage("15"), 20);
-            runTaskLater(() -> broadcastMessage("10"), 120);
-            runTaskLater(() -> broadcastMessage("5"), 220);
-            runTaskLater(() -> broadcastMessage("&d3"), 260);
-            runTaskLater(() -> broadcastMessage("&d2"), 280);
-            runTaskLater(() -> broadcastMessage("&d1"), 300);
-            runTaskLater(() -> {
+            countdownToStart(() -> {
                 List<Player> playersToStartGameWith = getPlayers();
 
                 if (playersToStartGameWith.size() < getMinimumPlayersAmount()) {
@@ -119,33 +104,38 @@ public class SnowballsBattleMiniGame extends MiniGame {
                     timer.showBossBarToPlayer(player);
                 });
 
-                runTaskTimer(() -> {
-                    gameTime++;
+                runTaskTimer(this::miniGameTick, 20, 20);
+            }, 15);
 
-                    if (gameTime == PREPARE_TIME_IN_SECONDS) {
-                        timer.stopTimerAndHideBossBar();
-                        timer = new BossBarTimer(plugin, gameTimeInSeconds - PREPARE_TIME_IN_SECONDS, "&eKoniec minigry", BossBar.Color.BLUE);
-                        timer.startTimer();
-                        getPlayers().forEach(player -> timer.showBossBarToPlayer(player));
-
-                        world.setPVP(true);
-                    }
-
-                    if (gameTime == gameTimeInSeconds) {
-                        scheduleStopMiniGameAndSendReason("&dKoniec minigry! &eRozgrywka zakończyła się remisem.", "&dKoniec minigry", "&eRemis");
-                    }
-
-                    List<Player> playersInGame = getPlayersInMiniGame();
-                    if (gameTime % 30 == 0) {
-                        playersInGame.forEach(player -> player.setHealth(Math.min(player.getHealth() + 2, 20)));
-                    }
-                    playersInGame.stream()
-                            .map(HumanEntity::getInventory)
-                            .filter(inv -> !inv.containsAtLeast(new ItemStack(Material.SNOWBALL), 128))
-                            .forEach(inv -> inv.addItem(new ItemStack(Material.SNOWBALL, 2)));
-                }, 20, 20);
-            }, 320);
         }));
+    }
+
+    @Override
+    protected void miniGameTick() {
+        gameTime++;
+
+        if (gameTime == PREPARE_TIME_IN_SECONDS) {
+            timer.stopTimerAndHideBossBar();
+            timer = new BossBarTimer(plugin, gameTimeInSeconds - PREPARE_TIME_IN_SECONDS, "&eKoniec minigry", BossBar.Color.BLUE);
+            timer.startTimer();
+            getPlayers().forEach(player -> timer.showBossBarToPlayer(player));
+
+            World world = getWorld();
+            if (world != null) world.setPVP(true);
+        }
+
+        if (gameTime == gameTimeInSeconds) {
+            scheduleStopMiniGameAndSendReason("&dKoniec minigry! &eRozgrywka zakończyła się remisem.", "&dKoniec minigry", "&eRemis");
+        }
+
+        List<Player> playersInGame = getPlayersInMiniGame();
+        if (gameTime % 30 == 0) {
+            playersInGame.forEach(player -> player.setHealth(Math.min(player.getHealth() + 2, 20)));
+        }
+        playersInGame.stream()
+                .map(HumanEntity::getInventory)
+                .filter(inv -> !inv.containsAtLeast(new ItemStack(Material.SNOWBALL), 128))
+                .forEach(inv -> inv.addItem(new ItemStack(Material.SNOWBALL, 2)));
     }
 
     @Override
@@ -187,7 +177,6 @@ public class SnowballsBattleMiniGame extends MiniGame {
         } else {
             broadcastMessage("Gracz " + player.getName() + " przestał obserwować minigrę.");
         }
-
     }
 
     @Override

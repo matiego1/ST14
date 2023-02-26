@@ -1,5 +1,6 @@
 package me.matiego.st14.minigames;
 
+import lombok.SneakyThrows;
 import me.matiego.st14.BossBarTimer;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.Logs;
@@ -61,6 +62,35 @@ public abstract class MiniGame {
         tasks.clear();
     }
 
+    @SneakyThrows(MiniGameException.class)
+    protected synchronized void countdownToStart(@NotNull Runnable startMiniGame, int countdownTimeInSeconds) {
+        broadcastMessage("&dRozpoczynanie minigry za...");
+
+        if (countdownTimeInSeconds % 5 != 0) throw new MiniGameException("time must be multiple of 5");
+        if (countdownTimeInSeconds < 5) throw new MiniGameException("time must be greater than or equal to 5");
+
+        int delay = 20;
+        for (; countdownTimeInSeconds >= 5; countdownTimeInSeconds -= 5) {
+            String message = String.valueOf(countdownTimeInSeconds);
+            runTaskLater(() -> broadcastMessage(message), delay);
+            delay += 100;
+        }
+        runTaskLater(() -> broadcastMessage("&d3"), delay - 60);
+        runTaskLater(() -> broadcastMessage("&d2"), delay - 40);
+        runTaskLater(() -> broadcastMessage("&d1"), delay - 20);
+        runTaskLater(startMiniGame, delay);
+    }
+
+    protected synchronized void broadcastMiniGameStartMessage(@NotNull Player sender) {
+        Utils.broadcastMessage(
+                sender,
+                Prefix.MINI_GAMES,
+                "Rozpocząłeś minigrę &d" + getMiniGameName(),
+                "Gracz " + sender.getName() + " rozpoczął minigrę &d" + getMiniGameName(),
+                "Gracz **" + sender.getName() + "** rozpoczął minigrę **" + getMiniGameName() + "**"
+        );
+    }
+
     protected synchronized void broadcastMessage(@NotNull String message) {
         Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + message));
         Logs.discord(PlainTextComponentSerializer.plainText().serialize(Utils.getComponentByString(Prefix.MINI_GAMES + message)));
@@ -75,7 +105,7 @@ public abstract class MiniGame {
         }
     }
 
-    protected boolean endGameIfLessThanTwoPlayersLeft() {
+    protected synchronized boolean endGameIfLessThanTwoPlayersLeft() {
         List<Player> players = getPlayersInMiniGame();
         if (players.size() <= 1) {
             String winner = (players.isEmpty() ? "???" : players.get(0).getName());
@@ -86,7 +116,7 @@ public abstract class MiniGame {
         return false;
     }
 
-    protected void scheduleStopMiniGameAndSendReason(@NotNull String message, @NotNull String title, @NotNull String subtitle) {
+    protected synchronized void scheduleStopMiniGameAndSendReason(@NotNull String message, @NotNull String title, @NotNull String subtitle) {
         broadcastMessage(message);
         showTitle(title, subtitle);
 
@@ -129,11 +159,12 @@ public abstract class MiniGame {
     }
 
 
-    protected abstract @NotNull String getMiniGameName();
+    public abstract @NotNull String getMiniGameName();
     public abstract void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException;
     public abstract void onPlayerJoin(@NotNull Player player);
     public abstract void onPlayerQuit(@NotNull Player player);
     public abstract void onPlayerDeath(@NotNull Player player);
+    protected abstract void miniGameTick();
     public abstract @Nullable World getWorld();
     public abstract @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount();
     public abstract @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount();
