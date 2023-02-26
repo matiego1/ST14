@@ -51,7 +51,7 @@ public class PlayerJoinListener implements Listener {
         plugin.getChatMinecraft().sendJoinMessage(player);
         plugin.getChatMinecraft().sendConsoleJoinMessage(player);
         //handle game
-        plugin.getMiniGameManager().onPlayerJoin(player);
+        plugin.getMiniGamesManager().onPlayerJoin(player);
         //non-premium warning
         if (NonPremiumUtils.isNonPremiumUuid(uuid)) {
             player.sendMessage(Utils.getComponentByString("&eSystem umożliwiający grę graczom non-premium jest w wersji BETA. Zgłaszaj wszystkie napotkane błędy!"));

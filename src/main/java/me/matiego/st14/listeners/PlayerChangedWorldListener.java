@@ -1,6 +1,6 @@
 package me.matiego.st14.listeners;
 
-import me.matiego.st14.MiniGameManager;
+import me.matiego.st14.MiniGamesManager;
 import me.matiego.st14.Main;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,7 +18,7 @@ public class PlayerChangedWorldListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerChangedWorld(@NotNull PlayerChangedWorldEvent event) {
         Player player = event.getPlayer();
-        MiniGameManager manager = plugin.getMiniGameManager();
+        MiniGamesManager manager = plugin.getMiniGamesManager();
         if (event.getFrom().equals(manager.getActiveMiniGameWorld())) {
             manager.onPlayerQuit(player);
         } else if (player.getWorld().equals(manager.getActiveMiniGameWorld())) {

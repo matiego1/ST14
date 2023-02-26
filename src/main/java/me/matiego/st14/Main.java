@@ -54,7 +54,7 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private BackpackManager backpackManager;
     @Getter private RewardsManager rewardsManager;
     @Getter private AntyLogoutManager antyLogoutManager;
-    @Getter private MiniGameManager miniGameManager;
+    @Getter private MiniGamesManager miniGamesManager;
     @Getter private BanknoteManager banknoteManager;
     @Getter private WorldsLastLocation worldsLastLocation;
     private ListenersManager listenersManager;
@@ -135,7 +135,7 @@ public final class Main extends JavaPlugin implements Listener {
         backpackManager = new BackpackManager(this);
         chatReportsManager = new ChatReportsManager();
         antyLogoutManager = new AntyLogoutManager(this);
-        miniGameManager = new MiniGameManager(this);
+        miniGamesManager = new MiniGamesManager(this);
         listenersManager = new ListenersManager(this);
         didYouKnowManager = new DidYouKnowManager(this);
         banknoteManager = new BanknoteManager(this);
@@ -320,8 +320,8 @@ public final class Main extends JavaPlugin implements Listener {
         //disable commands
         if (commandManager != null) commandManager.setEnabled(false);
         //stop minigame
-        if (miniGameManager != null) {
-            miniGameManager.stopMiniGame();
+        if (miniGamesManager != null) {
+            miniGamesManager.stopMiniGame();
         }
         //close all plugin's inventories
         for (Player player : Bukkit.getOnlinePlayers()) {

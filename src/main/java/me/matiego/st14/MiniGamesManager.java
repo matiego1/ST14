@@ -5,6 +5,12 @@ import lombok.Synchronized;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGamesUtils;
 import me.matiego.st14.utils.Logs;
+import me.matiego.st14.utils.Prefix;
+import me.matiego.st14.utils.Utils;
+import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.model.data.NodeMap;
+import net.luckperms.api.node.Node;
+import net.luckperms.api.node.NodeEqualityPredicate;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -12,22 +18,26 @@ import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
-public class MiniGameManager {
-    public MiniGameManager(@NotNull Main plugin) {
+public class MiniGamesManager {
+    public MiniGamesManager(@NotNull Main plugin) {
         this.plugin = plugin;
     }
 
     private final Main plugin;
     @Getter (onMethod_ = {@Synchronized}) private MiniGame activeMiniGame = null;
     private BukkitTask task = null;
+    private final Set<UUID> editors = new HashSet<>();
 
     public synchronized @Nullable World getActiveMiniGameWorld() {
         return activeMiniGame == null ? null : activeMiniGame.getWorld();
     }
 
     public synchronized boolean startMiniGame(@NotNull MiniGame miniGame, @NotNull Set<Player> players, @NotNull Player sender) {
+        players.removeIf(this::isInEditorMode);
         if (players.size() < miniGame.getMinimumPlayersAmount()) return false;
         if (players.size() > miniGame.getMaximumPlayersAmount()) return false;
         if (!players.contains(sender)) return false;
@@ -72,26 +82,27 @@ public class MiniGameManager {
 
 
     public void onPlayerJoin(@NotNull Player player) {
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (!MiniGamesUtils.isInMinigameWorldOrLobby(player)) return;
+        setEditorMode(player, false);
+        if (!MiniGamesUtils.isInMinigameWorldOrLobby(player)) return;
 
-            MiniGame miniGame = getActiveMiniGame();
-            if (miniGame == null) {
-                MiniGamesUtils.teleportToLobby(player);
-                return;
-            }
-            if (miniGame.isInMiniGame(player)) return;
+        MiniGame miniGame = getActiveMiniGame();
+        if (miniGame == null) {
+            MiniGamesUtils.teleportToLobby(player);
+            return;
+        }
+        if (miniGame.isInMiniGame(player)) return;
 
-            try {
-                miniGame.onPlayerJoin(player);
-            } catch (Exception e) {
-                Logs.error("An error occurred while handling the game", e);
-                MiniGamesUtils.teleportToLobby(player);
-            }
-        }, 1);
+        try {
+            miniGame.onPlayerJoin(player);
+        } catch (Exception e) {
+            Logs.error("An error occurred while handling the game", e);
+            MiniGamesUtils.teleportToLobby(player);
+        }
     }
 
     public void onPlayerQuit(@NotNull Player player) {
+        setEditorMode(player, false);
+
         MiniGame miniGame = getActiveMiniGame();
         if (miniGame == null) return;
         if (!miniGame.isInMiniGame(player)) return;
@@ -105,6 +116,7 @@ public class MiniGameManager {
 
     public void onPlayerDeath(@NotNull Player player) {
         if (!MiniGamesUtils.isInMinigameWorldOrLobby(player)) return;
+        if (isInEditorMode(player)) return;
 
         MiniGame miniGame = getActiveMiniGame();
         if (miniGame == null) return;
@@ -115,5 +127,41 @@ public class MiniGameManager {
         } catch (Exception e) {
             Logs.error("An error occurred while handing game", e);
         }
+    }
+
+    public synchronized boolean isInEditorMode(@NotNull Player player) {
+        return editors.contains(player.getUniqueId());
+    }
+
+    public synchronized void setEditorMode(@NotNull Player player, boolean mode) {
+        if (mode == isInEditorMode(player)) return;
+
+        if (mode) {
+            MiniGame miniGame = getActiveMiniGame();
+            if (miniGame != null && miniGame.isInMiniGame(player)) {
+                miniGame.onPlayerQuit(player);
+            }
+            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Jesteś w trybie edytora."));
+            editors.add(player.getUniqueId());
+        } else {
+            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Już nie jesteś w trybie edytora."));
+            editors.remove(player.getUniqueId());
+        }
+        changePermissions(player);
+    }
+    private void changePermissions(@NotNull Player player) throws IllegalStateException {
+        try {
+            String permission = plugin.getConfig().getString("minigames.editor-permission");
+            if (permission == null) return;
+            LuckPermsProvider.get().getUserManager().modifyUser(player.getUniqueId(), user -> {
+                Node node = Node.builder(permission).build();
+                NodeMap data = user.data();
+                if (data.contains(node, NodeEqualityPredicate.ONLY_KEY).asBoolean()) {
+                    data.add(node);
+                } else {
+                    data.remove(node);
+                }
+            });
+        } catch (Exception ignored) {}
     }
 }

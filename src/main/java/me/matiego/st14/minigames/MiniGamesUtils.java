@@ -19,7 +19,7 @@ public class MiniGamesUtils {
     }
 
     public static boolean isInMinigameWorldOrLobby(@NotNull Player player) {
-        return player.getWorld().equals(getLobbyWorld()) || player.getWorld().equals(Main.getInstance().getMiniGameManager().getActiveMiniGameWorld());
+        return player.getWorld().equals(getLobbyWorld()) || player.getWorld().equals(Main.getInstance().getMiniGamesManager().getActiveMiniGameWorld());
     }
 
     public static void teleportToLobby(@NotNull Player player) {

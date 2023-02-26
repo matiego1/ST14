@@ -22,7 +22,7 @@ public class PlayerDeathListener implements Listener {
         Player player = event.getPlayer();
 
         plugin.getAntyLogoutManager().cancelAntyLogout(player);
-        plugin.getMiniGameManager().onPlayerDeath(player);
+        plugin.getMiniGamesManager().onPlayerDeath(player);
 
         Component component = event.deathMessage();
         String msg = player.getName() + " died";
