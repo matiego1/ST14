@@ -14,19 +14,27 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class MiniGamesUtils {
-    public static @Nullable World getLobbyWorld() {
+    public static @Nullable World getMiniGamesWorld() {
         return Bukkit.getWorld(Main.getInstance().getConfig().getString("minigames.world", ""));
     }
 
-    public static boolean isInMinigameWorldOrLobby(@NotNull Player player) {
-        return player.getWorld().equals(getLobbyWorld()) || player.getWorld().equals(Main.getInstance().getMiniGamesManager().getActiveMiniGameWorld());
+    public static @Nullable World getMiniGamesSurvivalWorld() {
+        return Bukkit.getWorld(Main.getInstance().getConfig().getString("minigames.survival-world", ""));
+    }
+
+    public static boolean isInAnyMiniGameWorld(@NotNull Player player) {
+        return isAnyMiniGameWorld(player.getWorld());
+    }
+
+    public static boolean isAnyMiniGameWorld(@NotNull World world) {
+        return world.equals(getMiniGamesWorld()) || world.equals(getMiniGamesSurvivalWorld());
     }
 
     public static void teleportToLobby(@NotNull Player player) {
-        World world = getLobbyWorld();
+        World world = getMiniGamesWorld();
         if (world == null) return;
 
-        if (!isInMinigameWorldOrLobby(player)) return;
+        if (!isInAnyMiniGameWorld(player)) return;
 
         player.setBedSpawnLocation(world.getSpawnLocation(), true);
 
@@ -39,7 +47,7 @@ public class MiniGamesUtils {
     }
 
     public static void healPlayer(@NotNull Player player, @NotNull GameMode gamemode) {
-        if (!isInMinigameWorldOrLobby(player)) return;
+        if (!isInAnyMiniGameWorld(player)) return;
 
         player.setHealth(20);
         player.setFoodLevel(20);
@@ -66,7 +74,7 @@ public class MiniGamesUtils {
     }
 
     public static void setLobbyRules() {
-        World world = getLobbyWorld();
+        World world = getMiniGamesWorld();
         if (world == null) return;
 
         world.setGameRule(GameRule.KEEP_INVENTORY, true);

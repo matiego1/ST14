@@ -12,11 +12,9 @@ import net.luckperms.api.model.data.NodeMap;
 import net.luckperms.api.node.Node;
 import net.luckperms.api.node.NodeEqualityPredicate;
 import org.bukkit.Bukkit;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -31,10 +29,6 @@ public class MiniGamesManager {
     @Getter (onMethod_ = {@Synchronized}) private MiniGame activeMiniGame = null;
     private BukkitTask task = null;
     private final Set<UUID> editors = new HashSet<>();
-
-    public synchronized @Nullable World getActiveMiniGameWorld() {
-        return activeMiniGame == null ? null : activeMiniGame.getWorld();
-    }
 
     public synchronized boolean startMiniGame(@NotNull MiniGame miniGame, @NotNull Set<Player> players, @NotNull Player sender) {
         players.removeIf(this::isInEditorMode);
@@ -79,10 +73,12 @@ public class MiniGamesManager {
         MiniGamesUtils.setLobbyRules();
     }
 
-
     public void onPlayerJoin(@NotNull Player player) {
         setEditorMode(player, false);
-        if (!MiniGamesUtils.isInMinigameWorldOrLobby(player)) return;
+        onPlayerJoin0(player);
+    }
+    public void onPlayerJoin0(@NotNull Player player) {
+        if (!MiniGamesUtils.isInAnyMiniGameWorld(player)) return;
 
         MiniGame miniGame = getActiveMiniGame();
         if (miniGame == null) {
@@ -101,7 +97,9 @@ public class MiniGamesManager {
 
     public void onPlayerQuit(@NotNull Player player) {
         setEditorMode(player, false);
-
+        onPlayerQuit0(player);
+    }
+    private void onPlayerQuit0(@NotNull Player player) {
         MiniGame miniGame = getActiveMiniGame();
         if (miniGame == null) return;
         if (!miniGame.isInMiniGame(player)) return;
@@ -114,7 +112,7 @@ public class MiniGamesManager {
     }
 
     public void onPlayerDeath(@NotNull Player player) {
-        if (!MiniGamesUtils.isInMinigameWorldOrLobby(player)) return;
+        if (!MiniGamesUtils.isInAnyMiniGameWorld(player)) return;
         if (isInEditorMode(player)) return;
 
         MiniGame miniGame = getActiveMiniGame();
@@ -136,18 +134,17 @@ public class MiniGamesManager {
         if (mode == isInEditorMode(player)) return;
 
         if (mode) {
-            MiniGame miniGame = getActiveMiniGame();
-            if (miniGame != null && miniGame.isInMiniGame(player)) {
-                miniGame.onPlayerQuit(player);
-            }
-            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Jesteś w trybie edytora."));
+            onPlayerQuit0(player);
             editors.add(player.getUniqueId());
+            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Jesteś w trybie edytora."));
         } else {
-            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Już nie jesteś w trybie edytora."));
             editors.remove(player.getUniqueId());
+            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Już nie jesteś w trybie edytora."));
+            onPlayerJoin0(player);
         }
         changePermissions(player);
     }
+
     private void changePermissions(@NotNull Player player) throws IllegalStateException {
         try {
             String permission = plugin.getConfig().getString("minigames.editor-permission");

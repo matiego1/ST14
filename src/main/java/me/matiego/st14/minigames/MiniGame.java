@@ -9,11 +9,9 @@ import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
 import java.util.HashMap;
@@ -62,6 +60,7 @@ public abstract class MiniGame {
         tasks.clear();
     }
 
+    @SuppressWarnings("SameParameterValue")
     @SneakyThrows(MiniGameException.class)
     protected synchronized void countdownToStart(@NotNull Runnable startMiniGame, int countdownTimeInSeconds) {
         broadcastMessage("&dRozpoczynanie minigry za...");
@@ -102,6 +101,12 @@ public abstract class MiniGame {
     protected synchronized void showTitle(@NotNull String title, @NotNull String subtitle) {
         for (Player player : getPlayers()) {
             player.showTitle(Title.title(Utils.getComponentByString(title), Utils.getComponentByString(subtitle)));
+        }
+    }
+
+    protected synchronized void sendActionBar(@NotNull String actionBar) {
+        for (Player player : getPlayers()) {
+            player.sendActionBar(Utils.getComponentByString(actionBar));
         }
     }
 
@@ -165,7 +170,6 @@ public abstract class MiniGame {
     public abstract void onPlayerQuit(@NotNull Player player);
     public abstract void onPlayerDeath(@NotNull Player player);
     protected abstract void miniGameTick();
-    public abstract @Nullable World getWorld();
     public abstract @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount();
     public abstract @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount();
 

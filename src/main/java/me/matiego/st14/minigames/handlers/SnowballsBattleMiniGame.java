@@ -13,7 +13,6 @@ import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
 import java.util.List;
@@ -43,7 +42,7 @@ public class SnowballsBattleMiniGame extends MiniGame {
     public void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException {
         if (isStarted()) throw new MiniGameException("minigame is already started");
 
-        World world = MiniGamesUtils.getLobbyWorld();
+        World world = MiniGamesUtils.getMiniGamesWorld();
         if (world == null) throw new MiniGameException("cannot load world");
 
         spawn = MiniGamesUtils.getLocationFromConfig(world, CONFIG_PATH + "spawn");
@@ -120,7 +119,7 @@ public class SnowballsBattleMiniGame extends MiniGame {
             timer.startTimer();
             getPlayers().forEach(player -> timer.showBossBarToPlayer(player));
 
-            World world = getWorld();
+            World world = MiniGamesUtils.getMiniGamesWorld();
             if (world != null) world.setPVP(true);
         }
 
@@ -132,6 +131,11 @@ public class SnowballsBattleMiniGame extends MiniGame {
         if (gameTime % 30 == 0) {
             playersInGame.forEach(player -> player.setHealth(Math.min(player.getHealth() + 2, 20)));
         }
+        playersInGame.forEach(player -> {
+            player.setFoodLevel(20);
+            player.setSaturation(20);
+            player.setExhaustion(0);
+        });
         playersInGame.stream()
                 .map(HumanEntity::getInventory)
                 .filter(inv -> !inv.containsAtLeast(new ItemStack(Material.SNOWBALL), 128))
@@ -193,11 +197,6 @@ public class SnowballsBattleMiniGame extends MiniGame {
             MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
             player.teleportAsync(spectatorSpawn);
         }, 5);
-    }
-
-    @Override
-    public @Nullable World getWorld()  {
-        return MiniGamesUtils.getLobbyWorld();
     }
 
     @Override

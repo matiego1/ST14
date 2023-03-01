@@ -58,7 +58,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft {
                 case "editor" -> {
                     if (!(sender instanceof Player player)) return -1;
 
-                    if (!MiniGamesUtils.isInMinigameWorldOrLobby(player)) {
+                    if (!MiniGamesUtils.isInAnyMiniGameWorld(player)) {
                         player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Nie możesz użyć tej komendy w tym świecie."));
                         return 3;
                     }
@@ -82,7 +82,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft {
             return 3;
         }
 
-        if (!MiniGamesUtils.isInMinigameWorldOrLobby(player)) {
+        if (!MiniGamesUtils.isInAnyMiniGameWorld(player)) {
             player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Nie możesz użyć tej komendy w tym świecie."));
             return 3;
         }
@@ -137,7 +137,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft {
         ItemStack item = event.getCurrentItem();
         Objects.requireNonNull(item); //already checked in GUI#checkInventory()
 
-        if (!MiniGamesUtils.isInMinigameWorldOrLobby(player)) {
+        if (!MiniGamesUtils.isInAnyMiniGameWorld(player)) {
             player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Nie możesz użyć tej komendy w tym świecie."));
             return;
         }
@@ -165,7 +165,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft {
         }
 
         Set<Player> players = Bukkit.getOnlinePlayers().stream()
-                .filter(MiniGamesUtils::isInMinigameWorldOrLobby)
+                .filter(MiniGamesUtils::isInAnyMiniGameWorld)
                 .filter(p -> !manager.isInEditorMode(p))
                 .collect(Collectors.toSet());
 

@@ -46,7 +46,7 @@ public class TpaCommand implements CommandHandler.Minecraft {
             return -1;
         }
 
-        if (Utils.checkIfCanNotExecuteCommandInWorld(player, "tpa")) {
+        if (Utils.checkIfCanNotExecuteCommandInWorld(player, "tpa", '.')) {
             sender.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cNie możesz użyć tej komendy w tym świecie."));
             return 5;
         }
