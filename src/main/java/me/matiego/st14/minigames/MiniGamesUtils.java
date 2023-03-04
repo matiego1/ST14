@@ -104,4 +104,23 @@ public class MiniGamesUtils {
 
         return new Location(world, x, y, z, 0, 0);
     }
+
+//    public static boolean pasteSchematic(@NotNull File file) throws Exception {
+//        ClipboardFormat format = ClipboardFormats.findByFile(file);
+//        if (format == null) return false;
+//        try (ClipboardReader reader = format.getReader(new FileInputStream(file))) {
+//            Clipboard clipboard = reader.read();
+//            //noinspection deprecation
+//            try (EditSession editSession = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, -1)) {
+//                Operation operation = new ClipboardHolder(clipboard)
+//                        .createPaste(editSession)
+//                        .to(BlockVector3.at(x, y, z))
+//                        .ignoreAirBlocks(false)
+//                        .build();
+//                Operations.complete(operation);
+//            }
+//        }
+//        //TODO: https://madelinemiller.dev/blog/how-to-load-and-save-schematics-with-the-worldedit-api/
+//        return false;
+//    }
 }

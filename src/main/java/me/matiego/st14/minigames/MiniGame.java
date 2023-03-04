@@ -10,6 +10,8 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
@@ -19,7 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public abstract class MiniGame {
+public abstract class MiniGame implements Listener {
     public MiniGame(@NotNull Main plugin, int gameTimeInSeconds) {
         this.plugin = plugin;
         this.gameTimeInSeconds = gameTimeInSeconds;
@@ -157,12 +159,16 @@ public abstract class MiniGame {
 
         if (timer != null) timer.stopTimerAndHideBossBar();
         cancelAllTasks();
+        HandlerList.unregisterAll(this);
 
         getPlayers().forEach(MiniGamesUtils::teleportToLobby);
 
         isMiniGameStarted = false;
     }
 
+    protected void registerEvents() {
+        Bukkit.getPluginManager().registerEvents(this, plugin);
+    }
 
     public abstract @NotNull String getMiniGameName();
     public abstract void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException;

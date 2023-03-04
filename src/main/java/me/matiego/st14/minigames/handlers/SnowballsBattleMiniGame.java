@@ -9,16 +9,29 @@ import me.matiego.st14.minigames.MiniGamesUtils;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.*;
-import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByBlockEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 
 import java.util.List;
 import java.util.Set;
 
-public class SnowballsBattleMiniGame extends MiniGame {
+public class SnowballsBattleMiniGame extends MiniGame implements Listener {
     @SneakyThrows(MiniGameException.class)
     public SnowballsBattleMiniGame(@NotNull Main plugin, int gameTimeInSeconds) {
         super(plugin, gameTimeInSeconds);
@@ -31,6 +44,7 @@ public class SnowballsBattleMiniGame extends MiniGame {
     }
 
     private final int PREPARE_TIME_IN_SECONDS = 60;
+    private final int GLOWING_BEFORE_END_IN_SECONDS = 180;
     private final String CONFIG_PATH = "minigames.snowballs-battle.";
 
     private int gameTime = 0;
@@ -56,6 +70,8 @@ public class SnowballsBattleMiniGame extends MiniGame {
 
         isMiniGameStarted = true;
         lobby = true;
+
+        registerEvents();
 
         world.setPVP(false);
         world.setGameRule(GameRule.KEEP_INVENTORY, true);
@@ -127,19 +143,25 @@ public class SnowballsBattleMiniGame extends MiniGame {
             scheduleStopMiniGameAndSendReason("&dKoniec minigry! &eRozgrywka zakończyła się remisem.", "&dKoniec minigry", "&eRemis");
         }
 
-        List<Player> playersInGame = getPlayersInMiniGame();
-        if (gameTime % 30 == 0) {
-            playersInGame.forEach(player -> player.setHealth(Math.min(player.getHealth() + 2, 20)));
-        }
-        playersInGame.forEach(player -> {
-            player.setFoodLevel(20);
-            player.setSaturation(20);
-            player.setExhaustion(0);
+        List<Player> playersInMiniGame = getPlayersInMiniGame();
+        playersInMiniGame.forEach(player -> {
+            player.setLevel(playersInMiniGame.size());
+            player.setFireTicks(0);
+
+            if (gameTime % 30 == 0) {
+                player.setHealth(Math.min(player.getHealth() + 2, 20));
+                player.spawnParticle(Particle.HEART, player.getLocation().add(0, 0.5, 0), 5, 0.5, 1, 0.5, 0.00001);
+                player.playSound(player.getLocation().add(0, 0.5, 0), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.NEUTRAL, 3, 1);
+            }
+
+            if (gameTime == gameTimeInSeconds - GLOWING_BEFORE_END_IN_SECONDS) {
+                player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, GLOWING_BEFORE_END_IN_SECONDS * 20, 255, false, false, true));
+            }
+
+            Inventory inv = player.getInventory();
+            if (inv.containsAtLeast(new ItemStack(Material.SNOWBALL), 128)) return;
+            inv.addItem(new ItemStack(Material.SNOWBALL, 2));
         });
-        playersInGame.stream()
-                .map(HumanEntity::getInventory)
-                .filter(inv -> !inv.containsAtLeast(new ItemStack(Material.SNOWBALL), 128))
-                .forEach(inv -> inv.addItem(new ItemStack(Material.SNOWBALL, 2)));
     }
 
     @Override
@@ -167,20 +189,19 @@ public class SnowballsBattleMiniGame extends MiniGame {
 
         if (timer != null) timer.hideBossBarFromPlayer(player);
 
-        PlayerStatus status = getPlayerStatus(player);
-        changePlayerStatus(player, PlayerStatus.NOT_IN_MINI_GAME);
-
         if (lobby) {
             broadcastMessage("Gracz " + player.getName() + " opuścił minigrę.");
             return;
         }
 
-        if (status == PlayerStatus.IN_MINI_GAME) {
+        if (getPlayerStatus(player) == PlayerStatus.IN_MINI_GAME) {
             broadcastMessage("Gracz " + player.getName() + " opuścił minigrę.");
             endGameIfLessThanTwoPlayersLeft();
         } else {
             broadcastMessage("Gracz " + player.getName() + " przestał obserwować minigrę.");
         }
+
+        changePlayerStatus(player, PlayerStatus.NOT_IN_MINI_GAME);
     }
 
     @Override
@@ -207,5 +228,54 @@ public class SnowballsBattleMiniGame extends MiniGame {
     @Override
     public @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount() {
         return 15;
+    }
+
+    @EventHandler (ignoreCancelled = true)
+    public void onPlayerDropItem(@NotNull PlayerDropItemEvent event) {
+        if (!isInMiniGame(event.getPlayer())) return;
+        event.setCancelled(true);
+    }
+
+    @EventHandler (ignoreCancelled = true)
+    public void onPlayerInteract(@NotNull PlayerInteractEvent event) {
+        if (!isInMiniGame(event.getPlayer())) return;
+
+        ItemStack item = event.getItem();
+        if (item != null && item.getType() == Material.SNOWBALL && event.getAction().isRightClick()) return;
+
+        event.setCancelled(true);
+        event.setUseItemInHand(Event.Result.DENY);
+        event.setUseInteractedBlock(Event.Result.DENY);
+    }
+
+    @EventHandler (ignoreCancelled = true)
+    public void onFoodLevelChange(@NotNull FoodLevelChangeEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+        if (!isInMiniGame(player)) return;
+        if (event.getFoodLevel() == 20) return;
+        event.setCancelled(true);
+    }
+
+    @EventHandler (ignoreCancelled = true)
+    public void onEntityDamageByBlock(@NotNull EntityDamageByBlockEvent event) {
+        if (event.getCause() != EntityDamageEvent.DamageCause.FIRE && event.getCause() != EntityDamageEvent.DamageCause.FIRE_TICK) return;
+        if (!(event.getEntity() instanceof Player player)) return;
+        if (!isInMiniGame(player)) return;
+        event.setCancelled(true);
+    }
+
+    @EventHandler (ignoreCancelled = true)
+    public void onEntityDamageByEntity(@NotNull EntityDamageByEntityEvent event) {
+        if (event.getDamager().getType() == EntityType.SNOWBALL) return;
+        if (!(event.getEntity() instanceof Player player)) return;
+        if (!isInMiniGame(player)) return;
+        event.setCancelled(true);
+    }
+
+    @EventHandler (ignoreCancelled = true)
+    public void onCraftItem(@NotNull CraftItemEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!isInMiniGame(player)) return;
+        event.setCancelled(true);
     }
 }
