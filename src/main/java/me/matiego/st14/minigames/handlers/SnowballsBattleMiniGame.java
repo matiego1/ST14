@@ -191,6 +191,7 @@ public class SnowballsBattleMiniGame extends MiniGame implements Listener {
 
         if (lobby) {
             broadcastMessage("Gracz " + player.getName() + " opuścił minigrę.");
+            changePlayerStatus(player, PlayerStatus.NOT_IN_MINI_GAME);
             return;
         }
 

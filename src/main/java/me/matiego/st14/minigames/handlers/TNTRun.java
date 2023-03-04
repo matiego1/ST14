@@ -25,6 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -35,7 +36,7 @@ public class TNTRun extends MiniGame {
         if (totalGameTimeInSeconds <= 30) throw new MiniGameException("too little time");
     }
 
-    private final int PREPARE_TIME_IN_SECONDS = 10;
+    private final int PREPARE_TIME_IN_SECONDS = 5;
     private final String CONFIG_PATH = "minigames.tnt-run.";
 
     private int gameTime = 0;
@@ -98,7 +99,7 @@ public class TNTRun extends MiniGame {
             }
 
             try {
-                if (!MiniGamesUtils.teleportPlayers(players.stream().toList(), spectatorSpawn).get()) {
+                if (!MiniGamesUtils.teleportPlayers(players.stream().toList(), spawn).get()) {
                     Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", ""));
                     return;
                 }
@@ -172,6 +173,7 @@ public class TNTRun extends MiniGame {
 
         if (lobby) {
             broadcastMessage("Gracz " + player.getName() + " opuścił minigrę.");
+            changePlayerStatus(player, PlayerStatus.NOT_IN_MINI_GAME);
             return;
         }
 
@@ -211,7 +213,7 @@ public class TNTRun extends MiniGame {
 
         int maxDistance = plugin.getConfig().getInt(CONFIG_PATH + "map-radius", 100);
         getPlayers().stream()
-                .filter(player -> player.getLocation().distanceSquared(spectatorSpawn) > maxDistance * maxDistance)
+                .filter(player -> distanceSquared(player.getLocation(), spectatorSpawn) > maxDistance * maxDistance)
                 .filter(player -> getPlayerStatus(player) == PlayerStatus.SPECTATOR)
                 .forEach(player -> {
                     player.teleportAsync(spectatorSpawn);
@@ -225,10 +227,17 @@ public class TNTRun extends MiniGame {
         });
     }
 
+    private double distanceSquared(@NotNull Location l1, @NotNull Location l2) {
+        double a = l1.getX() - l2.getX();
+        double b = l1.getZ() - l2.getZ();
+        return a * a + b * b;
+    }
+
     private void breakBlockUnderPlayers() {
         if (gameTime < PREPARE_TIME_IN_SECONDS) return;
         getPlayersInMiniGame().forEach(player -> {
             Block blockUnderPlayer = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
+            if (blockUnderPlayer.getType().isAir()) return;
 
             runTaskLater(() -> {
                 blockUnderPlayer.setType(Material.AIR);
@@ -279,6 +288,8 @@ public class TNTRun extends MiniGame {
         }
 
         List<String> mapFiles = plugin.getConfig().getStringList(CONFIG_PATH + "map-files");
+        Collections.shuffle(mapFiles);
+
         for (String mapFile : mapFiles) {
             File file = new File(dir, mapFile);
             if (file.exists()) {
