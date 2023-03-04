@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Set;
 
 public abstract class MiniGame implements Listener {
-    public MiniGame(@NotNull Main plugin, int gameTimeInSeconds) {
+    public MiniGame(@NotNull Main plugin, int totalGameTimeInSeconds) {
         this.plugin = plugin;
-        this.gameTimeInSeconds = gameTimeInSeconds;
+        this.gameTimeInSeconds = totalGameTimeInSeconds;
     }
     protected final Main plugin;
     protected final int gameTimeInSeconds;

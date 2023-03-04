@@ -33,9 +33,9 @@ import java.util.Set;
 
 public class SnowballsBattleMiniGame extends MiniGame implements Listener {
     @SneakyThrows(MiniGameException.class)
-    public SnowballsBattleMiniGame(@NotNull Main plugin, int gameTimeInSeconds) {
-        super(plugin, gameTimeInSeconds);
-        if (gameTimeInSeconds <= 120) throw new MiniGameException("too little time");
+    public SnowballsBattleMiniGame(@NotNull Main plugin, int totalGameTimeInSeconds) {
+        super(plugin, totalGameTimeInSeconds);
+        if (totalGameTimeInSeconds <= 120) throw new MiniGameException("too little time");
     }
 
     @Override

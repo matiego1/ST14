@@ -3,6 +3,7 @@ package me.matiego.st14.minigames;
 import lombok.Getter;
 import me.matiego.st14.Main;
 import me.matiego.st14.minigames.handlers.SnowballsBattleMiniGame;
+import me.matiego.st14.minigames.handlers.TNTRun;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 public enum MiniGameType {
     TAG(null, "Berek", Material.NAME_TAG, 10 * 60),
     SNOWBALLS_BATTLE(SnowballsBattleMiniGame.class, "Bitwa na śnieżki", Material.SNOWBALL, 15 * 60),
-    TNT_RUN(null, "TNT Run", Material.TNT, 15 * 60),
+    TNT_RUN(TNTRun.class, "TNT Run", Material.TNT, 15 * 60),
     SPLEEF(null, "Spleef", Material.STONE_SHOVEL, 15 * 60),
     RED_GREEN(null, "Czerwone-Zielone", Material.BOW, 15 * 60),
     SKYWARS(null, "Skywars", Material.ENDER_EYE, 20 * 60),

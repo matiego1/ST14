@@ -1,5 +1,16 @@
 package me.matiego.st14.minigames;
 
+import com.sk89q.worldedit.EditSession;
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.extent.clipboard.Clipboard;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
+import com.sk89q.worldedit.function.operation.Operation;
+import com.sk89q.worldedit.function.operation.Operations;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.session.ClipboardHolder;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.*;
@@ -9,6 +20,8 @@ import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -105,22 +118,20 @@ public class MiniGamesUtils {
         return new Location(world, x, y, z, 0, 0);
     }
 
-//    public static boolean pasteSchematic(@NotNull File file) throws Exception {
-//        ClipboardFormat format = ClipboardFormats.findByFile(file);
-//        if (format == null) return false;
-//        try (ClipboardReader reader = format.getReader(new FileInputStream(file))) {
-//            Clipboard clipboard = reader.read();
-//            //noinspection deprecation
-//            try (EditSession editSession = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, -1)) {
-//                Operation operation = new ClipboardHolder(clipboard)
-//                        .createPaste(editSession)
-//                        .to(BlockVector3.at(x, y, z))
-//                        .ignoreAirBlocks(false)
-//                        .build();
-//                Operations.complete(operation);
-//            }
-//        }
-//        //TODO: https://madelinemiller.dev/blog/how-to-load-and-save-schematics-with-the-worldedit-api/
-//        return false;
-//    }
+    public static void pasteSchematic(@NotNull World world, @NotNull BlockVector3 vector, @NotNull File file) throws Exception{
+        ClipboardFormat format = ClipboardFormats.findByFile(file);
+        if (format == null) throw new IllegalStateException("cannot find clipboard format by file");
+        try (ClipboardReader reader = format.getReader(new FileInputStream(file))) {
+            Clipboard clipboard = reader.read();
+            //noinspection deprecation
+            try (EditSession editSession = WorldEdit.getInstance().getEditSessionFactory().getEditSession(BukkitAdapter.adapt(world), -1)) {
+                Operation operation = new ClipboardHolder(clipboard)
+                        .createPaste(editSession)
+                        .to(vector)
+                        .ignoreAirBlocks(false)
+                        .build();
+                Operations.complete(operation);
+            }
+        }
+    }
 }
