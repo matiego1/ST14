@@ -6,6 +6,7 @@ import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGameException;
 import me.matiego.st14.minigames.MiniGamesUtils;
+import me.matiego.st14.utils.Prefix;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.*;
@@ -171,15 +172,18 @@ public class SnowballsBattleMiniGame extends MiniGame implements Listener {
         if (timer != null) timer.showBossBarToPlayer(player);
 
         changePlayerStatus(player, PlayerStatus.SPECTATOR);
-        MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
-
-        player.teleportAsync(spectatorSpawn);
 
         if (lobby) {
             broadcastMessage("Gracz " + player.getName() + " dołącza do minigry!");
         } else {
             broadcastMessage("Gracz " + player.getName() + " obserwuje minigrę");
         }
+
+        runTaskLater(() -> {
+            MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
+
+            player.teleportAsync(spectatorSpawn);
+        }, 5);
     }
 
     @Override
@@ -189,20 +193,22 @@ public class SnowballsBattleMiniGame extends MiniGame implements Listener {
 
         if (timer != null) timer.hideBossBarFromPlayer(player);
 
+        PlayerStatus status = getPlayerStatus(player);
+        changePlayerStatus(player, PlayerStatus.NOT_IN_MINI_GAME);
+
+        player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Opuściłeś minigrę."));
+
         if (lobby) {
             broadcastMessage("Gracz " + player.getName() + " opuścił minigrę.");
-            changePlayerStatus(player, PlayerStatus.NOT_IN_MINI_GAME);
             return;
         }
 
-        if (getPlayerStatus(player) == PlayerStatus.IN_MINI_GAME) {
+        if (status == PlayerStatus.IN_MINI_GAME) {
             broadcastMessage("Gracz " + player.getName() + " opuścił minigrę.");
             endGameIfLessThanTwoPlayersLeft();
         } else {
             broadcastMessage("Gracz " + player.getName() + " przestał obserwować minigrę.");
         }
-
-        changePlayerStatus(player, PlayerStatus.NOT_IN_MINI_GAME);
     }
 
     @Override
@@ -237,15 +243,9 @@ public class SnowballsBattleMiniGame extends MiniGame implements Listener {
         event.setCancelled(true);
     }
 
-    @EventHandler (ignoreCancelled = true)
+    @EventHandler
     public void onPlayerInteract(@NotNull PlayerInteractEvent event) {
         if (!isInMiniGame(event.getPlayer())) return;
-
-        ItemStack item = event.getItem();
-        if (item != null && item.getType() == Material.SNOWBALL && event.getAction().isRightClick()) return;
-
-        event.setCancelled(true);
-        event.setUseItemInHand(Event.Result.DENY);
         event.setUseInteractedBlock(Event.Result.DENY);
     }
 

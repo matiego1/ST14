@@ -8,6 +8,7 @@ import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGameException;
 import me.matiego.st14.minigames.MiniGamesUtils;
 import me.matiego.st14.utils.Logs;
+import me.matiego.st14.utils.Prefix;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.*;
@@ -149,19 +150,22 @@ public class TNTRun extends MiniGame {
         if (timer != null) timer.showBossBarToPlayer(player);
 
         changePlayerStatus(player, PlayerStatus.SPECTATOR);
-        if (lobby) {
-            MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
-        } else {
-            MiniGamesUtils.healPlayer(player, GameMode.SPECTATOR);
-        }
-
-        player.teleportAsync(spectatorSpawn);
 
         if (lobby) {
             broadcastMessage("Gracz " + player.getName() + " dołącza do minigry!");
         } else {
             broadcastMessage("Gracz " + player.getName() + " obserwuje minigrę");
+
         }
+        runTaskLater(() -> {
+            if (lobby) {
+                MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
+            } else {
+                MiniGamesUtils.healPlayer(player, GameMode.SPECTATOR);
+            }
+
+            player.teleportAsync(spectatorSpawn);
+        }, 5);
     }
 
     @Override
@@ -171,20 +175,22 @@ public class TNTRun extends MiniGame {
 
         if (timer != null) timer.hideBossBarFromPlayer(player);
 
+        PlayerStatus status = getPlayerStatus(player);
+        changePlayerStatus(player, PlayerStatus.NOT_IN_MINI_GAME);
+
+        player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Opuściłeś minigrę."));
+
         if (lobby) {
             broadcastMessage("Gracz " + player.getName() + " opuścił minigrę.");
-            changePlayerStatus(player, PlayerStatus.NOT_IN_MINI_GAME);
             return;
         }
 
-        if (getPlayerStatus(player) == PlayerStatus.IN_MINI_GAME) {
+        if (status == PlayerStatus.IN_MINI_GAME) {
             broadcastMessage("Gracz " + player.getName() + " opuścił minigrę.");
             endGameIfLessThanTwoPlayersLeft();
         } else {
             broadcastMessage("Gracz " + player.getName() + " przestał obserwować minigrę.");
         }
-
-        changePlayerStatus(player, PlayerStatus.NOT_IN_MINI_GAME);
     }
 
     @Override
