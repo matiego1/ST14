@@ -16,7 +16,6 @@ import me.matiego.st14.utils.Utils;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -50,12 +49,11 @@ public class MiniGamesUtils {
         if (!isInAnyMiniGameWorld(player)) return;
 
         player.setBedSpawnLocation(world.getSpawnLocation(), true);
+        player.setWorldBorder(null);
 
         player.teleportAsync(world.getSpawnLocation()).thenAcceptAsync(result -> Utils.sync(() -> {
             if (!result) return;
             healPlayer(player, GameMode.ADVENTURE);
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, Integer.MAX_VALUE, 255, false, false, false));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, Integer.MAX_VALUE, 255, false, false, false));
         }));
     }
 
@@ -99,25 +97,40 @@ public class MiniGamesUtils {
         world.setPVP(false);
     }
 
+    public static @Nullable Location getRelativeLocationFromConfig(@NotNull Location baseLocation, @NotNull String path) {
+        Location loc = getLocationFromConfig(baseLocation.getWorld(), path);
+        if (loc == null) return null;
+        return loc.add(baseLocation);
+    }
+
     public static @Nullable Location getLocationFromConfig(@NotNull World world, @NotNull String path) {
         String value = Main.getInstance().getConfig().getString(path);
         if (value == null) return null;
 
-        String[] values = value.split(";");
+        return getLocationFromString(world, value);
+    }
+
+    public static @Nullable Location getRelativeLocationFromString(@NotNull Location baseLocation, @NotNull String string) {
+        Location loc = getLocationFromString(baseLocation.getWorld(), string);
+        if (loc == null) return null;
+        return loc.add(baseLocation);
+    }
+
+    public static @Nullable Location getLocationFromString(@NotNull World world, @NotNull String string) {
+        String[] values = string.split(";");
         if (values.length != 3) return null;
 
-        int x, y, z;
+        double x, y, z;
         try {
-            x = Integer.parseInt(values[0]);
-            y = Integer.parseInt(values[1]);
-            z = Integer.parseInt(values[2]);
+            x = Double.parseDouble(values[0]);
+            y = Double.parseDouble(values[1]);
+            z = Double.parseDouble(values[2]);
         } catch (NumberFormatException e) {
             return null;
         }
 
         return new Location(world, x, y, z, 0, 0);
     }
-
     public static void pasteSchematic(@NotNull World world, @NotNull BlockVector3 vector, @NotNull File file) throws Exception{
         ClipboardFormat format = ClipboardFormats.findByFile(file);
         if (format == null) throw new IllegalStateException("cannot find clipboard format by file");

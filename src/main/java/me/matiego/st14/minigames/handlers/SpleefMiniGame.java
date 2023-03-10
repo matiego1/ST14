@@ -8,19 +8,18 @@ import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGameException;
 import me.matiego.st14.minigames.MiniGamesUtils;
 import me.matiego.st14.utils.Logs;
-import me.matiego.st14.utils.Prefix;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.*;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.entity.EntityType;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.entity.EntityDamageByBlockEvent;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
@@ -30,24 +29,22 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-public class TNTRun extends MiniGame {
+public class SpleefMiniGame extends MiniGame {
     @SneakyThrows(MiniGameException.class)
-    public TNTRun(@NotNull Main plugin, int totalGameTimeInSeconds) {
+    public SpleefMiniGame(@NotNull Main plugin, int totalGameTimeInSeconds) {
         super(plugin, totalGameTimeInSeconds);
-        if (totalGameTimeInSeconds <= 30) throw new MiniGameException("too little time");
+        if (totalGameTimeInSeconds <= 0) throw new MiniGameException("too little time");
     }
 
-    private final int PREPARE_TIME_IN_SECONDS = 5;
-    private final String CONFIG_PATH = "minigames.tnt-run.";
+    private final String CONFIG_PATH = "minigames.spleef.";
 
     private int gameTime = 0;
 
     private Location spawn = null;
-    private Location spectatorSpawn = null;
 
     @Override
     public @NotNull String getMiniGameName() {
-        return "TNT Run";
+        return "Spleef";
     }
 
     @Override
@@ -84,6 +81,7 @@ public class TNTRun extends MiniGame {
             MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
         }
 
+        sendActionBar("&eGenerowanie areny...");
         Utils.async(() -> {
             try {
                 File file = getRandomMapFile();
@@ -110,8 +108,6 @@ public class TNTRun extends MiniGame {
                 return;
             }
 
-            Utils.sync(() -> sendActionBar("&eGenerowanie areny..."));
-
             Utils.sync(() -> countdownToStart(() -> {
                 List<Player> playersToStartGameWith = getPlayers();
 
@@ -130,83 +126,17 @@ public class TNTRun extends MiniGame {
                 timer.startTimer();
 
                 playersToStartGameWith.forEach(player -> {
-                    player.teleportAsync(spawn);
                     changePlayerStatus(player, PlayerStatus.IN_MINI_GAME);
-                    MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
+                    player.teleportAsync(spawn);
+                    MiniGamesUtils.healPlayer(player, GameMode.SURVIVAL);
                     player.setBedSpawnLocation(spectatorSpawn, true);
                     timer.showBossBarToPlayer(player);
+                    giveToolsToPlayer(player);
                 });
 
                 runTaskTimer(this::miniGameTick, 20, 20);
-                runTaskTimer(this::breakBlockUnderPlayers, 1, 1);
             }, 15));
         });
-    }
-
-    @Override
-    public void onPlayerJoin(@NotNull Player player) {
-        if (!isMiniGameStarted) return;
-
-        if (timer != null) timer.showBossBarToPlayer(player);
-
-        changePlayerStatus(player, PlayerStatus.SPECTATOR);
-
-        if (lobby) {
-            broadcastMessage("Gracz " + player.getName() + " dołącza do minigry!");
-        } else {
-            broadcastMessage("Gracz " + player.getName() + " obserwuje minigrę");
-
-        }
-        runTaskLater(() -> {
-            if (lobby) {
-                MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
-            } else {
-                MiniGamesUtils.healPlayer(player, GameMode.SPECTATOR);
-            }
-
-            player.teleportAsync(spectatorSpawn);
-        }, 5);
-    }
-
-    @Override
-    public void onPlayerQuit(@NotNull Player player) {
-        if (!isMiniGameStarted) return;
-        if (!isInMiniGame(player)) return;
-
-        if (timer != null) timer.hideBossBarFromPlayer(player);
-
-        PlayerStatus status = getPlayerStatus(player);
-        changePlayerStatus(player, PlayerStatus.NOT_IN_MINI_GAME);
-
-        player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Opuściłeś minigrę."));
-
-        if (lobby) {
-            broadcastMessage("Gracz " + player.getName() + " opuścił minigrę.");
-            return;
-        }
-
-        if (status == PlayerStatus.IN_MINI_GAME) {
-            broadcastMessage("Gracz " + player.getName() + " opuścił minigrę.");
-            endGameIfLessThanTwoPlayersLeft();
-        } else {
-            broadcastMessage("Gracz " + player.getName() + " przestał obserwować minigrę.");
-        }
-    }
-
-    @Override
-    public void onPlayerDeath(@NotNull Player player) {
-        if (!isMiniGameStarted || lobby) return;
-        if (getPlayerStatus(player) != PlayerStatus.IN_MINI_GAME) return;
-
-        changePlayerStatus(player, PlayerStatus.SPECTATOR);
-
-        if (endGameIfLessThanTwoPlayersLeft()) return;
-
-        broadcastMessage("Gracz " + player.getName() + " obserwuje minigrę.");
-        runTaskLater(() -> {
-            MiniGamesUtils.healPlayer(player, GameMode.SPECTATOR);
-            player.teleportAsync(spectatorSpawn);
-        }, 5);
     }
 
     @Override
@@ -217,7 +147,7 @@ public class TNTRun extends MiniGame {
             scheduleStopMiniGameAndSendReason("&dKoniec minigry! &eRozgrywka zakończyła się remisem.", "&dKoniec minigry", "&eRemis");
         }
 
-        int maxDistance = plugin.getConfig().getInt(CONFIG_PATH + "map-radius", 100);
+        int maxDistance = Math.max(0, plugin.getConfig().getInt(CONFIG_PATH + "map-radius", 100));
         getPlayers().stream()
                 .filter(player -> distanceSquared(player.getLocation(), spectatorSpawn) > maxDistance * maxDistance)
                 .filter(player -> getPlayerStatus(player) == PlayerStatus.SPECTATOR)
@@ -239,19 +169,6 @@ public class TNTRun extends MiniGame {
         return a * a + b * b;
     }
 
-    private void breakBlockUnderPlayers() {
-        if (gameTime < PREPARE_TIME_IN_SECONDS) return;
-        getPlayersInMiniGame().forEach(player -> {
-            Block blockUnderPlayer = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
-            if (blockUnderPlayer.getType().isAir()) return;
-
-            runTaskLater(() -> {
-                blockUnderPlayer.setType(Material.AIR);
-                blockUnderPlayer.getRelative(BlockFace.DOWN).setType(Material.AIR);
-            }, 5);
-        });
-    }
-
     @Override
     public @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount() {
         return 2;
@@ -262,28 +179,29 @@ public class TNTRun extends MiniGame {
         return 15;
     }
 
+    @Override
+    public @NotNull GameMode getSpectatorGameMode() {
+        return GameMode.SPECTATOR;
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityDamageByEntity(@NotNull EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+        if (!isInMiniGame(player)) return;
+        event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockBreak(@NotNull BlockBreakEvent event) {
+        if (!isInMiniGame(event.getPlayer())) return;
+        event.setDropItems(false);
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onFoodLevelChange(@NotNull FoodLevelChangeEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
         if (!isInMiniGame(player)) return;
-        if (event.getFoodLevel() == 20) return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler (ignoreCancelled = true)
-    public void onEntityDamageByBlock(@NotNull EntityDamageByBlockEvent event) {
-        if (event.getCause() != EntityDamageEvent.DamageCause.FIRE && event.getCause() != EntityDamageEvent.DamageCause.FIRE_TICK) return;
-        if (!(event.getEntity() instanceof Player player)) return;
-        if (!isInMiniGame(player)) return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler (ignoreCancelled = true)
-    public void onEntityDamageByEntity(@NotNull EntityDamageByEntityEvent event) {
-        if (event.getDamager().getType() == EntityType.SNOWBALL) return;
-        if (!(event.getEntity() instanceof Player player)) return;
-        if (!isInMiniGame(player)) return;
-        event.setCancelled(true);
+        event.setFoodLevel(20);
     }
 
     private @Nullable File getRandomMapFile() {
@@ -303,5 +221,26 @@ public class TNTRun extends MiniGame {
             }
         }
         return null;
+    }
+
+    private void giveToolsToPlayer(@NotNull Player player) {
+        player.getInventory().addItem(
+                createTool(Material.NETHERITE_SHOVEL),
+                createTool(Material.NETHERITE_PICKAXE),
+                createTool(Material.NETHERITE_HOE)
+        );
+    }
+
+    private @NotNull ItemStack createTool(Material toolMaterial) {
+        ItemStack tool = new ItemStack(toolMaterial);
+
+        ItemMeta meta = tool.getItemMeta();
+        meta.setUnbreakable(true);
+        meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ENCHANTS);
+        tool.setItemMeta(meta);
+
+        tool.addUnsafeEnchantment(Enchantment.DIG_SPEED, 50);
+
+        return tool;
     }
 }

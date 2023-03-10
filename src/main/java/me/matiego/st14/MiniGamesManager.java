@@ -145,7 +145,7 @@ public class MiniGamesManager {
         changePermissions(player);
     }
 
-    private void changePermissions(@NotNull Player player) throws IllegalStateException {
+    private void changePermissions(@NotNull Player player) {
         try {
             String permission = plugin.getConfig().getString("minigames.editor-permission");
             if (permission == null) return;

@@ -9,6 +9,9 @@ import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.WorldBorder;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -30,9 +33,11 @@ public abstract class MiniGame implements Listener {
     protected final int gameTimeInSeconds;
     protected boolean isMiniGameStarted = false;
     protected boolean lobby = true;
+    protected BossBarTimer timer;
+    protected Location spectatorSpawn;
+    protected WorldBorder worldBorder;
     private final Set<BukkitTask> tasks = new HashSet<>();
     private final HashMap<Player, PlayerStatus> players = new HashMap<>();
-    protected BossBarTimer timer;
 
     protected synchronized void changePlayerStatus(@NotNull Player player, @NotNull PlayerStatus status) {
         if (status == PlayerStatus.NOT_IN_MINI_GAME) {
@@ -93,6 +98,8 @@ public abstract class MiniGame implements Listener {
     }
 
     protected synchronized void broadcastMessage(@NotNull String message) {
+        if (message.isBlank()) return;
+
         Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + message));
         Logs.discord(PlainTextComponentSerializer.plainText().serialize(Utils.getComponentByString(Prefix.MINI_GAMES + message)));
         for (Player player : getPlayers()) {
@@ -106,6 +113,7 @@ public abstract class MiniGame implements Listener {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     protected synchronized void sendActionBar(@NotNull String actionBar) {
         for (Player player : getPlayers()) {
             player.sendActionBar(Utils.getComponentByString(actionBar));
@@ -151,6 +159,70 @@ public abstract class MiniGame implements Listener {
         return isMiniGameStarted;
     }
 
+    public void onPlayerJoin(@NotNull Player player) {
+        if (!isMiniGameStarted) return;
+
+        if (timer != null) timer.showBossBarToPlayer(player);
+        player.setWorldBorder(worldBorder);
+
+        changePlayerStatus(player, PlayerStatus.SPECTATOR);
+
+        if (lobby) {
+            broadcastMessage("Gracz " + player.getName() + " dołącza do minigry!");
+        } else {
+            broadcastMessage("Gracz " + player.getName() + " obserwuje minigrę");
+
+        }
+        runTaskLater(() -> {
+            if (lobby) {
+                MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
+            } else {
+                MiniGamesUtils.healPlayer(player, getSpectatorGameMode());
+            }
+
+            player.teleportAsync(spectatorSpawn);
+        }, 3);
+    }
+
+    public void onPlayerQuit(@NotNull Player player) {
+        if (!isMiniGameStarted) return;
+        if (!isInMiniGame(player)) return;
+
+        if (timer != null) timer.hideBossBarFromPlayer(player);
+
+        PlayerStatus status = getPlayerStatus(player);
+        changePlayerStatus(player, PlayerStatus.NOT_IN_MINI_GAME);
+
+        player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Opuściłeś minigrę."));
+
+        if (lobby) {
+            broadcastMessage("Gracz " + player.getName() + " opuścił minigrę.");
+            return;
+        }
+
+        if (status == PlayerStatus.IN_MINI_GAME) {
+            broadcastMessage("Gracz " + player.getName() + " opuścił minigrę.");
+            endGameIfLessThanTwoPlayersLeft();
+        } else {
+            broadcastMessage("Gracz " + player.getName() + " przestał obserwować minigrę.");
+        }
+    }
+
+    public void onPlayerDeath(@NotNull Player player) {
+        if (!isMiniGameStarted || lobby) return;
+        if (getPlayerStatus(player) != PlayerStatus.IN_MINI_GAME) return;
+
+        changePlayerStatus(player, PlayerStatus.SPECTATOR);
+
+        if (endGameIfLessThanTwoPlayersLeft()) return;
+
+        broadcastMessage("Gracz " + player.getName() + " obserwuje minigrę.");
+        runTaskLater(() -> {
+            MiniGamesUtils.healPlayer(player, getSpectatorGameMode());
+            player.teleportAsync(spectatorSpawn);
+        }, 3);
+    }
+
     public void stopMiniGame() {
         if (!isMiniGameStarted) return;
 
@@ -172,12 +244,10 @@ public abstract class MiniGame implements Listener {
 
     public abstract @NotNull String getMiniGameName();
     public abstract void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException;
-    public abstract void onPlayerJoin(@NotNull Player player);
-    public abstract void onPlayerQuit(@NotNull Player player);
-    public abstract void onPlayerDeath(@NotNull Player player);
     protected abstract void miniGameTick();
     public abstract @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount();
     public abstract @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount();
+    public abstract @NotNull GameMode getSpectatorGameMode();
 
     protected enum PlayerStatus {
         IN_MINI_GAME,

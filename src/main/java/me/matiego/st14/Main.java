@@ -160,6 +160,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new EntityDeathListener(this),
                 new EntityExplodeListener(this),
                 new EntityPortalListener(this),
+                new FoodLevelChangeListener(this),
                 graveCreateListener,
                 new GS4QueryListener(this),
                 new InventoryCloseListener(this),
