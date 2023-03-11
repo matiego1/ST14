@@ -123,21 +123,32 @@ public abstract class MiniGame implements Listener {
     protected synchronized boolean endGameIfLessThanTwoPlayersLeft() {
         List<Player> players = getPlayersInMiniGame();
         if (players.size() <= 1) {
-            String winner = (players.isEmpty() ? "???" : players.get(0).getName());
-            scheduleStopMiniGameAndSendReason("Koniec minigry! Wygrywa gracz &d" + winner, "&dKoniec minigry", "");
-            plugin.getChatMinecraft().sendMessage("Gracz **" + winner + "** wygrywa minigrę **" + getMiniGameName() + "**!", Prefix.MINI_GAMES.getDiscord());
+            if (players.isEmpty()) {
+                scheduleStopMiniGameAndSendReason("Koniec minigry! Napotkano błąd przy wyłanianiu zwycięzcy.", "&dKoniec minigry", "");
+            } else {
+                endGameWithWinner(players.get(0));
+            }
             return true;
         }
         return false;
     }
 
+    protected synchronized void endGameWithWinner(@NotNull Player winner) {
+        scheduleStopMiniGameAndSendReason("Koniec minigry! Wygrywa gracz &d" + winner, "&dKoniec minigry", "");
+        if (plugin.getIncognitoManager().isIncognito(winner.getUniqueId())) {
+            Logs.discord("Gracz **" + winner + "** wygrywa minigrę **" + getMiniGameName() + "**!");
+            return;
+        }
+        plugin.getChatMinecraft().sendMessage("Gracz **" + winner + "** wygrywa minigrę **" + getMiniGameName() + "**!", Prefix.MINI_GAMES.getDiscord());
+    }
+
     protected synchronized void scheduleStopMiniGameAndSendReason(@NotNull String message, @NotNull String title, @NotNull String subtitle) {
+        lobby = true;
+
         broadcastMessage(message);
         showTitle(title, subtitle);
 
         if (timer != null) timer.stopTimerAndHideBossBar();
-
-        lobby = true;
 
         cancelAllTasks();
         runTaskLater(this::stopMiniGame, 100);
@@ -209,7 +220,15 @@ public abstract class MiniGame implements Listener {
     }
 
     public void onPlayerDeath(@NotNull Player player) {
-        if (!isMiniGameStarted || lobby) return;
+        if (!isMiniGameStarted) return;
+
+        if (lobby) {
+            if (isInMiniGame(player)) {
+                runTaskLater(() -> player.teleportAsync(spectatorSpawn), 3);
+            }
+            return;
+        }
+
         if (getPlayerStatus(player) != PlayerStatus.IN_MINI_GAME) return;
 
         changePlayerStatus(player, PlayerStatus.SPECTATOR);

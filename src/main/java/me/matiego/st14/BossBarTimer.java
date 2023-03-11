@@ -8,12 +8,12 @@ import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
 public class BossBarTimer {
-    public BossBarTimer(@NotNull Main plugin, int timeInSeconds, @NotNull String name, @NotNull BossBar.Color color) {
+    public BossBarTimer(@NotNull Main plugin, int timeInSeconds, @NotNull String name) {
         this.plugin = plugin;
         this.name = name;
         this.timeInSeconds = timeInSeconds;
 
-        bossBar = BossBar.bossBar(Utils.getComponentByString(""), 1, color, BossBar.Overlay.PROGRESS);
+        bossBar = BossBar.bossBar(Utils.getComponentByString(""), 1, BossBar.Color.BLUE, BossBar.Overlay.PROGRESS);
     }
     private final Main plugin;
     private final String name;
@@ -58,6 +58,10 @@ public class BossBarTimer {
     public void hideBossBarFromPlayer(@NotNull Player player) {
         if (bossBar == null) return;
         player.hideBossBar(bossBar);
+    }
+
+    public void setColor(BossBar.Color color) {
+        Utils.async(() -> bossBar.color(color));
     }
 
     private @NotNull String getMessage() {

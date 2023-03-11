@@ -40,7 +40,10 @@ public class BanknoteManager {
 
     public double getAmount(@NotNull ItemStack item) {
         if (!isBanknote(item)) return 0;
-        Double amount = item.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.DOUBLE);
-        return amount == null ? 0 : amount;
+        try {
+            Double amount = item.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.DOUBLE);
+            return amount == null ? 0 : amount;
+        } catch (Exception ignored) {}
+        return 0;
     }
 }

@@ -21,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -215,9 +216,14 @@ public class Utils {
     public static boolean checkIfCanNotExecuteCommandInWorld(@NotNull Player player, @NotNull String command) {
         return checkIfCanNotExecuteCommandInWorld(player, command, '-');
     }
+
     public static boolean checkIfCanNotExecuteCommandInWorld(@NotNull Player player, @NotNull String command, char configPathSeparator) {
         if (player.isOp()) return false;
         if (player.hasPermission("st14." + command + "." + player.getWorld().getName())) return false;
         return !Main.getInstance().getConfig().getStringList(command + configPathSeparator + "worlds").contains(player.getWorld().getName());
+    }
+
+    public static int getRandomNumber(int minInclusive, int maxInclusive) {
+        return ThreadLocalRandom.current().nextInt(minInclusive, maxInclusive + 1);
     }
 }

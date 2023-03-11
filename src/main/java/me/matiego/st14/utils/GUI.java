@@ -9,6 +9,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -39,25 +40,25 @@ public class GUI implements InventoryHolder {
         for (int i = 0; i < lores.length; i++) {
             componentLores[i] = Utils.getComponentByString(lores[i]).decoration(TextDecoration.ITALIC, false);
         }
+        
         ItemStack item = new ItemStack(material);
+
         ItemMeta meta = item.getItemMeta();
         meta.displayName(Utils.getComponentByString(name).decoration(TextDecoration.ITALIC, false));
         meta.lore(Arrays.asList(componentLores));
         item.setItemMeta(meta);
+
+        item.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ITEM_SPECIFICS, ItemFlag.HIDE_DESTROYS, ItemFlag.HIDE_DYE, ItemFlag.HIDE_PLACED_ON);
         return item;
     }
 
     public static @NotNull ItemStack createPlayerSkull(@NotNull OfflinePlayer player, @NotNull String name, String @NotNull ... lores) {
-        ItemStack item = new ItemStack(Material.PLAYER_HEAD);
+        ItemStack item = createGuiItem(Material.PLAYER_HEAD, name, lores);
+
         SkullMeta meta = (SkullMeta) item.getItemMeta();
         meta.setOwningPlayer(player);
-        meta.displayName(Utils.getComponentByString(name));
-        Component[] componentLores = new Component[lores.length];
-        for (int i = 0; i < lores.length; i++) {
-            componentLores[i] = Utils.getComponentByString(lores[i]).decoration(TextDecoration.ITALIC, false);
-        }
-        meta.lore(Arrays.asList(componentLores));
         item.setItemMeta(meta);
+
         return item;
     }
 

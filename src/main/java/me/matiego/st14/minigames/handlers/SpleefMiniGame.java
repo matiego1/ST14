@@ -9,7 +9,6 @@ import me.matiego.st14.minigames.MiniGameException;
 import me.matiego.st14.minigames.MiniGamesUtils;
 import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Utils;
-import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -17,6 +16,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -122,7 +122,7 @@ public class SpleefMiniGame extends MiniGame {
                 showTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
 
                 gameTime = 0;
-                timer = new BossBarTimer(plugin, gameTimeInSeconds, "&eKoniec minigry", BossBar.Color.BLUE);
+                timer = new BossBarTimer(plugin, gameTimeInSeconds, "&eKoniec minigry");
                 timer.startTimer();
 
                 playersToStartGameWith.forEach(player -> {
@@ -160,6 +160,7 @@ public class SpleefMiniGame extends MiniGame {
         playersInMiniGame.forEach(player -> {
             player.setLevel(playersInMiniGame.size());
             player.setFireTicks(0);
+            player.setHealth(20);
         });
     }
 
@@ -202,6 +203,12 @@ public class SpleefMiniGame extends MiniGame {
         if (!(event.getEntity() instanceof Player player)) return;
         if (!isInMiniGame(player)) return;
         event.setFoodLevel(20);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerDropItem(@NotNull PlayerDropItemEvent event) {
+        if (!isInMiniGame(event.getPlayer())) return;
+        event.setCancelled(true);
     }
 
     private @Nullable File getRandomMapFile() {

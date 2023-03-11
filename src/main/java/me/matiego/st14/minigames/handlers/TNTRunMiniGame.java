@@ -9,15 +9,15 @@ import me.matiego.st14.minigames.MiniGameException;
 import me.matiego.st14.minigames.MiniGamesUtils;
 import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Utils;
-import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.util.BoundingBox;
+import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
@@ -34,7 +34,7 @@ public class TNTRunMiniGame extends MiniGame {
         if (totalGameTimeInSeconds <= PREPARE_TIME_IN_SECONDS) throw new MiniGameException("too little time");
     }
 
-    private final int PREPARE_TIME_IN_SECONDS = 5;
+    private final int PREPARE_TIME_IN_SECONDS = 3;
     private final String CONFIG_PATH = "minigames.tnt-run.";
 
     private int gameTime = 0;
@@ -121,7 +121,7 @@ public class TNTRunMiniGame extends MiniGame {
                 showTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
 
                 gameTime = 0;
-                timer = new BossBarTimer(plugin, gameTimeInSeconds, "&eKoniec minigry", BossBar.Color.BLUE);
+                timer = new BossBarTimer(plugin, gameTimeInSeconds, "&eKoniec minigry");
                 timer.startTimer();
 
                 playersToStartGameWith.forEach(player -> {
@@ -159,6 +159,7 @@ public class TNTRunMiniGame extends MiniGame {
         playersInMiniGame.forEach(player -> {
             player.setLevel(playersInMiniGame.size());
             player.setFireTicks(0);
+            player.setHealth(20);
         });
     }
 
@@ -171,13 +172,15 @@ public class TNTRunMiniGame extends MiniGame {
     private void breakBlockUnderPlayers() {
         if (gameTime < PREPARE_TIME_IN_SECONDS) return;
         getPlayersInMiniGame().forEach(player -> {
-            Block blockUnderPlayer = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
-            if (blockUnderPlayer.getType().isAir()) return;
+            BoundingBox box = player.getBoundingBox().clone();
+            World world = player.getWorld();
 
             runTaskLater(() -> {
-                blockUnderPlayer.setType(Material.AIR);
-                blockUnderPlayer.getRelative(BlockFace.DOWN).setType(Material.AIR);
-                blockUnderPlayer.getRelative(BlockFace.DOWN, 2).setType(Material.AIR);
+                for (int x = NumberConversions.floor(box.getMinX()); x <= NumberConversions.floor(box.getMaxX()); x++) {
+                    for (int z = NumberConversions.floor(box.getMinZ()); z <= NumberConversions.floor(box.getMaxZ()); z++) {
+                        breakBlocksIfNonAir(world, x, NumberConversions.floor(box.getMinY()), z);
+                    }
+                }
             }, 5);
         });
     }
@@ -229,5 +232,13 @@ public class TNTRunMiniGame extends MiniGame {
             }
         }
         return null;
+    }
+
+    private void breakBlocksIfNonAir(@NotNull World world, int x, int y, int z) {
+        Block block = world.getBlockAt(x, y, z);
+        if (block.getType() == Material.AIR) return;
+        block.setType(Material.AIR);
+        world.getBlockAt(x, y - 1, z).setType(Material.AIR);
+        world.getBlockAt(x, y - 2, z).setType(Material.AIR);
     }
 }

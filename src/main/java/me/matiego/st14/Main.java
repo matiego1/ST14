@@ -71,6 +71,7 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private PlayerQuitListener playerQuitListener;
     @Getter private PlayerMoveListener playerMoveListener;
     @Getter private GraveCreateListener graveCreateListener;
+    @Getter private EntityDamageByEntityListener entityDamageByEntityListener;
 
     private JDA jda;
     private boolean isJdaEnabled = false;
@@ -148,6 +149,7 @@ public final class Main extends JavaPlugin implements Listener {
         playerQuitListener = new PlayerQuitListener(this);
         playerMoveListener = new PlayerMoveListener(this);
         graveCreateListener = new GraveCreateListener();
+        entityDamageByEntityListener = new EntityDamageByEntityListener(this);
         listenersManager.registerListeners(
                 new AsyncChatListener(this),
                 new AsyncPlayerPreLoginListener(this),
@@ -156,7 +158,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new BlockPistonExtendListener(),
                 new BlockPlaceListener(),
                 new EntityChangeBlockListener(),
-                new EntityDamageByEntityListener(this),
+                entityDamageByEntityListener,
                 new EntityDeathListener(this),
                 new EntityExplodeListener(this),
                 new EntityPortalListener(this),

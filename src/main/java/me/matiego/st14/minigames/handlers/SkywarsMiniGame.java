@@ -10,7 +10,6 @@ import me.matiego.st14.minigames.MiniGamesUtils;
 import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Pair;
 import me.matiego.st14.utils.Utils;
-import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -144,7 +143,7 @@ public class SkywarsMiniGame extends MiniGame {
                 showTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
 
                 gameTime = 0;
-                timer = new BossBarTimer(plugin, gameTimeInSeconds, "&eKoniec minigry", BossBar.Color.BLUE);
+                timer = new BossBarTimer(plugin, gameTimeInSeconds, "&eKoniec minigry");
                 timer.startTimer();
 
                 teleportPlayersToIslands(playersToStartGameWith);
@@ -160,7 +159,7 @@ public class SkywarsMiniGame extends MiniGame {
 
         if (gameTime == PREPARE_TIME_IN_SECONDS) {
             timer.stopTimerAndHideBossBar();
-            timer = new BossBarTimer(plugin, gameTimeInSeconds - PREPARE_TIME_IN_SECONDS, "&eKoniec minigry", BossBar.Color.BLUE);
+            timer = new BossBarTimer(plugin, gameTimeInSeconds - PREPARE_TIME_IN_SECONDS, "&eKoniec minigry");
             timer.startTimer();
             getPlayers().forEach(player -> {
                 timer.showBossBarToPlayer(player);

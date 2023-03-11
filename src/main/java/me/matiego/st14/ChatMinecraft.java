@@ -171,12 +171,18 @@ public class ChatMinecraft extends ListenerAdapter {
         Logs.discord("Gracz **" + player.getName() + "** opuścił grę. " + time);
     }
 
-    public void sendDeathMessage(@NotNull String message, @NotNull Player... players) {
+    public void sendDeathMessage(@NotNull String message, @NotNull Player player) {
+        if (Bukkit.getOnlinePlayers().stream()
+                .filter(p -> plugin.getIncognitoManager().isIncognito(p.getUniqueId()))
+                .anyMatch(p -> message.contains(" " + p.getName()))) {
+            Logs.discord(message + " `[Wykryto nick gracza incognito]`");
+            return;
+        }
+
         Logs.discord(message);
 
-        for (Player player : players) {
-            if (plugin.getIncognitoManager().isIncognito(player.getUniqueId())) return;
-        }
+        if (plugin.getIncognitoManager().isIncognito(player.getUniqueId())) return;
+
         EmbedBuilder eb = new EmbedBuilder();
         eb.setDescription(message);
         eb.setColor(Color.RED);

@@ -2,10 +2,7 @@ package me.matiego.st14.minigames;
 
 import lombok.Getter;
 import me.matiego.st14.Main;
-import me.matiego.st14.minigames.handlers.SkywarsMiniGame;
-import me.matiego.st14.minigames.handlers.SnowballsBattleMiniGame;
-import me.matiego.st14.minigames.handlers.SpleefMiniGame;
-import me.matiego.st14.minigames.handlers.TNTRunMiniGame;
+import me.matiego.st14.minigames.handlers.*;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,7 +12,7 @@ public enum MiniGameType {
     SNOWBALLS_BATTLE(SnowballsBattleMiniGame.class, "Bitwa na śnieżki", Material.SNOWBALL, 15 * 60),
     TNT_RUN(TNTRunMiniGame.class, "TNT Run", Material.TNT, 15 * 60),
     SPLEEF(SpleefMiniGame.class, "Spleef", Material.STONE_SHOVEL, 15 * 60),
-    RED_GREEN(null, "Czerwone-Zielone", Material.BOW, 15 * 60),
+    RED_GREEN(RedGreenMiniGame.class, "Czerwone-Zielone", Material.BOW, 15 * 60),
     SKYWARS(SkywarsMiniGame.class, "Skywars", Material.ENDER_EYE, 20 * 60),
     DEATH_MAZE(null, "Labirynt-śmierci", Material.SKELETON_SKULL, 30 * 60),
     UHC(null, "UHC", Material.GOLDEN_APPLE, 30 * 60),
