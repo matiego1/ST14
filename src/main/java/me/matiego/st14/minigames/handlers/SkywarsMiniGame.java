@@ -33,11 +33,11 @@ public class SkywarsMiniGame extends MiniGame {
 
     private final int PREPARE_TIME_IN_SECONDS = 60;
     private final int SHRINK_BORDER_BEFORE_END_IN_SECONDS = 180;
-    private final String CONFIG_PATH = "minigames.snowballs-battle.";
+    private final String CONFIG_PATH = "minigames.skywars.";
 
     private int gameTime = 0;
     private int mapRadius = 100;
-    private String mapConfigPath = "minigames.snowballs-battle.maps";
+    private String mapConfigPath = "minigames.skywars.maps";
     private Location baseLocation = null;
     private List<Location> spawns = null;
     private List<Pair<Location, ChestType>> chests = null;
@@ -59,7 +59,7 @@ public class SkywarsMiniGame extends MiniGame {
         baseLocation = MiniGamesUtils.getLocationFromConfig(world, CONFIG_PATH + "base-location");
         if (baseLocation == null) throw new MiniGameException("cannot load base location");
 
-        spectatorSpawn = MiniGamesUtils.getRelativeLocationFromConfig(baseLocation, CONFIG_PATH + "spectator-spawn");
+        spectatorSpawn = MiniGamesUtils.getRelativeLocationFromConfig(baseLocation, mapConfigPath + "spectator-spawn");
         if (spectatorSpawn == null) throw new MiniGameException("cannot load spectator spawn location");
 
         mapRadius = Math.max(5, plugin.getConfig().getInt(mapConfigPath + "radius", 100));

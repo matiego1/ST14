@@ -23,6 +23,8 @@ public class PlayerJoinListener implements Listener {
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
 
+        //claims
+        plugin.getClaimsDynmap().refreshClaims(player);
         //load player times
         if (!plugin.getTimeManager().join(player)) {
             player.kick(Utils.getComponentByString("&cNapotkano niespodziewany błąd przy ładowaniu twoich czasów. Spróbuj ponownie."));

@@ -36,7 +36,7 @@ public class TabListManager {
 
     private synchronized @NotNull String formatTps(double tps) {
         tps = Utils.round(tps, 2);
-        if (tps >= 19d) {
+        if (tps >= 18d) {
             if (log15 || log10) {
                 Logs.info("TPS są powyżej 19.");
             }

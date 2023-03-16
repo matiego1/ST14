@@ -35,8 +35,7 @@ public class Logs {
      * @param message the message to send
      */
     public static void warning(@NotNull String message) {
-        plugin.getLogger().warning(message);
-        discord("__WARNING__", message, null);
+        warning(message, null);
     }
 
     /**
@@ -45,17 +44,22 @@ public class Logs {
      * @param message the message to send
      * @param throwable the throwable whose stack trace is to be sent to the console
      */
-    public static void warning(@NotNull String message, @NotNull Throwable throwable) {
-        plugin.getLogger().severe(message);
+    public static void warning(@NotNull String message, @Nullable Throwable throwable) {
+        plugin.getLogger().warning(message);
 
-        StringWriter stringWriter = new StringWriter();
-        throwable.printStackTrace(new PrintWriter(stringWriter));
-        for (String line : stringWriter.toString().split("\n")) plugin.getLogger().warning(line);
+        MessageEmbed embed = null;
+        if (throwable != null) {
+            StringWriter stringWriter = new StringWriter();
+            throwable.printStackTrace(new PrintWriter(stringWriter));
+            for (String line : stringWriter.toString().split("\n")) plugin.getLogger().warning(line);
 
-        EmbedBuilder eb = new EmbedBuilder();
-        eb.setColor(Color.YELLOW);
-        eb.setDescription(DiscordUtils.checkLength(stringWriter.toString(), MessageEmbed.DESCRIPTION_MAX_LENGTH));
-        discord("__WARNING__", message, eb.build());
+            EmbedBuilder eb = new EmbedBuilder();
+            eb.setColor(Color.YELLOW);
+            eb.setDescription(DiscordUtils.checkLength(stringWriter.toString(), MessageEmbed.DESCRIPTION_MAX_LENGTH));
+            embed = eb.build();
+        }
+
+        discord("__WARNING__", message, embed);
     }
 
     /**
@@ -63,8 +67,7 @@ public class Logs {
      * @param message the message to send
      */
     public static void error(@NotNull String message) {
-        plugin.getLogger().severe(message);
-        discord("__ERROR__", message, null);
+        error(message, null);
     }
 
     /**
@@ -73,17 +76,22 @@ public class Logs {
      * @param message the message to send
      * @param throwable the throwable whose stack trace is to be sent to the console
      */
-    public static void error(@NotNull String message, @NotNull Throwable throwable) {
+    public static void error(@NotNull String message, @Nullable Throwable throwable) {
         plugin.getLogger().severe(message);
 
-        StringWriter stringWriter = new StringWriter();
-        throwable.printStackTrace(new PrintWriter(stringWriter));
-        for (String line : stringWriter.toString().split("\n")) plugin.getLogger().severe(line);
+        MessageEmbed embed = null;
+        if (throwable != null) {
+            StringWriter stringWriter = new StringWriter();
+            throwable.printStackTrace(new PrintWriter(stringWriter));
+            for (String line : stringWriter.toString().split("\n")) plugin.getLogger().severe(line);
 
-        EmbedBuilder eb = new EmbedBuilder();
-        eb.setColor(Color.RED);
-        eb.setDescription(DiscordUtils.checkLength(stringWriter.toString(), MessageEmbed.DESCRIPTION_MAX_LENGTH));
-        discord("__ERROR__", message, eb.build());
+            EmbedBuilder eb = new EmbedBuilder();
+            eb.setColor(Color.RED);
+            eb.setDescription(DiscordUtils.checkLength(stringWriter.toString(), MessageEmbed.DESCRIPTION_MAX_LENGTH));
+            embed = eb.build();
+        }
+
+        discord("__ERROR__", message, embed);
     }
 
     public static void discord(@NotNull String message) {

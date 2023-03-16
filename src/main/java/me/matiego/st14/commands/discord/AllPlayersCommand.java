@@ -33,19 +33,24 @@ public class AllPlayersCommand implements CommandHandler.Discord {
     @Override
     public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
         boolean ephemeral = event.getOption("incognito", "False", OptionMapping::getAsString).equals("True");
+
         List<String> players = new ArrayList<>();
+        int index = 1;
         for (String name : plugin.getOfflinePlayers().getNames()) {
-            players.add("- " + name);
+            players.add((index++) + ". " + name);
         }
+
         if (players.isEmpty()) {
             event.reply("Nikt nie grał na tym serwerze albo napotkano błąd.").setEphemeral(ephemeral).queue();
             return 5;
         }
+
         if (players.size() > 50) {
             int more = players.size() - 50;
             players = players.subList(0, 50);
             players.add("... i " + more + " innych graczy");
         }
+
         event.reply("**__Wszyscy gracze:__**\n```\n" + String.join("\n", players) + "\n```").setEphemeral(ephemeral).queue();
         return 5;
     }

@@ -147,7 +147,7 @@
             <name>m2-dv8tion</name>
             <url>https://m2.dv8tion.net/releases</url>
         </repository>
-        <!--Vault API-->
+        <!--APIs from GitHub-->
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
@@ -161,6 +161,11 @@
         <repository>
             <id>enginehub-maven</id>
             <url>https://maven.enginehub.org/repo/</url>
+        </repository>
+        <!--Dynmap-->
+        <repository>
+            <id>dynmap-repo</id>
+            <url>https://repo.mikeprimm.com/</url>
         </repository>
     </repositories>
 
@@ -183,7 +188,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.0.0-beta.4</version>
+            <version>5.0.0-beta.5</version>
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
@@ -210,7 +215,7 @@
             <artifactId>HikariCP</artifactId>
             <version>5.0.1</version>
         </dependency>
-        <!--Vault API-->
+        <!--Vault-->
         <dependency>
             <groupId>com.github.MilkBowl</groupId>
             <artifactId>VaultAPI</artifactId>
@@ -240,7 +245,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.24</version>
+            <version>1.18.26</version>
             <scope>compile</scope>
         </dependency>
         <!--Commons lang-->
@@ -261,7 +266,7 @@
         <dependency>
             <groupId>com.github.matiego1</groupId>
             <artifactId>CountingBot</artifactId>
-            <version>4cb3b75</version>
+            <version>7c801dc</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.bukkit</groupId>
@@ -283,6 +288,20 @@
             <artifactId>worldedit-bukkit</artifactId>
             <version>7.2.13</version>
             <scope>provided</scope>
+        </dependency>
+        <!--CrashClaim-->
+        <dependency>
+            <groupId>net.crashcraft</groupId>
+            <artifactId>crashclaim</artifactId>
+            <version>1.0.38</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}\CrashClaim-1.0.38.jar</systemPath>
+        </dependency>
+        <!--Dynmap-->
+        <dependency>
+            <groupId>us.dynmap</groupId>
+            <artifactId>dynmap-api</artifactId>
+            <version>3.3</version>
         </dependency>
     </dependencies>
 </project>

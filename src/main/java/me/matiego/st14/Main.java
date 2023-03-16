@@ -57,6 +57,7 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private MiniGamesManager miniGamesManager;
     @Getter private BanknoteManager banknoteManager;
     @Getter private WorldsLastLocation worldsLastLocation;
+    @Getter private ClaimsDynmap claimsDynmap;
     private ListenersManager listenersManager;
     private TabListManager tabListManager;
     private ChatReportsManager chatReportsManager;
@@ -141,6 +142,7 @@ public final class Main extends JavaPlugin implements Listener {
         didYouKnowManager = new DidYouKnowManager(this);
         banknoteManager = new BanknoteManager(this);
         worldsLastLocation = new WorldsLastLocation(this);
+        claimsDynmap = new ClaimsDynmap(this);
 
         Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomy(), vault, ServicePriority.High);
 
