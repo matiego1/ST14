@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 
 public abstract class MiniGame implements Listener {
-    @SneakyThrows(MiniGameException.class)
     public MiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime) {
         this.plugin = plugin;
         this.totalMiniGameTime = totalMiniGameTime;
