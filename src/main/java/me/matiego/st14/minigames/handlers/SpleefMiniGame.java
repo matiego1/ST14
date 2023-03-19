@@ -1,7 +1,6 @@
 package me.matiego.st14.minigames.handlers;
 
 import com.sk89q.worldedit.math.BlockVector3;
-import lombok.SneakyThrows;
 import me.matiego.st14.BossBarTimer;
 import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGame;
@@ -10,6 +9,7 @@ import me.matiego.st14.minigames.MiniGamesUtils;
 import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.*;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -25,21 +25,19 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 public class SpleefMiniGame extends MiniGame {
-    @SneakyThrows(MiniGameException.class)
     public SpleefMiniGame(@NotNull Main plugin, int totalGameTimeInSeconds) {
         super(plugin, totalGameTimeInSeconds);
-        if (totalGameTimeInSeconds <= 0) throw new MiniGameException("too little time");
     }
 
     private final String CONFIG_PATH = "minigames.spleef.";
 
-    private int gameTime = 0;
-
+    private String mapConfigPath = "minigames.skywars.maps";
     private Location spawn = null;
 
     @Override
@@ -51,29 +49,17 @@ public class SpleefMiniGame extends MiniGame {
     public void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException {
         if (isStarted()) throw new MiniGameException("minigame is already started");
 
-        World world = MiniGamesUtils.getMiniGamesWorld();
-        if (world == null) throw new MiniGameException("cannot load world");
-
-        spawn = MiniGamesUtils.getLocationFromConfig(world, CONFIG_PATH + "spawn");
-        if (spawn == null) throw new MiniGameException("cannot load spawn location");
-        spectatorSpawn = MiniGamesUtils.getLocationFromConfig(world, CONFIG_PATH + "spectator-spawn");
-        if (spectatorSpawn == null) throw new MiniGameException("cannot load spectator spawn location");
-
-        cancelAllTasks();
-        getPlayers().forEach(player -> changePlayerStatus(player, PlayerStatus.NOT_IN_MINI_GAME));
-        if (timer != null) timer.stopTimerAndHideBossBar();
-
+        clearExistingData();
         isMiniGameStarted = true;
         lobby = true;
 
+        World world = MiniGamesUtils.getMiniGamesWorld();
+        if (world == null) throw new MiniGameException("cannot load world");
+
+        setRandomMapConfigPath();
+        loadDataFromConfig(world);
         registerEvents();
-
-        world.setPVP(false);
-        world.setGameRule(GameRule.KEEP_INVENTORY, true);
-        world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
-        world.setGameRule(GameRule.DO_ENTITY_DROPS, false);
-        world.setGameRule(GameRule.FALL_DAMAGE, false);
-
+        setUpGameRules(world);
         broadcastMiniGameStartMessage(sender);
 
         for (Player player : players) {
@@ -84,13 +70,7 @@ public class SpleefMiniGame extends MiniGame {
         sendActionBar("&eGenerowanie areny...");
         Utils.async(() -> {
             try {
-                File file = getRandomMapFile();
-                if (file == null) throw new NullPointerException("map file is null");
-                MiniGamesUtils.pasteSchematic(
-                        MiniGamesUtils.getMiniGamesWorld(),
-                        BlockVector3.at(plugin.getConfig().getInt(CONFIG_PATH + "x"), plugin.getConfig().getInt(CONFIG_PATH + "y"), plugin.getConfig().getInt(CONFIG_PATH + "z")),
-                        file
-                );
+                pasteMap(world);
             } catch (Exception e) {
                 Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy generowaniu areny. Minigra anulowana.", "&dStart anulowany", ""));
                 Logs.error("An error occurred while pasting a map for the minigame", e);
@@ -108,45 +88,117 @@ public class SpleefMiniGame extends MiniGame {
                 return;
             }
 
-            Utils.sync(() -> countdownToStart(() -> {
-                List<Player> playersToStartGameWith = getPlayers();
-
-                if (playersToStartGameWith.size() < getMinimumPlayersAmount()) {
-                    scheduleStopMiniGameAndSendReason("Za mało graczy! Anulowanie startu minigry...", "&dStart anulowany", "&eZa mało graczy");
-                    return;
-                }
-
-                lobby = false;
-
-                broadcastMessage("&dMinigra rozpoczęta. &ePowodzenia!");
-                showTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
-
-                gameTime = 0;
-                timer = new BossBarTimer(plugin, gameTimeInSeconds, "&eKoniec minigry");
-                timer.startTimer();
-
-                playersToStartGameWith.forEach(player -> {
-                    changePlayerStatus(player, PlayerStatus.IN_MINI_GAME);
-                    player.teleportAsync(spawn);
-                    MiniGamesUtils.healPlayer(player, GameMode.SURVIVAL);
-                    player.setBedSpawnLocation(spectatorSpawn, true);
-                    timer.showBossBarToPlayer(player);
-                    giveToolsToPlayer(player);
-                });
-
-                runTaskTimer(this::miniGameTick, 20, 20);
-            }, 15));
+            Utils.sync(() -> startCountdown(10));
         });
+    }
+
+    private void setRandomMapConfigPath() throws MiniGameException {
+        ConfigurationSection section = plugin.getConfig().getConfigurationSection(mapConfigPath);
+        if (section == null) throw new MiniGameException("cannot find any map");
+
+        List<String> maps = new ArrayList<>(section.getKeys(false));
+        if (maps.isEmpty()) throw new MiniGameException("cannot find any map");
+
+        Collections.shuffle(maps);
+
+        mapConfigPath += "." + maps.get(0);
+    }
+
+    private void loadDataFromConfig(@NotNull World world) throws MiniGameException {
+        baseLocation = MiniGamesUtils.getLocationFromConfig(world, CONFIG_PATH + "base-location");
+        if (baseLocation == null) throw new MiniGameException("cannot load base location");
+
+        spawn = MiniGamesUtils.getRelativeLocationFromConfig(baseLocation, mapConfigPath + "spawn");
+        if (spawn == null) throw new MiniGameException("cannot load spawn location");
+        spectatorSpawn = MiniGamesUtils.getRelativeLocationFromConfig(baseLocation, mapConfigPath + "spectator-spawn");
+        if (spectatorSpawn == null) throw new MiniGameException("cannot load spectator spawn location");
+    }
+
+    private void setUpGameRules(@NotNull World world) {
+        world.setPVP(false);
+        world.setGameRule(GameRule.KEEP_INVENTORY, true);
+        world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
+        world.setGameRule(GameRule.DO_ENTITY_DROPS, false);
+        world.setGameRule(GameRule.FALL_DAMAGE, false);
+    }
+
+    private void pasteMap(@NotNull World world) throws Exception {
+        File file = getMapFile();
+        if (file == null) throw new NullPointerException("map file is null");
+
+        MiniGamesUtils.pasteSchematic(
+                world,
+                BlockVector3.at(baseLocation.getBlockX(), baseLocation.getBlockY(), baseLocation.getBlockZ()),
+                file
+        );
+    }
+
+    private @Nullable File getMapFile() {
+        File dir = new File(plugin.getDataFolder(), "mini-games");
+        if (!dir.exists()) {
+            //noinspection ResultOfMethodCallIgnored
+            dir.mkdirs();
+        }
+
+        File file = new File(dir, plugin.getConfig().getString(mapConfigPath + "map-file", ""));
+        return file.exists() ? file : null;
+    }
+
+    @Override
+    protected void onCountdownEnd() {
+        List<Player> playersToStartGameWith = getPlayers();
+
+        if (playersToStartGameWith.size() < getMinimumPlayersAmount()) {
+            scheduleStopMiniGameAndSendReason("Za mało graczy! Anulowanie startu minigry...", "&dStart anulowany", "&eZa mało graczy");
+            return;
+        }
+
+        lobby = false;
+
+        broadcastMessage("&dMinigra rozpoczęta. &ePowodzenia!");
+        showTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
+
+        timer = new BossBarTimer(plugin, totalMiniGameTime, "&eKoniec minigry");
+        timer.startTimer();
+
+        playersToStartGameWith.forEach(player -> {
+            changePlayerStatus(player, PlayerStatus.IN_MINI_GAME);
+            player.teleportAsync(spawn);
+            MiniGamesUtils.healPlayer(player, GameMode.SURVIVAL);
+            player.setBedSpawnLocation(spectatorSpawn, true);
+            timer.showBossBarToPlayer(player);
+            giveToolsToPlayer(player);
+        });
+    }
+
+    private void giveToolsToPlayer(@NotNull Player player) {
+        player.getInventory().addItem(
+                createTool(Material.NETHERITE_SHOVEL),
+                createTool(Material.NETHERITE_PICKAXE),
+                createTool(Material.NETHERITE_HOE)
+        );
+    }
+
+    private @NotNull ItemStack createTool(Material toolMaterial) {
+        ItemStack tool = new ItemStack(toolMaterial);
+
+        ItemMeta meta = tool.getItemMeta();
+        meta.setUnbreakable(true);
+        meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ENCHANTS);
+        tool.setItemMeta(meta);
+
+        tool.addUnsafeEnchantment(Enchantment.DIG_SPEED, 50);
+
+        return tool;
     }
 
     @Override
     protected void miniGameTick() {
-        gameTime++;
+        teleportSpectatorsBackIfTooFarAway();
+        tickPlayers();
+    }
 
-        if (gameTime == gameTimeInSeconds) {
-            scheduleStopMiniGameAndSendReason("&dKoniec minigry! &eRozgrywka zakończyła się remisem.", "&dKoniec minigry", "&eRemis");
-        }
-
+    private void teleportSpectatorsBackIfTooFarAway() {
         int maxDistance = Math.max(0, plugin.getConfig().getInt(CONFIG_PATH + "map-radius", 100));
         getPlayers().stream()
                 .filter(player -> distanceSquared(player.getLocation(), spectatorSpawn) > maxDistance * maxDistance)
@@ -155,19 +207,20 @@ public class SpleefMiniGame extends MiniGame {
                     player.teleportAsync(spectatorSpawn);
                     player.sendActionBar(Utils.getComponentByString("&cOdleciałeś za daleko"));
                 });
-
-        List<Player> playersInMiniGame = getPlayersInMiniGame();
-        playersInMiniGame.forEach(player -> {
-            player.setLevel(playersInMiniGame.size());
-            player.setFireTicks(0);
-            player.setHealth(20);
-        });
     }
 
     private double distanceSquared(@NotNull Location l1, @NotNull Location l2) {
         double a = l1.getX() - l2.getX();
         double b = l1.getZ() - l2.getZ();
         return a * a + b * b;
+    }
+
+    private void tickPlayers() {
+        List<Player> playersInMiniGame = getPlayersInMiniGame();
+        playersInMiniGame.forEach(player -> {
+            player.setLevel(playersInMiniGame.size());
+            player.setFireTicks(0);
+        });
     }
 
     @Override
@@ -209,45 +262,5 @@ public class SpleefMiniGame extends MiniGame {
     public void onPlayerDropItem(@NotNull PlayerDropItemEvent event) {
         if (!isInMiniGame(event.getPlayer())) return;
         event.setCancelled(true);
-    }
-
-    private @Nullable File getRandomMapFile() {
-        File dir = new File(plugin.getDataFolder(), "mini-games");
-        if (!dir.exists()) {
-            //noinspection ResultOfMethodCallIgnored
-            dir.mkdirs();
-        }
-
-        List<String> mapFiles = plugin.getConfig().getStringList(CONFIG_PATH + "map-files");
-        Collections.shuffle(mapFiles);
-
-        for (String mapFile : mapFiles) {
-            File file = new File(dir, mapFile);
-            if (file.exists()) {
-                return file;
-            }
-        }
-        return null;
-    }
-
-    private void giveToolsToPlayer(@NotNull Player player) {
-        player.getInventory().addItem(
-                createTool(Material.NETHERITE_SHOVEL),
-                createTool(Material.NETHERITE_PICKAXE),
-                createTool(Material.NETHERITE_HOE)
-        );
-    }
-
-    private @NotNull ItemStack createTool(Material toolMaterial) {
-        ItemStack tool = new ItemStack(toolMaterial);
-
-        ItemMeta meta = tool.getItemMeta();
-        meta.setUnbreakable(true);
-        meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ENCHANTS);
-        tool.setItemMeta(meta);
-
-        tool.addUnsafeEnchantment(Enchantment.DIG_SPEED, 50);
-
-        return tool;
     }
 }

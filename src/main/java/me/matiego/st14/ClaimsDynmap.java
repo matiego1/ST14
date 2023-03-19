@@ -2,6 +2,7 @@ package me.matiego.st14;
 
 import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Utils;
+import net.crashcraft.crashclaim.CrashClaim;
 import net.crashcraft.crashclaim.api.CrashClaimAPI;
 import net.crashcraft.crashclaim.claimobjects.Claim;
 import org.bukkit.Bukkit;
@@ -9,7 +10,7 @@ import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.dynmap.DynmapCommonAPI;
+import org.dynmap.DynmapAPI;
 import org.dynmap.markers.AreaMarker;
 import org.dynmap.markers.MarkerAPI;
 import org.dynmap.markers.MarkerSet;
@@ -135,8 +136,8 @@ public class ClaimsDynmap {
     private @Nullable CrashClaimAPI getCrashClaimAPI() {
         Plugin plugin = Bukkit.getPluginManager().getPlugin("CrashClaim");
         if (plugin == null) return null;
-        if (plugin instanceof CrashClaimAPI crashClaimAPI) {
-            return crashClaimAPI;
+        if (plugin instanceof CrashClaim crashClaim) {
+            return crashClaim.getApi();
         }
         return null;
     }
@@ -144,9 +145,10 @@ public class ClaimsDynmap {
     private @Nullable MarkerAPI getDynmapMarkerAPI() {
         Plugin plugin = Bukkit.getPluginManager().getPlugin("dynmap");
         if (plugin == null) return null;
-        if (plugin instanceof DynmapCommonAPI dynmapCommonAPI) {
-            return dynmapCommonAPI.getMarkerAPI();
+        if (plugin instanceof DynmapAPI dynmapAPI) {
+            return dynmapAPI.getMarkerAPI();
         }
+//        System.out.println("BBBBB" + plugin.getClass() + " " + Arrays.toString(plugin.getClass().getInterfaces()));
         return null;
     }
 }

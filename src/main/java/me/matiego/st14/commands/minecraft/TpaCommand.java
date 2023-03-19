@@ -128,6 +128,11 @@ public class TpaCommand implements CommandHandler.Minecraft {
         player.closeInventory();
         Location destination = player.getLocation();
 
+        if (Utils.checkIfCanNotExecuteCommandInWorld(player, "tpa", '.')) {
+            player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cNie możesz użyć tej komendy w tym świecie."));
+            return;
+        }
+
         Player target = Bukkit.getPlayer(getItemName(event.getCurrentItem()));
         if (target == null) {
             player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cTen gracz anulował prośbę o teleportację."));

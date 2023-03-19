@@ -53,6 +53,12 @@ public class DifficultyCommand implements CommandHandler.Minecraft {
         Player player = (Player) event.getWhoClicked();
         int slot = event.getSlot();
         event.getInventory().close();
+
+        if (Utils.checkIfCanNotExecuteCommandInWorld(player, "difficulty")) {
+            player.sendMessage(Utils.getComponentByString("&cNie możesz zmienić poziomu trudności w tym świecie."));
+            return;
+        }
+
         switch (slot) {
             case 2 -> change(player, Difficulty.EASY, "łatwy");
             case 4 -> change(player, Difficulty.NORMAL, "normalny");

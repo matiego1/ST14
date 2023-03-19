@@ -2,6 +2,8 @@ package me.matiego.st14.listeners;
 
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.Logs;
+import me.matiego.st14.utils.Utils;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -19,9 +21,10 @@ public class BlockBreakListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreak(@NotNull BlockBreakEvent event) {
         String material = event.getBlock().getBlockData().getMaterial().name();
+        Player player = event.getPlayer();
         try {
             if (material.matches(plugin.getConfig().getString("block-break-warn-regex", "[^\\s\\S]*"))) {
-                Logs.info("Gracz " + event.getPlayer().getName() + " wykopał " + material + ".");
+                Logs.info("Gracz " + player.getName() + " wykopał " + material + " w " + Utils.getWorldName(player.getWorld()));
             }
         } catch (PatternSyntaxException e) {
             Logs.warning("block-break-warn regex's syntax is invalid", e);

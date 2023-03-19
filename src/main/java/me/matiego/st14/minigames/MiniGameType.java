@@ -13,8 +13,9 @@ public enum MiniGameType {
     TNT_RUN(TNTRunMiniGame.class, "TNT Run", Material.TNT, 15 * 60),
     SPLEEF(SpleefMiniGame.class, "Spleef", Material.STONE_SHOVEL, 15 * 60),
     RED_GREEN(RedGreenMiniGame.class, "Czerwone-Zielone", Material.BOW, 15 * 60),
+    MAZE(MazeMiniGame.class, "Labirynt", Material.BRICKS, 15 * 60),
+    PARKOUR(null, "Parkour", Material.POTION, 20 * 60),
     SKYWARS(SkywarsMiniGame.class, "Skywars", Material.ENDER_EYE, 20 * 60),
-    DEATH_MAZE(null, "Labirynt-śmierci", Material.SKELETON_SKULL, 30 * 60),
     UHC(null, "UHC", Material.GOLDEN_APPLE, 30 * 60),
     DEATH_SWAP(null, "Death Swap", Material.ENDER_PEARL, 30 * 60);
 

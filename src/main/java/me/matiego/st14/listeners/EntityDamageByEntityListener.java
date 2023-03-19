@@ -7,6 +7,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -65,5 +66,13 @@ public class EntityDamageByEntityListener implements Listener {
         item.setItemMeta(meta);
 
         return item;
+    }
+
+    public void copyItemStackDamageToProjectile(@NotNull Projectile projectile, @NotNull ItemStack item) {
+        try {
+            Double damage = item.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.DOUBLE);
+            if (damage == null) return;
+            projectile.getPersistentDataContainer().set(key, PersistentDataType.DOUBLE, damage);
+        } catch (Exception ignored) {}
     }
 }

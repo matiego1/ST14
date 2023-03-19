@@ -56,6 +56,12 @@ public class GameModeCommand implements CommandHandler.Minecraft {
         Player player = (Player) event.getWhoClicked();
         int slot = event.getSlot();
         event.getInventory().close();
+
+        if (Utils.checkIfCanNotExecuteCommandInWorld(player, "gamemode")) {
+            player.sendMessage(Utils.getComponentByString("&cNie możesz zmienić trybu gry w tym świecie."));
+            return;
+        }
+
         switch (slot) {
             case 1 -> change(player, GameMode.SURVIVAL, "przetrwania");
             case 3 -> change(player, GameMode.CREATIVE, "kreatywny");

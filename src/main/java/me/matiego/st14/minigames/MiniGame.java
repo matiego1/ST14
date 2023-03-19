@@ -25,17 +25,21 @@ import java.util.List;
 import java.util.Set;
 
 public abstract class MiniGame implements Listener {
-    public MiniGame(@NotNull Main plugin, int totalGameTimeInSeconds) {
+    @SneakyThrows(MiniGameException.class)
+    public MiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime) {
         this.plugin = plugin;
-        this.gameTimeInSeconds = totalGameTimeInSeconds;
+        this.totalMiniGameTime = totalMiniGameTime;
     }
+
     protected final Main plugin;
-    protected final int gameTimeInSeconds;
-    protected boolean isMiniGameStarted = false;
-    protected boolean lobby = true;
+    protected final int totalMiniGameTime;
     protected BossBarTimer timer;
     protected Location spectatorSpawn;
+    protected Location baseLocation;
     protected WorldBorder worldBorder;
+    protected boolean isMiniGameStarted = false;
+    protected boolean lobby = true;
+    protected int miniGameTime = 0;
     private final Set<BukkitTask> tasks = new HashSet<>();
     private final HashMap<Player, PlayerStatus> players = new HashMap<>();
 
@@ -55,7 +59,6 @@ public abstract class MiniGame implements Listener {
         tasks.add(Bukkit.getScheduler().runTaskLater(plugin, task, delay));
     }
 
-    @SuppressWarnings("SameParameterValue")
     protected synchronized void runTaskTimer(@NotNull Runnable task, long delay, long period) {
         tasks.add(Bukkit.getScheduler().runTaskTimer(plugin, task, delay, period));
     }
@@ -67,9 +70,24 @@ public abstract class MiniGame implements Listener {
         tasks.clear();
     }
 
-    @SuppressWarnings("SameParameterValue")
+    protected void clearExistingData() {
+        cancelAllTasks();
+        getPlayers().forEach(player -> changePlayerStatus(player, PlayerStatus.NOT_IN_MINI_GAME));
+        if (timer != null) {
+            timer.stopTimerAndHideBossBar();
+            timer = null;
+        }
+
+        spectatorSpawn = null;
+        baseLocation = null;
+        worldBorder = null;
+        isMiniGameStarted = false;
+        lobby = true;
+        miniGameTime = 0;
+    }
+
     @SneakyThrows(MiniGameException.class)
-    protected synchronized void countdownToStart(@NotNull Runnable startMiniGame, int countdownTimeInSeconds) {
+    protected synchronized void startCountdown(int countdownTimeInSeconds) {
         broadcastMessage("&dRozpoczynanie minigry za...");
 
         if (countdownTimeInSeconds % 5 != 0) throw new MiniGameException("time must be multiple of 5");
@@ -81,10 +99,23 @@ public abstract class MiniGame implements Listener {
             runTaskLater(() -> broadcastMessage(message), delay);
             delay += 100;
         }
+
         runTaskLater(() -> broadcastMessage("&d3"), delay - 60);
         runTaskLater(() -> broadcastMessage("&d2"), delay - 40);
         runTaskLater(() -> broadcastMessage("&d1"), delay - 20);
-        runTaskLater(startMiniGame, delay);
+
+        runTaskLater(() -> {
+            miniGameTime = 0;
+            onCountdownEnd();
+            runTaskTimer(() -> {
+                miniGameTime++;
+                miniGameTick();
+
+                if (miniGameTime == totalMiniGameTime) {
+                    scheduleStopMiniGameAndSendReason("&dKoniec minigry! &eRozgrywka zakończyła się remisem.", "&dKoniec minigry", "&eRemis");
+                }
+            }, 20, 20);
+        }, delay);
     }
 
     protected synchronized void broadcastMiniGameStartMessage(@NotNull Player sender) {
@@ -134,7 +165,7 @@ public abstract class MiniGame implements Listener {
     }
 
     protected synchronized void endGameWithWinner(@NotNull Player winner) {
-        scheduleStopMiniGameAndSendReason("Koniec minigry! Wygrywa gracz &d" + winner, "&dKoniec minigry", "");
+        scheduleStopMiniGameAndSendReason("Koniec minigry! Wygrywa gracz &d" + winner.getName(), "&dKoniec minigry", "");
         if (plugin.getIncognitoManager().isIncognito(winner.getUniqueId())) {
             Logs.discord("Gracz **" + winner + "** wygrywa minigrę **" + getMiniGameName() + "**!");
             return;
@@ -263,6 +294,7 @@ public abstract class MiniGame implements Listener {
 
     public abstract @NotNull String getMiniGameName();
     public abstract void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException;
+    protected abstract void onCountdownEnd();
     protected abstract void miniGameTick();
     public abstract @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount();
     public abstract @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount();
