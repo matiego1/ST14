@@ -253,9 +253,10 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                             "Pomyślnie rozłączono twoje konto z kontem Discord" :
                             "Napotkano niespodziewany błąd. Spróbuj później"
                     )));
+
                     JDA jda = plugin.getJda();
-                    if (jda == null || id == null) return;
-                    if (!success) return;
+                    if (jda == null || id == null || !success) return;
+
                     User user = jda.retrieveUserById(id.getId()).complete();
                     if (user == null) return;
                     DiscordUtils.sendPrivateMessage(user, "Twoje konto zostało rozłączone z kontem minecraft!");

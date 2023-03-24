@@ -17,7 +17,7 @@ public class FoodLevelChangeListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onFoodLevelChange(@NotNull FoodLevelChangeEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
-        if (MiniGamesUtils.isInAnyMiniGameWorld(player)) return;
+        if (!MiniGamesUtils.isInAnyMiniGameWorld(player)) return;
         if (plugin.getMiniGamesManager().getActiveMiniGame() != null) return;
         event.setFoodLevel(20);
     }

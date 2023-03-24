@@ -32,10 +32,10 @@ public class TNTRunMiniGame extends MiniGame {
         super(plugin, totalGameTimeInSeconds);
     }
 
-    private final String CONFIG_PATH = "minigames.tnt-run.";
+//    private final String CONFIG_PATH = "minigames.tnt-run.";
     private final int PREPARE_TIME_IN_SECONDS = 3;
 
-    private String mapConfigPath = "minigames.skywars.maps";
+//    private String mapConfigPath = "minigames.skywars.maps";
     private Location spawn = null;
 
     @Override
@@ -50,6 +50,7 @@ public class TNTRunMiniGame extends MiniGame {
         clearExistingData();
         isMiniGameStarted = true;
         lobby = true;
+        configPath = "mini";
 
         World world = MiniGamesUtils.getMiniGamesWorld();
         if (world == null) throw new MiniGameException("cannot load world");
@@ -103,7 +104,7 @@ public class TNTRunMiniGame extends MiniGame {
     }
 
     private void loadDataFromConfig(@NotNull World world) throws MiniGameException {
-        baseLocation = MiniGamesUtils.getLocationFromConfig(world, CONFIG_PATH + "base-location");
+        baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
         if (baseLocation == null) throw new MiniGameException("cannot load base location");
 
         spawn = MiniGamesUtils.getLocationFromConfig(world, mapConfigPath + "spawn");
@@ -121,7 +122,7 @@ public class TNTRunMiniGame extends MiniGame {
     }
 
     private void pasteMap(@NotNull World world) throws Exception {
-        File file = getMapFile();
+        File file = getRandomMapFile();
         if (file == null) throw new NullPointerException("map file is null");
 
         MiniGamesUtils.pasteSchematic(
@@ -131,15 +132,23 @@ public class TNTRunMiniGame extends MiniGame {
         );
     }
 
-    private @Nullable File getMapFile() {
+    private @Nullable File getRandomMapFile() {
         File dir = new File(plugin.getDataFolder(), "mini-games");
         if (!dir.exists()) {
             //noinspection ResultOfMethodCallIgnored
             dir.mkdirs();
         }
 
-        File file = new File(dir, plugin.getConfig().getString(mapConfigPath + "map-file", ""));
-        return file.exists() ? file : null;
+        List<String> mapFiles = plugin.getConfig().getStringList(mapConfigPath + "map-files");
+        Collections.shuffle(mapFiles);
+
+        for (String mapFile : mapFiles) {
+            File file = new File(dir, mapFile);
+            if (file.exists()) {
+                return file;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -203,7 +212,7 @@ public class TNTRunMiniGame extends MiniGame {
     }
 
     private void teleportSpectatorsBackIfTooFarAway() {
-        int maxDistance = Math.max(0, plugin.getConfig().getInt(CONFIG_PATH + "map-radius", 100));
+        int maxDistance = Math.max(0, plugin.getConfig().getInt(configPath + "map-radius", 100));
         getPlayers().stream()
                 .filter(player -> distanceSquared(player.getLocation(), spectatorSpawn) > maxDistance * maxDistance)
                 .filter(player -> getPlayerStatus(player) == PlayerStatus.SPECTATOR)

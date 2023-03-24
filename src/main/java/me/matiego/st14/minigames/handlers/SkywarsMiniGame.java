@@ -162,7 +162,7 @@ public class SkywarsMiniGame extends MiniGame {
     }
 
     private void pasteMap(@NotNull World world) throws Exception {
-        File file = getMapFile();
+        File file = getRandomMapFile();
         if (file == null) throw new NullPointerException("map file is null");
 
         MiniGamesUtils.pasteSchematic(
@@ -172,15 +172,23 @@ public class SkywarsMiniGame extends MiniGame {
         );
     }
 
-    private @Nullable File getMapFile() {
+    private @Nullable File getRandomMapFile() {
         File dir = new File(plugin.getDataFolder(), "mini-games");
         if (!dir.exists()) {
             //noinspection ResultOfMethodCallIgnored
             dir.mkdirs();
         }
 
-        File file = new File(dir, plugin.getConfig().getString(mapConfigPath + "map-file", ""));
-        return file.exists() ? file : null;
+        List<String> mapFiles = plugin.getConfig().getStringList(mapConfigPath + "map-files");
+        Collections.shuffle(mapFiles);
+
+        for (String mapFile : mapFiles) {
+            File file = new File(dir, mapFile);
+            if (file.exists()) {
+                return file;
+            }
+        }
+        return null;
     }
 
     private void generateChests() {

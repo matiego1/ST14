@@ -32,10 +32,12 @@ public abstract class MiniGame implements Listener {
 
     protected final Main plugin;
     protected final int totalMiniGameTime;
-    protected BossBarTimer timer;
+    protected String configPath = null;
+    protected String mapConfigPath = null;
     protected Location spectatorSpawn;
     protected Location baseLocation;
     protected WorldBorder worldBorder;
+    protected BossBarTimer timer;
     protected boolean isMiniGameStarted = false;
     protected boolean lobby = true;
     protected int miniGameTime = 0;
@@ -83,6 +85,8 @@ public abstract class MiniGame implements Listener {
         isMiniGameStarted = false;
         lobby = true;
         miniGameTime = 0;
+        configPath = null;
+        mapConfigPath = null;
     }
 
     @SneakyThrows(MiniGameException.class)
