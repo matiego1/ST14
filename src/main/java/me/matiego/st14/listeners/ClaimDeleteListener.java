@@ -14,6 +14,6 @@ public class ClaimDeleteListener implements Listener {
 
     @EventHandler
     public void onClaimDelete(@NotNull ClaimDeleteEvent event) {
-        plugin.getClaimsDynmap().deleteClaim(event.getClaim());
+        plugin.getDynmap().deleteClaim(event.getClaim());
     }
 }

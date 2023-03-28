@@ -57,7 +57,7 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private MiniGamesManager miniGamesManager;
     @Getter private BanknoteManager banknoteManager;
     @Getter private WorldsLastLocation worldsLastLocation;
-    @Getter private ClaimsDynmap claimsDynmap;
+    @Getter private Dynmap dynmap;
     @Getter private ListenersManager listenersManager;
     private TabListManager tabListManager;
     private ChatReportsManager chatReportsManager;
@@ -142,7 +142,7 @@ public final class Main extends JavaPlugin implements Listener {
         didYouKnowManager = new DidYouKnowManager(this);
         banknoteManager = new BanknoteManager(this);
         worldsLastLocation = new WorldsLastLocation(this);
-        claimsDynmap = new ClaimsDynmap(this);
+        dynmap = new Dynmap(this);
 
         Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomy(), vault, ServicePriority.High);
 
@@ -190,11 +190,12 @@ public final class Main extends JavaPlugin implements Listener {
                 new PlayerTeleportListener(),
                 new ServerCommandListener(),
                 new ServerListPingListener(this),
+                new SignChangeListener(this),
                 new StructureGrowListener()
 
         );
         listenersManager.registerListener("minecraft:brand", new PluginMessageReceivedListener(this));
-        getClaimsDynmap().registerListeners();
+        getDynmap().registerListeners();
 
         //Counting plugin
         if (Bukkit.getPluginManager().getPlugin("Counting") != null) {

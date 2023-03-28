@@ -8,24 +8,29 @@ import net.crashcraft.crashclaim.CrashClaim;
 import net.crashcraft.crashclaim.api.CrashClaimAPI;
 import net.crashcraft.crashclaim.claimobjects.Claim;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.dynmap.DynmapAPI;
 import org.dynmap.markers.AreaMarker;
+import org.dynmap.markers.Marker;
 import org.dynmap.markers.MarkerAPI;
 import org.dynmap.markers.MarkerSet;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ClaimsDynmap {
-    public ClaimsDynmap(@NotNull Main plugin) {
+public class Dynmap {
+    public Dynmap(@NotNull Main plugin) {
         this.plugin = plugin;
     }
 
     private final Main plugin;
-    private final String MARKER_SET_ID = "claims";
-    private final String MARKER_ID = "claim_";
+    private final String CLAIMS_MARKER_SET_ID = "claims";
+    private final String CLAIM_MARKER_ID = "claim_";
+    private final String SIGNS_MARKER_SET_ID = "signs";
+    private final String SIGN_MARKER_ID = "sign_";
+
 
     public void registerListeners() {
         if (Bukkit.getPluginManager().getPlugin("CrashClaim") == null) return;
@@ -34,6 +39,57 @@ public class ClaimsDynmap {
                 new ClaimChangeListener(plugin),
                 new ClaimDeleteListener(plugin)
         );
+    }
+
+    public boolean addSignMarker(@NotNull Location location, @NotNull String text) {
+        MarkerAPI markerAPI = getDynmapMarkerAPI();
+        if (markerAPI == null) return false;
+
+        MarkerSet set = getSignsMarkerSet(markerAPI);
+        if (set == null) {
+            Logs.warning("An error occurred while creating marker set for signs");
+            return false;
+        }
+
+        Marker marker = set.findMarker(SIGN_MARKER_ID + location);
+
+        if (marker == null) {
+            marker = set.createMarker(
+                    SIGN_MARKER_ID + location,
+                    "loading...",
+                    false,
+                    location.getWorld().getName(),
+                    location.getBlockX() + 0.5,
+                    location.getBlockY() + 0.5,
+                    location.getBlockZ() + 0.5,
+                    markerAPI.getMarkerIcon("sign"),
+                    true
+            );
+            if (marker == null) {
+                Logs.warning("An error occurred while creating marker for sign (" + CLAIM_MARKER_ID + location + ")");
+                return false;
+            }
+        }
+
+        marker.setLabel(text);
+        return true;
+    }
+
+    public void deleteSignMarker(@NotNull Location location) {
+        MarkerAPI markerAPI = getDynmapMarkerAPI();
+        if (markerAPI == null) return;
+
+        MarkerSet set = getSignsMarkerSet(markerAPI);
+        if (set == null) return;
+
+        set.findAreaMarker(SIGN_MARKER_ID + location).deleteMarker();
+    }
+
+    private @Nullable MarkerSet getSignsMarkerSet(@NotNull MarkerAPI api) {
+        MarkerSet set = api.getMarkerSet(SIGNS_MARKER_SET_ID);
+        if (set != null) return set;
+
+        return api.createMarkerSet(SIGNS_MARKER_SET_ID, "Tabliczki", null, true);
     }
 
     public void refreshPlayerClaims(@NotNull Player player) {
@@ -50,7 +106,7 @@ public class ClaimsDynmap {
                     }
                     if (claims == null) return;
 
-                    MarkerSet set = getMarkerSet(markerAPI);
+                    MarkerSet set = getClaimsMarkerSet(markerAPI);
                     if (set == null) {
                         Logs.warning("An error occurred while creating marker set for claims");
                         return;
@@ -64,7 +120,7 @@ public class ClaimsDynmap {
         MarkerAPI markerAPI = getDynmapMarkerAPI();
         if (markerAPI == null) return;
 
-        MarkerSet set = getMarkerSet(markerAPI);
+        MarkerSet set = getClaimsMarkerSet(markerAPI);
         if (set == null) {
             Logs.warning("An error occurred while creating marker set for claims");
             return;
@@ -77,11 +133,11 @@ public class ClaimsDynmap {
         World world = Bukkit.getWorld(claim.getWorld());
         if (world == null) return;
 
-        AreaMarker marker = markerSet.findAreaMarker(MARKER_ID + claim.getId());
+        AreaMarker marker = markerSet.findAreaMarker(CLAIM_MARKER_ID + claim.getId());
         if (marker == null) {
             marker = markerSet.createAreaMarker(
-                    MARKER_ID + claim.getId(),
-                    getLabel(claim),
+                    CLAIM_MARKER_ID + claim.getId(),
+                    getClaimLabel(claim),
                     true,
                     world.getName(),
                     new double[]{claim.getMinX(), claim.getMaxX() + 1},
@@ -89,14 +145,14 @@ public class ClaimsDynmap {
                     true
             );
             if (marker == null) {
-                Logs.warning("An error occurred while creating area marker for claim (" + MARKER_ID + claim.getId() + ")");
+                Logs.warning("An error occurred while creating area marker for claim (" + CLAIM_MARKER_ID + claim.getId() + ")");
                 return;
             }
         }
 
         marker.setLineStyle(1, 1, 0x00ffb3);
         marker.setFillStyle(0.1, 0xd6fff3);
-        marker.setLabel(getLabel(claim), true);
+        marker.setLabel(getClaimLabel(claim), true);
         marker.setCornerLocations(new double[]{claim.getMinX(), claim.getMaxX() + 1}, new double[]{claim.getMinZ(), claim.getMaxZ() + 1});
     }
 
@@ -104,13 +160,27 @@ public class ClaimsDynmap {
         MarkerAPI markerAPI = getDynmapMarkerAPI();
         if (markerAPI == null) return;
 
-        MarkerSet set = getMarkerSet(markerAPI);
-        if (set == null) {
-            Logs.warning("An error occurred while creating marker set for claims");
-            return;
-        }
+        MarkerSet set = getClaimsMarkerSet(markerAPI);
+        if (set == null) return;
 
-        set.findAreaMarker(MARKER_ID + claim.getId()).deleteMarker();
+        set.findAreaMarker(CLAIM_MARKER_ID + claim.getId()).deleteMarker();
+    }
+
+    private @Nullable MarkerSet getClaimsMarkerSet(@NotNull MarkerAPI api) {
+        MarkerSet set = api.getMarkerSet(CLAIMS_MARKER_SET_ID);
+        if (set != null) return set;
+
+        return api.createMarkerSet(CLAIMS_MARKER_SET_ID, "Działki", null, true);
+    }
+
+    private @NotNull String getClaimLabel(@NotNull Claim claim) {
+        return plugin.getConfig().getString("claims-dynmap-label", "{name}")
+                .replace("{owner}", plugin.getOfflinePlayers().getEffectiveNameById(claim.getOwner()))
+                .replace("{name}", claim.getName())
+                .replace("{minX}", String.valueOf(claim.getMinX()))
+                .replace("{maxX}", String.valueOf(claim.getMaxX()))
+                .replace("{minZ}", String.valueOf(claim.getMinZ()))
+                .replace("{maxZ}", String.valueOf(claim.getMaxZ()));
     }
 
     private @Nullable CrashClaimAPI getCrashClaimAPI() {
@@ -129,22 +199,5 @@ public class ClaimsDynmap {
             return dynmapAPI.getMarkerAPI();
         }
         return null;
-    }
-
-    private @Nullable MarkerSet getMarkerSet(@NotNull MarkerAPI api) {
-        MarkerSet set = api.getMarkerSet(MARKER_SET_ID);
-        if (set != null) return set;
-
-        return api.createMarkerSet(MARKER_SET_ID, "Działki", null, true);
-    }
-
-    private @NotNull String getLabel(@NotNull Claim claim) {
-        return plugin.getConfig().getString("claims-dynmap-label", "{name}")
-                .replace("{owner}", plugin.getOfflinePlayers().getEffectiveNameById(claim.getOwner()))
-                .replace("{name}", claim.getName())
-                .replace("{minX}", String.valueOf(claim.getMinX()))
-                .replace("{maxX}", String.valueOf(claim.getMaxX()))
-                .replace("{minZ}", String.valueOf(claim.getMinZ()))
-                .replace("{maxZ}", String.valueOf(claim.getMaxZ()));
     }
 }
