@@ -82,7 +82,9 @@ public class Dynmap {
         MarkerSet set = getSignsMarkerSet(markerAPI);
         if (set == null) return;
 
-        set.findAreaMarker(SIGN_MARKER_ID + location).deleteMarker();
+        Marker marker = set.findMarker(SIGN_MARKER_ID + location);
+        if (marker == null) return;
+        marker.deleteMarker();
     }
 
     private @Nullable MarkerSet getSignsMarkerSet(@NotNull MarkerAPI api) {
@@ -163,7 +165,9 @@ public class Dynmap {
         MarkerSet set = getClaimsMarkerSet(markerAPI);
         if (set == null) return;
 
-        set.findAreaMarker(CLAIM_MARKER_ID + claim.getId()).deleteMarker();
+        AreaMarker marker = set.findAreaMarker(CLAIM_MARKER_ID + claim.getId());
+        if (marker == null) return;
+        marker.deleteMarker();
     }
 
     private @Nullable MarkerSet getClaimsMarkerSet(@NotNull MarkerAPI api) {

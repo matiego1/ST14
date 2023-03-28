@@ -5,8 +5,6 @@ import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
-import org.bukkit.block.data.BlockData;
-import org.bukkit.block.data.type.WallSign;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -27,13 +25,16 @@ public class SignChangeListener implements Listener {
         Sign sign = getSign(event.getBlock());
         if (sign == null) return;
 
-        List<String> lines = sign.lines().stream().map(c -> PlainTextComponentSerializer.plainText().serialize(c)).toList();
+        List<String> lines = event.lines().stream().map(c -> PlainTextComponentSerializer.plainText().serialize(c)).toList();
         if (lines.isEmpty()) return;
         if (!lines.get(0).equalsIgnoreCase("[map]")) return;
 
         StringBuilder textBuilder = new StringBuilder();
         for (int i = 1; i < lines.size(); i++) {
-            textBuilder.append(lines.get(i));
+            String line = lines.get(i);
+            if (!line.isBlank()) {
+                textBuilder.append(lines.get(i)).append("\n");
+            }
         }
 
         String text = textBuilder.toString();
@@ -46,7 +47,6 @@ public class SignChangeListener implements Listener {
 
     private @Nullable Sign getSign(@NotNull Block block) {
         if (!block.getWorld().isChunkLoaded(block.getX() >> 4, block.getZ() >> 4)) return null;
-        BlockData data = block.getBlockData();
-        return (data instanceof Sign || data instanceof WallSign) ? (Sign) block.getState() : null;
+        return block.getState() instanceof Sign sign ? sign : null;
     }
 }
