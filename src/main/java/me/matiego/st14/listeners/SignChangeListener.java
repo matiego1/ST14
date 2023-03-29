@@ -5,6 +5,7 @@ import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -25,9 +26,19 @@ public class SignChangeListener implements Listener {
         Sign sign = getSign(event.getBlock());
         if (sign == null) return;
 
-        List<String> lines = event.lines().stream().map(c -> PlainTextComponentSerializer.plainText().serialize(c)).toList();
-        if (lines.isEmpty()) return;
-        if (!lines.get(0).equalsIgnoreCase("[map]")) return;
+        if (!updateMarker(sign, event.lines().stream().map(c -> PlainTextComponentSerializer.plainText().serialize(c)).toList(), event.getPlayer())) {
+            plugin.getDynmap().deleteSignMarker(sign.getLocation());
+        }
+    }
+
+    private @Nullable Sign getSign(@NotNull Block block) {
+        if (!block.getWorld().isChunkLoaded(block.getX() >> 4, block.getZ() >> 4)) return null;
+        return block.getState() instanceof Sign sign ? sign : null;
+    }
+
+    private boolean updateMarker(@NotNull Sign sign, @NotNull List<String> lines, @NotNull Player player) {
+        if (lines.isEmpty()) return false;
+        if (!lines.get(0).equalsIgnoreCase("[map]")) return false;
 
         StringBuilder textBuilder = new StringBuilder();
         for (int i = 1; i < lines.size(); i++) {
@@ -38,15 +49,11 @@ public class SignChangeListener implements Listener {
         }
 
         String text = textBuilder.toString();
-        if (text.isBlank()) return;
+        if (text.isBlank()) return false;
 
         if (plugin.getDynmap().addSignMarker(sign.getLocation(), text)) {
-            event.getPlayer().sendMessage(Utils.getComponentByString("&aPomyślnie dodano tabliczkę do mapy."));
+            player.sendMessage(Utils.getComponentByString("&aPomyślnie dodano tabliczkę do mapy."));
         }
-    }
-
-    private @Nullable Sign getSign(@NotNull Block block) {
-        if (!block.getWorld().isChunkLoaded(block.getX() >> 4, block.getZ() >> 4)) return null;
-        return block.getState() instanceof Sign sign ? sign : null;
+        return true;
     }
 }
