@@ -66,7 +66,7 @@ public class Dynmap {
                     true
             );
             if (marker == null) {
-                Logs.warning("An error occurred while creating marker for sign (" + CLAIM_MARKER_ID + location + ")");
+                Logs.warning("An error occurred while creating marker for sign (" + SIGN_MARKER_ID + location + ")");
                 return false;
             }
         }
@@ -135,10 +135,10 @@ public class Dynmap {
         World world = Bukkit.getWorld(claim.getWorld());
         if (world == null) return;
 
-        AreaMarker marker = markerSet.findAreaMarker(CLAIM_MARKER_ID + claim.getId());
+        AreaMarker marker = markerSet.findAreaMarker(getClaimMarkerId(claim));
         if (marker == null) {
             marker = markerSet.createAreaMarker(
-                    CLAIM_MARKER_ID + claim.getId(),
+                    getClaimMarkerId(claim),
                     getClaimLabel(claim),
                     true,
                     world.getName(),
@@ -147,7 +147,7 @@ public class Dynmap {
                     true
             );
             if (marker == null) {
-                Logs.warning("An error occurred while creating area marker for claim (" + CLAIM_MARKER_ID + claim.getId() + ")");
+                Logs.warning("An error occurred while creating area marker for claim (" + getClaimMarkerId(claim) + ")");
                 return;
             }
         }
@@ -158,6 +158,10 @@ public class Dynmap {
         marker.setCornerLocations(new double[]{claim.getMinX(), claim.getMaxX() + 1}, new double[]{claim.getMinZ(), claim.getMaxZ() + 1});
     }
 
+    private @NotNull String getClaimMarkerId(@NotNull Claim claim) {
+        return CLAIM_MARKER_ID + claim.getOwner().hashCode() + "_" +  claim.getId();
+    }
+
     public void deleteClaim(@NotNull Claim claim) {
         MarkerAPI markerAPI = getDynmapMarkerAPI();
         if (markerAPI == null) return;
@@ -165,7 +169,7 @@ public class Dynmap {
         MarkerSet set = getClaimsMarkerSet(markerAPI);
         if (set == null) return;
 
-        AreaMarker marker = set.findAreaMarker(CLAIM_MARKER_ID + claim.getId());
+        AreaMarker marker = set.findAreaMarker(getClaimMarkerId(claim));
         if (marker == null) return;
         marker.deleteMarker();
     }
