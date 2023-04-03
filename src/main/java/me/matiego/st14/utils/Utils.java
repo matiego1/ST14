@@ -119,7 +119,7 @@ public class Utils {
             List<File> files = new ArrayList<>();
 
             try {
-                File logsDir = new File(Bukkit.getPluginsFolder().getAbsolutePath().replaceAll("plugins" + Pattern.quote(File.pathSeparator) + "*$", "") + "logs");
+                File logsDir = new File(Bukkit.getPluginsFolder().getAbsolutePath().replaceAll("plugins" + Pattern.quote(File.separator) + "*$", "") + "logs");
                 if (!logsDir.isDirectory()) return;
                 for (File file : Objects.requireNonNull(logsDir.listFiles())) {
                     if (!file.isDirectory()) files.add(file);
