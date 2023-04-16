@@ -133,35 +133,35 @@ public class TpaCommand implements CommandHandler.Minecraft {
             return;
         }
 
-        Player target = Bukkit.getPlayer(getItemName(event.getCurrentItem()));
-        if (target == null) {
+        Player requester = Bukkit.getPlayer(getItemName(event.getCurrentItem()));
+        if (requester == null) {
             player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cTen gracz anulował prośbę o teleportację."));
             return;
         }
         HashMap<UUID, BukkitTask> requests = tpa.getOrDefault(player.getUniqueId(), new HashMap<>());
-        if (!requests.containsKey(target.getUniqueId())) {
+        if (!requests.containsKey(requester.getUniqueId())) {
             player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cTen gracz anulował prośbę o teleportację."));
             return;
         }
-        if (!destination.getWorld().equals(target.getWorld())) {
+        if (!destination.getWorld().equals(requester.getWorld())) {
             player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cTen gracz anulował prośbę o teleportację."));
-            target.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cNie możesz przeteleportować się do " + player.getName() + ", ponieważ jest on w innym świecie."));
+            requester.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cNie możesz przeteleportować się do " + player.getName() + ", ponieważ jest on w innym świecie."));
             return;
         }
 
-        requests.remove(target.getUniqueId()).cancel();
+        requests.remove(requester.getUniqueId()).cancel();
         if (requests.isEmpty()) {
             tpa.remove(player.getUniqueId());
         } else {
             tpa.put(player.getUniqueId(), requests);
         }
 
-        if (plugin.getTeleportsManager().isAlreadyActive(target)) {
+        if (plugin.getTeleportsManager().isAlreadyActive(requester)) {
             player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cTen gracz nie może się do ciebie przeteleportować."));
             return;
         }
 
-        double distance = target.getLocation().distance(destination);
+        double distance = requester.getLocation().distance(destination);
         final double cost;
         if (plugin.getConfig().getStringList("tpa.free-worlds").contains(destination.getWorld().getName())) {
             cost = 0;
@@ -171,51 +171,51 @@ public class TpaCommand implements CommandHandler.Minecraft {
 
         Economy economy = plugin.getEconomy();
         if (cost != 0 && !economy.has(player, cost)) {
-            target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Aby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.getBalance(player) + "."));
+            requester.sendMessage(Utils.getComponentByString(Prefix.TPA + "Aby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.getBalance(player) + "."));
             return;
         }
 
         player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Ten gracz za chwilę zostanie do ciebie przeteleportowany"));
-        target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Zostaniesz przeteleportowany za 5 sekund do gracza " + player.getName() + ". Nie ruszaj się!"));
+        requester.sendMessage(Utils.getComponentByString(Prefix.TPA + "Zostaniesz przeteleportowany za 5 sekund do gracza " + player.getName() + ". Nie ruszaj się!"));
 
         Utils.async(() -> {
             try {
-                switch (plugin.getTeleportsManager().teleport(target, destination, 5, () -> {
+                switch (plugin.getTeleportsManager().teleport(requester, destination, 5, () -> {
                     if (cost == 0) return true;
-                    EconomyResponse response = economy.withdrawPlayer(target, cost);
+                    EconomyResponse response = economy.withdrawPlayer(requester, cost);
                     if (response.transactionSuccess()) return true;
-                    player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
-                    target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Aby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.format(response.balance) + "."));
+                    player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + requester.getName() + " nie może się do ciebie przeteleportować."));
+                    requester.sendMessage(Utils.getComponentByString(Prefix.TPA + "Aby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.format(response.balance) + "."));
                     return false;
                 }).get()) {
                     case SUCCESS -> {
-                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " przeteleportował się do ciebie."));
-                        target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Przeteleportowałeś się do gracza " + player.getName() + " za " + economy.format(cost)));
-                        Logs.info("Gracz " + player.getName() + " przeteleportował do gracza " + target.getName() + ".");
+                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + requester.getName() + " przeteleportował się do ciebie."));
+                        requester.sendMessage(Utils.getComponentByString(Prefix.TPA + "Przeteleportowałeś się do gracza " + player.getName() + " za " + economy.format(cost)));
+                        Logs.info("Gracz " + player.getName() + " przeteleportował do gracza " + requester.getName() + ".");
                     }
-                    case MOVE -> {
-                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
-                        target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Teleportowanie anulowane, poruszyłeś się."));
+                    case PLAYER_MOVED -> {
+                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + requester.getName() + " nie może się do ciebie przeteleportować."));
+                        requester.sendMessage(Utils.getComponentByString(Prefix.TPA + "Teleportowanie anulowane, poruszyłeś się."));
                     }
-                    case ANTY_LOGOUT -> {
-                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
-                        target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Nie możesz teleportować się z aktywnym anty-logoutem."));
+                    case CANCELLED_ANTY_LOGOUT -> {
+                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + requester.getName() + " nie może się do ciebie przeteleportować."));
+                        requester.sendMessage(Utils.getComponentByString(Prefix.TPA + "Nie możesz teleportować się z aktywnym anty-logoutem."));
                     }
                     case ALREADY_ACTIVE -> {
-                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
-                        target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Proces teleportowania już został rozpoczęty."));
+                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + requester.getName() + " nie może się do ciebie przeteleportować."));
+                        requester.sendMessage(Utils.getComponentByString(Prefix.TPA + "Proces teleportowania już został rozpoczęty."));
                     }
-                    case DISABLED -> {
-                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
-                        target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Teleportowanie anulowane."));
+                    case PLUGIN_DISABLED -> {
+                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + requester.getName() + " nie może się do ciebie przeteleportować."));
+                        requester.sendMessage(Utils.getComponentByString(Prefix.TPA + "Teleportowanie anulowane."));
                     }
-                    case CANCELLED -> {}
+                    case CANCELLED_AFTER_COUNTDOWN -> {}
                     case FAILURE -> {
-                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + target.getName() + " nie może się do ciebie przeteleportować."));
-                        target.sendMessage(Utils.getComponentByString(Prefix.TPA + "Napotkano błąd teleportowaniu."));
-                        if (!plugin.getEconomy().depositPlayer(target, cost).transactionSuccess()) {
-                            target.sendMessage(Utils.getComponentByString(Prefix.TPA + "&c&lNapotkano błąd przy oddawaniu pieniędzy! Zgłoś się do administratora, aby je odzyskać. Przepraszamy."));
-                            Logs.warning("Gracz " + target.getName() + " (" + target.getUniqueId() + ") stracił " + plugin.getEconomy().format(cost) + " ze swojego konta! Kwota musi być przywrócona ręcznie.");
+                        player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + requester.getName() + " nie może się do ciebie przeteleportować."));
+                        requester.sendMessage(Utils.getComponentByString(Prefix.TPA + "Napotkano błąd teleportowaniu."));
+                        if (!plugin.getEconomy().depositPlayer(requester, cost).transactionSuccess()) {
+                            requester.sendMessage(Utils.getComponentByString(Prefix.TPA + "&c&lNapotkano błąd przy oddawaniu pieniędzy! Zgłoś się do administratora, aby je odzyskać. Przepraszamy."));
+                            Logs.warning("Gracz " + requester.getName() + " (" + requester.getUniqueId() + ") stracił " + plugin.getEconomy().format(cost) + " ze swojego konta! Kwota musi być przywrócona ręcznie.");
                         }
                     }
                 }

@@ -4,6 +4,8 @@ import me.matiego.st14.Main;
 import me.matiego.st14.utils.NonPremiumUtils;
 import me.matiego.st14.utils.Prefix;
 import me.matiego.st14.utils.Utils;
+import org.bukkit.Bukkit;
+import org.bukkit.Keyed;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -52,11 +54,19 @@ public class PlayerJoinListener implements Listener {
         event.joinMessage(Utils.getComponentByString("&eGracz " + player.getName() + " dołączył do gry"));
         plugin.getChatMinecraft().sendJoinMessage(player);
         plugin.getChatMinecraft().sendConsoleJoinMessage(player);
-        //handle game
+        //handle minigame
         plugin.getMiniGamesManager().onPlayerJoin(player);
         //non-premium warning
         if (NonPremiumUtils.isNonPremiumUuid(uuid)) {
             player.sendMessage(Utils.getComponentByString("&eSystem umożliwiający grę graczom non-premium jest w wersji BETA. Zgłaszaj wszystkie napotkane błędy!"));
         }
+        //unlock recipes
+        Bukkit.recipeIterator().forEachRemaining(recipe -> {
+            if (recipe instanceof Keyed keyed) {
+                if (!player.hasDiscoveredRecipe(keyed.getKey())){
+                    player.discoverRecipe(keyed.getKey());
+                }
+            }
+        });
     }
 }

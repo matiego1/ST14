@@ -16,6 +16,11 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 
 public class TeleportsManager {
+    public TeleportsManager(@NotNull Main plugin) {
+        this.plugin = plugin;
+    }
+
+    private final Main plugin;
     private final HashMap<UUID, Pair<BukkitTask, CompletableFuture<Response>>> tasks = new HashMap<>();
     private final HashMap<UUID, BlockLocation> location = new HashMap<>();
 
@@ -23,40 +28,44 @@ public class TeleportsManager {
         return tasks.get(player.getUniqueId()) != null;
     }
 
-    public synchronized @NotNull CompletableFuture<Response> teleport(@NotNull Player player, @NotNull Location loc, int time, @NotNull Callable<Boolean> teleportWhenReady) {
+    public synchronized @NotNull CompletableFuture<Response> teleport(@NotNull Player player, @NotNull Location loc, int time, @NotNull Callable<Boolean> shouldTeleportAfterCountdown) {
         CompletableFuture<Response> future = new CompletableFuture<>();
         if (isAlreadyActive(player)) {
             future.complete(Response.ALREADY_ACTIVE);
             return future;
         }
-        if (Main.getInstance().getAntyLogoutManager().isInAntyLogout(player)) {
-            future.complete(Response.ANTY_LOGOUT);
+        if (plugin.getAntyLogoutManager().isInAntyLogout(player)) {
+            future.complete(Response.CANCELLED_ANTY_LOGOUT);
             return future;
         }
+
         location.put(player.getUniqueId(), BlockLocation.parseLocation(player.getLocation()));
         tasks.put(player.getUniqueId(), new Pair<>(
                 Bukkit.getScheduler().runTaskLater(
-                        Main.getInstance(),
+                        plugin,
                         () -> {
                             CompletableFuture<Response> result = tasks.remove(player.getUniqueId()).getSecond();
                             try {
-                                if (!teleportWhenReady.call()) {
-                                    result.complete(Response.CANCELLED);
+                                if (!shouldTeleportAfterCountdown.call()) {
+                                    result.complete(Response.CANCELLED_AFTER_COUNTDOWN);
                                     return;
                                 }
                             } catch (Exception e) {
-                                result.complete(Response.CANCELLED);
+                                result.complete(Response.CANCELLED_AFTER_COUNTDOWN);
                                 return;
                             }
-                            if (Main.getInstance().getAntyLogoutManager().isInAntyLogout(player)) {
-                                result.complete(Response.ANTY_LOGOUT);
+
+                            if (plugin.getAntyLogoutManager().isInAntyLogout(player)) {
+                                result.complete(Response.CANCELLED_ANTY_LOGOUT);
                                 return;
                             }
+
                             BlockLocation previousLocation = location.remove(player.getUniqueId());
                             if (previousLocation == null || !previousLocation.equals(player.getLocation())) {
-                                result.complete(Response.MOVE);
+                                result.complete(Response.PLAYER_MOVED);
                                 return;
                             }
+
                             player.teleportAsync(loc).thenAccept(b -> result.complete(b ? Response.SUCCESS : Response.FAILURE));
                         },
                         time * 20L
@@ -78,7 +87,7 @@ public class TeleportsManager {
         location.remove(uuid);
 
         task.getFirst().cancel();
-        task.getSecond().complete(Response.MOVE);
+        task.getSecond().complete(Response.PLAYER_MOVED);
     }
 
     public void onPlayerQuit(@NotNull Player player) {
@@ -89,7 +98,7 @@ public class TeleportsManager {
         location.remove(uuid);
 
         task.getFirst().cancel();
-        task.getSecond().complete(Response.MOVE);
+        task.getSecond().complete(Response.PLAYER_MOVED);
     }
 
     public void cancelAll() {
@@ -98,7 +107,7 @@ public class TeleportsManager {
             Pair<BukkitTask, CompletableFuture<Response>> cur = it.next().getValue();
             it.remove();
             cur.getFirst().cancel();
-            cur.getSecond().complete(Response.DISABLED);
+            cur.getSecond().complete(Response.PLUGIN_DISABLED);
         }
         location.clear();
     }
@@ -106,10 +115,10 @@ public class TeleportsManager {
     public enum Response {
         SUCCESS,
         ALREADY_ACTIVE,
-        MOVE,
-        CANCELLED,
-        DISABLED,
-        ANTY_LOGOUT,
+        PLAYER_MOVED,
+        CANCELLED_AFTER_COUNTDOWN,
+        PLUGIN_DISABLED,
+        CANCELLED_ANTY_LOGOUT,
         FAILURE
     }
 

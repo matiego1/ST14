@@ -119,11 +119,11 @@ public class WorldsCommand implements CommandHandler.Minecraft {
             try {
                 String msg = switch (plugin.getTeleportsManager().teleport(player, loc, 5, () -> hasPermission(player, loc.getWorld())).get()) {
                     case SUCCESS -> null;
-                    case MOVE -> "&dTeleportowanie anulowane, poruszyłeś się.";
+                    case PLAYER_MOVED -> "&dTeleportowanie anulowane, poruszyłeś się.";
                     case ALREADY_ACTIVE -> "&dProces teleportowania już został rozpoczęty.";
-                    case CANCELLED -> "&dNie masz uprawnień, aby przenieść się do tego świata.";
-                    case DISABLED -> "&dTeleportowanie anulowane.";
-                    case ANTY_LOGOUT -> "&dNie możesz się teleportować z aktywnym anty-logoutem.";
+                    case CANCELLED_AFTER_COUNTDOWN -> "&dNie masz uprawnień, aby przenieść się do tego świata.";
+                    case PLUGIN_DISABLED -> "&dTeleportowanie anulowane.";
+                    case CANCELLED_ANTY_LOGOUT -> "&dNie możesz się teleportować z aktywnym anty-logout'em.";
                     case FAILURE -> "&dNapotkano niespodziewany błąd. Spróbuj ponownie.";
                 };
                 if (msg == null) {

@@ -23,7 +23,7 @@ public class MySQL {
         config.setJdbcUrl(url);
         config.setUsername(user);
         config.setPassword(password);
-        config.setPoolName("Counting-Connection-Pool");
+        config.setPoolName("ST14-Connection-Pool");
 
         config.addDataSourceProperty("cachePrepStmts", "true");
         config.addDataSourceProperty("prepStmtCacheSize", "250");

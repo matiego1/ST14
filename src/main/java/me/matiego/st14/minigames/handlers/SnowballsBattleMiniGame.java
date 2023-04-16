@@ -5,9 +5,9 @@ import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGameException;
 import me.matiego.st14.minigames.MiniGamesUtils;
+import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.*;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -26,22 +26,18 @@ import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 public class SnowballsBattleMiniGame extends MiniGame {
-    public SnowballsBattleMiniGame(@NotNull Main plugin, int totalGameTimeInSeconds) {
-        super(plugin, totalGameTimeInSeconds);
+    public SnowballsBattleMiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime) {
+        super(plugin, totalMiniGameTime);
     }
 
-    private final String CONFIG_PATH = "minigames.snowballs-battle.";
-
     private Location spawn = null;
-    private String mapConfigPath = "minigames.skywars.maps";
-    private int prepareTime = 30;
-    private int levelUpBeforeEnd = 300;
+    private int prepareTime = 60;
+    private int levelUpBeforeEnd = 60;
+    private int increaseHealthInterval = 30;
 
     @Override
     public @NotNull String getMiniGameName() {
@@ -49,17 +45,34 @@ public class SnowballsBattleMiniGame extends MiniGame {
     }
 
     @Override
+    public @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount() {
+        return 2;
+    }
+
+    @Override
+    public @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount() {
+        return 15;
+    }
+
+    @Override
+    public @NotNull GameMode getSpectatorGameMode() {
+        return GameMode.ADVENTURE;
+    }
+
+    @Override
     public void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException {
-        if (isStarted()) throw new MiniGameException("minigame is already started");
+        if (isMiniGameStarted()) throw new MiniGameException("minigame is already started");
 
         clearExistingData();
         isMiniGameStarted = true;
         lobby = true;
 
+        configPath = "minigames.snowballs-battle.";
+
         World world = MiniGamesUtils.getMiniGamesWorld();
         if (world == null) throw new MiniGameException("cannot load world");
 
-        setRandomMapConfigPath();
+        setRandomMapConfigPath(configPath + "maps");
         loadDataFromConfig(world);
         registerEvents();
         setUpGameRules(world);
@@ -70,30 +83,25 @@ public class SnowballsBattleMiniGame extends MiniGame {
             MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
         }
 
-        MiniGamesUtils.teleportPlayers(players.stream().toList(), spectatorSpawn).thenAcceptAsync(success -> Utils.sync(() -> {
-            if (!success) {
-                scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", "");
+        sendActionBar("&eTeleportowanie graczy...");
+        Utils.async(() -> {
+            try {
+                if (!MiniGamesUtils.teleportPlayers(players.stream().toList(), spectatorSpawn).get()) {
+                    Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", ""));
+                    return;
+                }
+            } catch (Exception e) {
+                Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", ""));
+                Logs.error("An error occurred while teleporting players", e);
                 return;
             }
 
-            startCountdown(15);
-        }));
-    }
-
-    private void setRandomMapConfigPath() throws MiniGameException {
-        ConfigurationSection section = plugin.getConfig().getConfigurationSection(mapConfigPath);
-        if (section == null) throw new MiniGameException("cannot find any map");
-
-        List<String> maps = new ArrayList<>(section.getKeys(false));
-        if (maps.isEmpty()) throw new MiniGameException("cannot find any map");
-
-        Collections.shuffle(maps);
-
-        mapConfigPath += "." + maps.get(0);
+            Utils.sync(() -> startCountdown(10));
+        });
     }
 
     private void loadDataFromConfig(@NotNull World world) throws MiniGameException {
-        baseLocation = MiniGamesUtils.getLocationFromConfig(world, CONFIG_PATH + "base-location");
+        baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
         if (baseLocation == null) throw new MiniGameException("cannot load base location");
 
         spawn = MiniGamesUtils.getRelativeLocationFromConfig(baseLocation, mapConfigPath + "spawn");
@@ -101,8 +109,9 @@ public class SnowballsBattleMiniGame extends MiniGame {
         spectatorSpawn = MiniGamesUtils.getRelativeLocationFromConfig(baseLocation, mapConfigPath + "spectator-spawn");
         if (spectatorSpawn == null) throw new MiniGameException("cannot load spectator spawn location");
 
-        prepareTime = Math.max(0, plugin.getConfig().getInt(CONFIG_PATH + "prepare-time-seconds", prepareTime));
-        levelUpBeforeEnd = Math.max(0, plugin.getConfig().getInt(CONFIG_PATH + "level-up-before-end-seconds", levelUpBeforeEnd));
+        prepareTime = Math.max(0, plugin.getConfig().getInt(configPath + "prepare-time", prepareTime));
+        levelUpBeforeEnd = Math.max(0, plugin.getConfig().getInt(configPath + "level-up-before-end", levelUpBeforeEnd));
+        increaseHealthInterval = Math.max(1, plugin.getConfig().getInt(configPath + "increase-health-interval", increaseHealthInterval));
         if (totalMiniGameTime < prepareTime + levelUpBeforeEnd) throw new MiniGameException("incorrect game times");
     }
 
@@ -113,7 +122,7 @@ public class SnowballsBattleMiniGame extends MiniGame {
         world.setGameRule(GameRule.DO_ENTITY_DROPS, false);
         world.setGameRule(GameRule.FALL_DAMAGE, true);
         world.setGameRule(GameRule.FIRE_DAMAGE, false);
-        world.setGameRule(GameRule.DO_FIRE_TICK, true);
+        world.setGameRule(GameRule.DO_FIRE_TICK, false);
         world.setGameRule(GameRule.NATURAL_REGENERATION, false);
     }
 
@@ -167,7 +176,7 @@ public class SnowballsBattleMiniGame extends MiniGame {
         player.setLevel(playersLeft);
         player.setFireTicks(0);
 
-        if (miniGameTime % 30 == 0) {
+        if (miniGameTime % increaseHealthInterval == 0) {
             increasePlayerHealth(player);
         }
 
@@ -185,14 +194,14 @@ public class SnowballsBattleMiniGame extends MiniGame {
     }
 
     private void giveSnowballsToPlayer(@NotNull Player player) {
-        double damageAmount = plugin.getConfig().getDouble(CONFIG_PATH + "snowball-damage.normal", 1);
-        int maxSnowballsAmount = plugin.getConfig().getInt(CONFIG_PATH + "max-snowballs-amount.normal", 32);
-        int snowballsPerSecond = plugin.getConfig().getInt(CONFIG_PATH + "snowballs-per-second.normal", 1);
+        double damageAmount = plugin.getConfig().getDouble(configPath + "snowball-damage.normal", 1);
+        int maxSnowballsAmount = plugin.getConfig().getInt(configPath + "max-snowballs-amount.normal", 32);
+        int snowballsPerSecond = plugin.getConfig().getInt(configPath + "snowballs-per-second.normal", 1);
 
-        if (miniGameTime == totalMiniGameTime - levelUpBeforeEnd) {
-            damageAmount = plugin.getConfig().getDouble(CONFIG_PATH + "snowball-damage.level-up", 4);
-            maxSnowballsAmount = plugin.getConfig().getInt(CONFIG_PATH + "max-snowballs-amount.level-up", 5);
-            snowballsPerSecond = plugin.getConfig().getInt(CONFIG_PATH + "snowballs-per-second.level-up", 1);
+        if (miniGameTime >= totalMiniGameTime - levelUpBeforeEnd) {
+            damageAmount = plugin.getConfig().getDouble(configPath + "snowball-damage.level-up", 4);
+            maxSnowballsAmount = plugin.getConfig().getInt(configPath + "max-snowballs-amount.level-up", 5);
+            snowballsPerSecond = plugin.getConfig().getInt(configPath + "snowballs-per-second.level-up", 1);
         }
 
         Inventory inv = player.getInventory();
@@ -202,22 +211,7 @@ public class SnowballsBattleMiniGame extends MiniGame {
         inv.addItem(snowball);
     }
 
-    @Override
-    public @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount() {
-        return 2;
-    }
-
-    @Override
-    public @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount() {
-        return 15;
-    }
-
-    @Override
-    public @NotNull GameMode getSpectatorGameMode() {
-        return GameMode.ADVENTURE;
-    }
-
-    @EventHandler (ignoreCancelled = true)
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerDropItem(@NotNull PlayerDropItemEvent event) {
         if (!isInMiniGame(event.getPlayer())) return;
         event.setCancelled(true);

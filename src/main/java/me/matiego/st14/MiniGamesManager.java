@@ -15,6 +15,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -26,7 +27,9 @@ public class MiniGamesManager {
     }
 
     private final Main plugin;
-    @Getter (onMethod_ = {@Synchronized}) private MiniGame activeMiniGame = null;
+    @Nullable
+    @Getter (onMethod_ = {@Synchronized})
+    private MiniGame activeMiniGame = null;
     private BukkitTask task = null;
     private final Set<UUID> editors = new HashSet<>();
 
@@ -48,7 +51,7 @@ public class MiniGamesManager {
         }
         task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             MiniGame mg = getActiveMiniGame();
-            if (mg == null || !mg.isStarted()) {
+            if (mg == null || !mg.isMiniGameStarted()) {
                 activeMiniGame = null;
                 if (task != null) {
                     task.cancel();
@@ -77,7 +80,7 @@ public class MiniGamesManager {
         setEditorMode(player, false);
         onPlayerJoin0(player);
     }
-    public void onPlayerJoin0(@NotNull Player player) {
+    private void onPlayerJoin0(@NotNull Player player) {
         if (!MiniGamesUtils.isInAnyMiniGameWorld(player)) return;
 
         MiniGame miniGame = getActiveMiniGame();

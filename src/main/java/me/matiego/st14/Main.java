@@ -132,7 +132,7 @@ public final class Main extends JavaPlugin implements Listener {
         economy = new Economy(this, true);
         premiumManager = new PremiumManager(this);
         tabListManager = new TabListManager(this);
-        teleportsManager = new TeleportsManager();
+        teleportsManager = new TeleportsManager(this);
         rewardsManager = new RewardsManager(this);
         backpackManager = new BackpackManager(this);
         chatReportsManager = new ChatReportsManager();
@@ -159,6 +159,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new BlockFormListener(),
                 new BlockPistonExtendListener(),
                 new BlockPlaceListener(),
+                new CraftItemListener(this),
                 new EntityChangeBlockListener(),
                 entityDamageByEntityListener,
                 new EntityDeathListener(this),

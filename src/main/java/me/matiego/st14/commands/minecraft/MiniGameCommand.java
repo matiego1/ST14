@@ -98,12 +98,12 @@ public class MiniGameCommand implements CommandHandler.Minecraft {
             if (type.isMiniGameEnabled()) {
                 lores = new String[] {
                         "&eKliknij, aby rozpocząć!",
-                        "&eCzas gry: &d" + Utils.parseMillisToString(type.getGameTimeInSeconds() * 1000L, false)
+                        "&eCzas minigry: &d" + Utils.parseMillisToString(type.getGameTimeInSeconds() * 1000L, false)
                 };
             } else {
                 lores = new String[] {
                         "&eKliknij, aby rozpocząć!",
-                        "&eCzas gry: &d" + Utils.parseMillisToString(type.getGameTimeInSeconds() * 1000L, false),
+                        "&eCzas minigry: &d" + Utils.parseMillisToString(type.getGameTimeInSeconds() * 1000L, false),
                         "",
                         (type.isMiniGameEnabled() ? "" : "&4Ta gra jest wyłączona")
                 };

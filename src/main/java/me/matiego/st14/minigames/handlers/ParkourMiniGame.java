@@ -5,12 +5,12 @@ import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGameException;
 import me.matiego.st14.minigames.MiniGamesUtils;
+import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.GameMode;
 import org.bukkit.GameRule;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -23,38 +23,50 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 public class ParkourMiniGame extends MiniGame {
-    public ParkourMiniGame(@NotNull Main plugin, int totalGameTimeInSeconds) {
-        super(plugin, totalGameTimeInSeconds);
+    public ParkourMiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime) {
+        super(plugin, totalMiniGameTime);
     }
 
-    private final String CONFIG_PATH = "minigames.parkour.";
-
-    private String mapConfigPath = "minigames.skywars.maps";
     private Location spawn = null;
 
     @Override
     public @NotNull String getMiniGameName() {
-        return "Czerwone-Zielone";
+        return "Parkour";
+    }
+
+    @Override
+    public @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount() {
+        return 2;
+    }
+
+    @Override
+    public @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount() {
+        return 15;
+    }
+
+    @Override
+    public @NotNull GameMode getSpectatorGameMode() {
+        return GameMode.ADVENTURE;
     }
 
     @Override
     public void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException {
-        if (isStarted()) throw new MiniGameException("minigame is already started");
+        if (isMiniGameStarted()) throw new MiniGameException("minigame is already started");
 
         clearExistingData();
         isMiniGameStarted = true;
         lobby = true;
 
+        configPath = "minigames.parkour.";
+
         World world = MiniGamesUtils.getMiniGamesWorld();
         if (world == null) throw new MiniGameException("cannot load world");
 
-        setRandomMapConfigPath();
+        setRandomMapConfigPath(configPath + "maps");
         loadDataFromConfig(world);
         registerEvents();
         setUpGameRules(world);
@@ -65,30 +77,25 @@ public class ParkourMiniGame extends MiniGame {
             MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
         }
 
-        MiniGamesUtils.teleportPlayers(players.stream().toList(), spectatorSpawn).thenAcceptAsync(success -> Utils.sync(() -> {
-            if (!success) {
-                scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", "");
+        sendActionBar("&eTeleportowanie graczy...");
+        Utils.async(() -> {
+            try {
+                if (!MiniGamesUtils.teleportPlayers(players.stream().toList(), spectatorSpawn).get()) {
+                    Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", ""));
+                    return;
+                }
+            } catch (Exception e) {
+                Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", ""));
+                Logs.error("An error occurred while teleporting players", e);
                 return;
             }
 
-            startCountdown(15);
-        }));
-    }
-
-    private void setRandomMapConfigPath() throws MiniGameException {
-        ConfigurationSection section = plugin.getConfig().getConfigurationSection(mapConfigPath);
-        if (section == null) throw new MiniGameException("cannot find any map");
-
-        List<String> maps = new ArrayList<>(section.getKeys(false));
-        if (maps.isEmpty()) throw new MiniGameException("cannot find any map");
-
-        Collections.shuffle(maps);
-
-        mapConfigPath += "." + maps.get(0);
+            Utils.sync(() -> startCountdown(10));
+        });
     }
 
     private void loadDataFromConfig(@NotNull World world) throws MiniGameException {
-        baseLocation = MiniGamesUtils.getLocationFromConfig(world, CONFIG_PATH + "base-location");
+        baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
         if (baseLocation == null) throw new MiniGameException("cannot load base location");
 
         spawn = MiniGamesUtils.getRelativeLocationFromConfig(baseLocation, mapConfigPath + "spawn");
@@ -138,39 +145,23 @@ public class ParkourMiniGame extends MiniGame {
         playersInMiniGame.forEach(player -> {
             player.setLevel(playersInMiniGame.size());
             player.setFireTicks(0);
-            player.setHealth(20);
         });
-    }
-
-    @Override
-    public @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount() {
-        return 2;
-    }
-
-    @Override
-    public @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount() {
-        return 15;
-    }
-
-    @Override
-    public @NotNull GameMode getSpectatorGameMode() {
-        return GameMode.ADVENTURE;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerMove(@NotNull PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        if (!isInMiniGame(player)) return;
+        if (getPlayerStatus(player) != PlayerStatus.IN_MINI_GAME) return;
         if (!isInWinnerArea(player)) return;
         if (lobby) return;
         endGameWithWinner(player);
     }
 
     private boolean isInWinnerArea(@NotNull Player player) {
-        int minX = plugin.getConfig().getInt(CONFIG_PATH + "winner-area.minX");
-        int minZ = plugin.getConfig().getInt(CONFIG_PATH + "winner-area.minZ");
-        int maxX = plugin.getConfig().getInt(CONFIG_PATH + "winner-area.maxX");
-        int maxZ = plugin.getConfig().getInt(CONFIG_PATH + "winner-area.maxZ");
+        int minX = plugin.getConfig().getInt(configPath + "winner-area.minX");
+        int minZ = plugin.getConfig().getInt(configPath + "winner-area.minZ");
+        int maxX = plugin.getConfig().getInt(configPath + "winner-area.maxX");
+        int maxZ = plugin.getConfig().getInt(configPath + "winner-area.maxZ");
 
         int x = player.getLocation().getBlockX();
         int z = player.getLocation().getBlockZ();

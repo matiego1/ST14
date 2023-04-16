@@ -32,8 +32,12 @@ public class SignChangeListener implements Listener {
     }
 
     private @Nullable Sign getSign(@NotNull Block block) {
-        if (!block.getWorld().isChunkLoaded(block.getX() >> 4, block.getZ() >> 4)) return null;
-        return block.getState() instanceof Sign sign ? sign : null;
+        String material = block.getType().name();
+        if (!material.contains("SIGN") || material.contains("WALL") || material.contains("HANGING")) return null;
+        if (block.getState() instanceof Sign sign) {
+            return sign;
+        }
+        return null;
     }
 
     private boolean updateMarker(@NotNull Sign sign, @NotNull List<String> lines, @NotNull Player player) {

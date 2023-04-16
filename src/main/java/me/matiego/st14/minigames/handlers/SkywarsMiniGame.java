@@ -44,7 +44,10 @@ public class SkywarsMiniGame extends MiniGame {
 
     @Override
     public void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException {
-        if (isStarted()) throw new MiniGameException("minigame is already started");
+        //noinspection ConstantValue
+        if (true) throw new MiniGameException("not fixed yet");
+
+        if (isMiniGameStarted()) throw new MiniGameException("minigame is already started");
 
         clearExistingData();
         isMiniGameStarted = true;
@@ -172,7 +175,7 @@ public class SkywarsMiniGame extends MiniGame {
         );
     }
 
-    private @Nullable File getRandomMapFile() {
+    protected @Nullable File getRandomMapFile() {
         File dir = new File(plugin.getDataFolder(), "mini-games");
         if (!dir.exists()) {
             //noinspection ResultOfMethodCallIgnored

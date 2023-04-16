@@ -4,6 +4,7 @@ import me.matiego.st14.listeners.ClaimChangeListener;
 import me.matiego.st14.listeners.ClaimCreateListener;
 import me.matiego.st14.listeners.ClaimDeleteListener;
 import me.matiego.st14.utils.Logs;
+import me.matiego.st14.utils.Utils;
 import net.crashcraft.crashclaim.CrashClaim;
 import net.crashcraft.crashclaim.api.CrashClaimAPI;
 import net.crashcraft.crashclaim.claimobjects.Claim;
@@ -40,6 +41,10 @@ public class Dynmap {
                 new ClaimDeleteListener(plugin)
         );
     }
+
+    //TODO: split to separate classes
+
+    // ---- SIGNS ----
 
     public boolean addSignMarker(@NotNull Location location, @NotNull String text) {
         MarkerAPI markerAPI = getDynmapMarkerAPI();
@@ -94,6 +99,8 @@ public class Dynmap {
         return api.createMarkerSet(SIGNS_MARKER_SET_ID, "Tabliczki", null, true);
     }
 
+    // ---- CLAIMS ----
+
     public void refreshPlayerClaims(@NotNull Player player) {
         CrashClaimAPI claimAPI = getCrashClaimAPI();
         if (claimAPI == null) return;
@@ -114,7 +121,7 @@ public class Dynmap {
                         return;
                     }
 
-                    claims.forEach(claim -> refreshClaim(set, claim));
+                    claims.forEach(claim -> Utils.sync(() -> refreshClaim(set, claim)));
                 });
     }
 
@@ -128,7 +135,7 @@ public class Dynmap {
             return;
         }
 
-        refreshClaim(set, claim);
+        Utils.sync(() -> refreshClaim(set, claim));
     }
 
     private void refreshClaim(@NotNull MarkerSet markerSet, @NotNull Claim claim) {
@@ -158,10 +165,6 @@ public class Dynmap {
         marker.setCornerLocations(new double[]{claim.getMinX(), claim.getMaxX() + 1}, new double[]{claim.getMinZ(), claim.getMaxZ() + 1});
     }
 
-    private @NotNull String getClaimMarkerId(@NotNull Claim claim) {
-        return CLAIM_MARKER_ID + claim.getOwner().hashCode() + "_" +  claim.getId();
-    }
-
     public void deleteClaim(@NotNull Claim claim) {
         MarkerAPI markerAPI = getDynmapMarkerAPI();
         if (markerAPI == null) return;
@@ -172,6 +175,10 @@ public class Dynmap {
         AreaMarker marker = set.findAreaMarker(getClaimMarkerId(claim));
         if (marker == null) return;
         marker.deleteMarker();
+    }
+
+    private @NotNull String getClaimMarkerId(@NotNull Claim claim) {
+        return CLAIM_MARKER_ID + claim.getWorld().hashCode() + "_" +  claim.getId();
     }
 
     private @Nullable MarkerSet getClaimsMarkerSet(@NotNull MarkerAPI api) {

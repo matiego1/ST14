@@ -5,13 +5,13 @@ import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGameException;
 import me.matiego.st14.minigames.MiniGamesUtils;
+import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.GameMode;
 import org.bukkit.GameRule;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -22,27 +22,22 @@ import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 public class RedGreenMiniGame extends MiniGame {
-    public RedGreenMiniGame(@NotNull Main plugin, int totalGameTimeInSeconds) {
-        super(plugin, totalGameTimeInSeconds);
+    public RedGreenMiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime) {
+        super(plugin, totalMiniGameTime);
     }
 
-    private final String CONFIG_PATH = "minigames.red-green.";
-
-    private String mapConfigPath = "minigames.skywars.maps";
     private Location spawn = null;
-    private int maxDelay = 3;
-    private int minDelay = 10;
-    private int nextCanMoveChange = 0;
+    private int minDelay;
+    private int maxDelay;
+    private int nextCanMoveChange = -1;
+    private int lastCanMoveChange = nextCanMoveChange;
     private boolean canMove = true;
 
     @Override
@@ -51,17 +46,34 @@ public class RedGreenMiniGame extends MiniGame {
     }
 
     @Override
+    public @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount() {
+        return 2;
+    }
+
+    @Override
+    public @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount() {
+        return 15;
+    }
+
+    @Override
+    public @NotNull GameMode getSpectatorGameMode() {
+        return GameMode.ADVENTURE;
+    }
+
+    @Override
     public void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException {
-        if (isStarted()) throw new MiniGameException("minigame is already started");
+        if (isMiniGameStarted()) throw new MiniGameException("minigame is already started");
 
         clearExistingData();
         isMiniGameStarted = true;
         lobby = true;
 
+        configPath = "minigames.red-green.";
+
         World world = MiniGamesUtils.getMiniGamesWorld();
         if (world == null) throw new MiniGameException("cannot load world");
 
-        setRandomMapConfigPath();
+        setRandomMapConfigPath(configPath + "maps");
         loadDataFromConfig(world);
         registerEvents();
         setUpGameRules(world);
@@ -72,30 +84,25 @@ public class RedGreenMiniGame extends MiniGame {
             MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
         }
 
-        MiniGamesUtils.teleportPlayers(players.stream().toList(), spectatorSpawn).thenAcceptAsync(success -> Utils.sync(() -> {
-            if (!success) {
-                scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", "");
+        sendActionBar("&eTeleportowanie graczy...");
+        Utils.async(() -> {
+            try {
+                if (!MiniGamesUtils.teleportPlayers(players.stream().toList(), spectatorSpawn).get()) {
+                    Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", ""));
+                    return;
+                }
+            } catch (Exception e) {
+                Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", ""));
+                Logs.error("An error occurred while teleporting players", e);
                 return;
             }
 
-            startCountdown(15);
-        }));
-    }
-
-    private void setRandomMapConfigPath() throws MiniGameException {
-        ConfigurationSection section = plugin.getConfig().getConfigurationSection(mapConfigPath);
-        if (section == null) throw new MiniGameException("cannot find any map");
-
-        List<String> maps = new ArrayList<>(section.getKeys(false));
-        if (maps.isEmpty()) throw new MiniGameException("cannot find any map");
-
-        Collections.shuffle(maps);
-
-        mapConfigPath += "." + maps.get(0);
+            Utils.sync(() -> startCountdown(10));
+        });
     }
 
     private void loadDataFromConfig(@NotNull World world) throws MiniGameException {
-        baseLocation = MiniGamesUtils.getLocationFromConfig(world, CONFIG_PATH + "base-location");
+        baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
         if (baseLocation == null) throw new MiniGameException("cannot load base location");
 
         spawn = MiniGamesUtils.getRelativeLocationFromConfig(baseLocation, mapConfigPath + "spawn");
@@ -103,9 +110,9 @@ public class RedGreenMiniGame extends MiniGame {
         spectatorSpawn = MiniGamesUtils.getRelativeLocationFromConfig(baseLocation, mapConfigPath + "spectator-spawn");
         if (spectatorSpawn == null) throw new MiniGameException("cannot load spectator spawn location");
 
-        minDelay = plugin.getConfig().getInt(CONFIG_PATH + "min-delay", 3);
-        maxDelay = plugin.getConfig().getInt(CONFIG_PATH + "max-delay", 10);
-        if (minDelay > maxDelay) throw new MiniGameException("incorrect delays");
+        minDelay = Math.max(2, plugin.getConfig().getInt(configPath + "min-delay", 3));
+        maxDelay = Math.min(60, plugin.getConfig().getInt(configPath + "max-delay", 10));
+        if (minDelay > maxDelay) throw new MiniGameException("minDelay is greater than maxDelay");
     }
 
     private void setUpGameRules(@NotNull World world) {
@@ -131,12 +138,15 @@ public class RedGreenMiniGame extends MiniGame {
         broadcastMessage("&dMinigra rozpoczęta. &ePowodzenia!");
         showTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
 
-        nextCanMoveChange = 5 + Utils.getRandomNumber(minDelay, maxDelay);
+        nextCanMoveChange = 3 + Utils.getRandomNumber(minDelay, maxDelay);
+        lastCanMoveChange = miniGameTime;
         canMove = true;
 
         timer = new BossBarTimer(plugin, totalMiniGameTime, "&eKoniec minigry");
         timer.setColor(BossBar.Color.GREEN);
         timer.startTimer();
+
+        sendActionBar("&aBiegnij!");
 
         playersToStartGameWith.forEach(player -> {
             player.teleportAsync(spawn);
@@ -153,12 +163,14 @@ public class RedGreenMiniGame extends MiniGame {
             changeCanMove();
         }
         tickPlayers();
+        sendActionBar(canMove ? "&aBiegnij!" : "&cStój!");
     }
 
     private void changeCanMove() {
-        nextCanMoveChange += Utils.getRandomNumber(minDelay, maxDelay);
+        nextCanMoveChange = miniGameTime + Utils.getRandomNumber(minDelay, maxDelay);
+        lastCanMoveChange = miniGameTime;
         canMove = !canMove;
-        worldBorder.setWarningDistance(canMove ? 0 : NumberConversions.ceil(worldBorder.getSize()));
+        worldBorder.setWarningDistance(canMove ? 0 : (int) Math.ceil(worldBorder.getSize()));
         timer.setColor(canMove ? BossBar.Color.GREEN : BossBar.Color.RED);
     }
 
@@ -170,40 +182,31 @@ public class RedGreenMiniGame extends MiniGame {
         });
     }
 
-    @Override
-    public @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount() {
-        return 2;
-    }
-
-    @Override
-    public @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount() {
-        return 15;
-    }
-
-    @Override
-    public @NotNull GameMode getSpectatorGameMode() {
-        return GameMode.ADVENTURE;
-    }
-
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerMove(@NotNull PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        if (!isInMiniGame(player)) return;
+        if (getPlayerStatus(player) != PlayerStatus.IN_MINI_GAME) return;
+
         if (lobby) return;
+
         if (isInArea(player, "winner-area")) {
             endGameWithWinner(player);
             return;
         }
-        if (canMove || isInArea(player, "lobby-area")) return;
+
+        if (lastCanMoveChange - miniGameTime < 1) return;
+        if (canMove) return;
+        if (isInArea(player, "lobby-area")) return;
+
         player.setLastDamageCause(new EntityDamageEvent(player, EntityDamageEvent.DamageCause.PROJECTILE, player.getHealth()));
         player.setHealth(0);
     }
 
     private boolean isInArea(@NotNull Player player, @NotNull String area) {
-        int minX = plugin.getConfig().getInt(CONFIG_PATH + area + ".minX");
-        int minZ = plugin.getConfig().getInt(CONFIG_PATH + area + ".minZ");
-        int maxX = plugin.getConfig().getInt(CONFIG_PATH + area + ".maxX");
-        int maxZ = plugin.getConfig().getInt(CONFIG_PATH + area + ".maxZ");
+        int minX = plugin.getConfig().getInt(configPath + area + ".minX");
+        int minZ = plugin.getConfig().getInt(configPath + area + ".minZ");
+        int maxX = plugin.getConfig().getInt(configPath + area + ".maxX");
+        int maxZ = plugin.getConfig().getInt(configPath + area + ".maxZ");
 
         int x = player.getLocation().getBlockX();
         int z = player.getLocation().getBlockZ();

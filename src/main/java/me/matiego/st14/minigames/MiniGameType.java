@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 public enum MiniGameType {
     TAG(null, "Berek", Material.NAME_TAG, 10 * 60),
+    HIDE_AND_SEEK(null, "Chowany", Material.TALL_GRASS, 15 * 60),
     SNOWBALLS_BATTLE(SnowballsBattleMiniGame.class, "Bitwa na śnieżki", Material.SNOWBALL, 15 * 60),
     TNT_RUN(TNTRunMiniGame.class, "TNT Run", Material.TNT, 15 * 60),
     SPLEEF(SpleefMiniGame.class, "Spleef", Material.STONE_SHOVEL, 15 * 60),
@@ -16,7 +17,9 @@ public enum MiniGameType {
     MAZE(MazeMiniGame.class, "Labirynt", Material.BRICKS, 15 * 60),
     PARKOUR(ParkourMiniGame.class, "Parkour", Material.POTION, 20 * 60),
     SKYWARS(SkywarsMiniGame.class, "Skywars", Material.ENDER_EYE, 20 * 60),
+    BLOCKED_IN_COMBAT(null, "Blocked in combat", Material.STONE, 30 * 60),
     UHC(null, "UHC", Material.GOLDEN_APPLE, 30 * 60),
+    MANHUNT(null, "Manhunt", Material.DIAMOND_SWORD, 30 * 60),
     DEATH_SWAP(null, "Death Swap", Material.ENDER_PEARL, 30 * 60);
 
     private final Class<? extends MiniGame> handler;

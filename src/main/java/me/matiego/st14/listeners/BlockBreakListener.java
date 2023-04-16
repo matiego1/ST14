@@ -4,6 +4,7 @@ import me.matiego.st14.Main;
 import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -35,5 +36,11 @@ public class BlockBreakListener implements Listener {
         if (material.contains("SIGN")) {
             plugin.getDynmap().deleteSignMarker(block.getLocation());
         }
+
+        Block up = event.getBlock().getRelative(BlockFace.UP);
+        if (up.getType().name().contains("SIGN")) {
+            plugin.getDynmap().deleteSignMarker(up.getLocation());
+        }
     }
+
 }

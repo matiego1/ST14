@@ -1,6 +1,9 @@
 package me.matiego.st14.minigames;
 
+import com.sk89q.worldedit.math.BlockVector3;
+import lombok.Getter;
 import lombok.SneakyThrows;
+import lombok.Synchronized;
 import me.matiego.st14.BossBarTimer;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.Logs;
@@ -8,21 +11,18 @@ import me.matiego.st14.utils.Prefix;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title;
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.WorldBorder;
+import org.bukkit.*;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.io.File;
+import java.util.*;
 
 public abstract class MiniGame implements Listener {
     public MiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime) {
@@ -30,6 +30,7 @@ public abstract class MiniGame implements Listener {
         this.totalMiniGameTime = totalMiniGameTime;
     }
 
+    //<editor-fold defaultstate="collapsed" desc="variables">
     protected final Main plugin;
     protected final int totalMiniGameTime;
     protected String configPath = null;
@@ -38,38 +39,12 @@ public abstract class MiniGame implements Listener {
     protected Location baseLocation;
     protected WorldBorder worldBorder;
     protected BossBarTimer timer;
+    @Getter(onMethod_ = {@Synchronized})
     protected boolean isMiniGameStarted = false;
     protected boolean lobby = true;
     protected int miniGameTime = 0;
     private final Set<BukkitTask> tasks = new HashSet<>();
     private final HashMap<Player, PlayerStatus> players = new HashMap<>();
-
-    protected synchronized void changePlayerStatus(@NotNull Player player, @NotNull PlayerStatus status) {
-        if (status == PlayerStatus.NOT_IN_MINI_GAME) {
-            players.remove(player);
-        } else {
-            players.put(player, status);
-        }
-    }
-
-    protected synchronized @NotNull PlayerStatus getPlayerStatus(@NotNull Player player) {
-        return players.getOrDefault(player, PlayerStatus.NOT_IN_MINI_GAME);
-    }
-
-    protected synchronized void runTaskLater(@NotNull Runnable task, long delay) {
-        tasks.add(Bukkit.getScheduler().runTaskLater(plugin, task, delay));
-    }
-
-    protected synchronized void runTaskTimer(@NotNull Runnable task, long delay, long period) {
-        tasks.add(Bukkit.getScheduler().runTaskTimer(plugin, task, delay, period));
-    }
-
-    protected synchronized void cancelAllTasks() {
-        for (BukkitTask task : tasks) {
-            task.cancel();
-        }
-        tasks.clear();
-    }
 
     protected void clearExistingData() {
         cancelAllTasks();
@@ -88,6 +63,137 @@ public abstract class MiniGame implements Listener {
         configPath = null;
         mapConfigPath = null;
     }
+
+    protected void setRandomMapConfigPath(@NotNull String mapsListConfigPath) throws MiniGameException {
+        ConfigurationSection section = plugin.getConfig().getConfigurationSection(mapsListConfigPath);
+        if (section == null) throw new MiniGameException("cannot find any map");
+
+        List<String> maps = new ArrayList<>(section.getKeys(false));
+        if (maps.isEmpty()) throw new MiniGameException("cannot find any map");
+
+        Collections.shuffle(maps);
+
+        mapConfigPath += "." + maps.get(0);
+    }
+
+    public abstract @NotNull String getMiniGameName();
+    public abstract @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount();
+    public abstract @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount();
+    public abstract @NotNull GameMode getSpectatorGameMode();
+
+    //</editor-fold>
+
+    //<editor-fold defaultstate="collapsed" desc="player status">
+    protected synchronized void changePlayerStatus(@NotNull Player player, @NotNull PlayerStatus status) {
+        if (status == PlayerStatus.NOT_IN_MINI_GAME) {
+            players.remove(player);
+        } else {
+            players.put(player, status);
+        }
+    }
+
+    protected synchronized @NotNull PlayerStatus getPlayerStatus(@NotNull Player player) {
+        return players.getOrDefault(player, PlayerStatus.NOT_IN_MINI_GAME);
+    }
+
+    protected enum PlayerStatus {
+        IN_MINI_GAME,
+        SPECTATOR,
+        NOT_IN_MINI_GAME
+    }
+
+    public synchronized boolean isInMiniGame(@NotNull Player player) {
+        return players.containsKey(player);
+    }
+
+    public synchronized @NotNull List<Player> getPlayers() {
+        return players.keySet().stream().toList();
+    }
+
+    public synchronized @NotNull List<Player> getPlayersInMiniGame() {
+        return players.keySet().stream().filter(player -> getPlayerStatus(player) == PlayerStatus.IN_MINI_GAME).toList();
+    }
+    //</editor-fold>
+
+    //<editor-fold defaultstate="collapsed" desc="minigame tasks">
+    protected synchronized void runTaskLater(@NotNull Runnable task, long delay) {
+        tasks.add(Bukkit.getScheduler().runTaskLater(plugin, task, delay));
+    }
+
+    protected synchronized void runTaskTimer(@NotNull Runnable task, long delay, long period) {
+        tasks.add(Bukkit.getScheduler().runTaskTimer(plugin, task, delay, period));
+    }
+
+    protected synchronized void cancelAllTasks() {
+        for (BukkitTask task : tasks) {
+            task.cancel();
+        }
+        tasks.clear();
+    }
+    //</editor-fold>
+
+    //<editor-fold defaultstate="collapsed" desc="messaging utils">
+    protected synchronized void broadcastMessage(@NotNull String message) {
+        if (message.isBlank()) return;
+
+        Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + message));
+        Logs.discord(PlainTextComponentSerializer.plainText().serialize(Utils.getComponentByString(Prefix.MINI_GAMES + message)));
+        for (Player player : getPlayers()) {
+            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + message));
+        }
+    }
+
+    protected synchronized void showTitle(@NotNull String title, @NotNull String subtitle) {
+        for (Player player : getPlayers()) {
+            player.showTitle(Title.title(Utils.getComponentByString(title), Utils.getComponentByString(subtitle)));
+        }
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    protected synchronized void sendActionBar(@NotNull String actionBar) {
+        for (Player player : getPlayers()) {
+            player.sendActionBar(Utils.getComponentByString(actionBar));
+        }
+    }
+    //</editor-fold>
+
+    //<editor-fold defaultstate="collapsed" desc="map utils">
+    protected @Nullable File getRandomMapFile() {
+        File dir = new File(plugin.getDataFolder(), "mini-games");
+        if (!dir.exists()) {
+            //noinspection ResultOfMethodCallIgnored
+            dir.mkdirs();
+        }
+
+        if (mapConfigPath == null) return null;
+
+        List<String> mapFiles = plugin.getConfig().getStringList(mapConfigPath + "map-files");
+        Collections.shuffle(mapFiles);
+
+        for (String mapFile : mapFiles) {
+            File file = new File(dir, mapFile);
+            if (file.exists()) {
+                return file;
+            }
+        }
+        return null;
+    }
+
+    protected void pasteMap(@NotNull World world, @NotNull File file) throws Exception {
+        if (file.exists()) throw new NullPointerException("map file does not exist");
+
+        MiniGamesUtils.pasteSchematic(
+                world,
+                BlockVector3.at(baseLocation.getBlockX(), baseLocation.getBlockY(), baseLocation.getBlockZ()),
+                file
+        );
+    }
+
+    //TODO: refresh minigame world
+    //</editor-fold>
+
+    //<editor-fold defaultstate="collapsed" desc="minigame start logic">
+    public abstract void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException;
 
     @SneakyThrows(MiniGameException.class)
     protected synchronized void startCountdown(int countdownTimeInSeconds) {
@@ -121,6 +227,8 @@ public abstract class MiniGame implements Listener {
         }, delay);
     }
 
+    protected abstract void onCountdownEnd();
+
     protected synchronized void broadcastMiniGameStartMessage(@NotNull Player sender) {
         Utils.broadcastMessage(
                 sender,
@@ -131,79 +239,14 @@ public abstract class MiniGame implements Listener {
         );
     }
 
-    protected synchronized void broadcastMessage(@NotNull String message) {
-        if (message.isBlank()) return;
-
-        Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + message));
-        Logs.discord(PlainTextComponentSerializer.plainText().serialize(Utils.getComponentByString(Prefix.MINI_GAMES + message)));
-        for (Player player : getPlayers()) {
-            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + message));
-        }
+    protected void registerEvents() {
+        Bukkit.getPluginManager().registerEvents(this, plugin);
     }
+    //</editor-fold>
 
-    protected synchronized void showTitle(@NotNull String title, @NotNull String subtitle) {
-        for (Player player : getPlayers()) {
-            player.showTitle(Title.title(Utils.getComponentByString(title), Utils.getComponentByString(subtitle)));
-        }
-    }
+    protected abstract void miniGameTick();
 
-    @SuppressWarnings("SameParameterValue")
-    protected synchronized void sendActionBar(@NotNull String actionBar) {
-        for (Player player : getPlayers()) {
-            player.sendActionBar(Utils.getComponentByString(actionBar));
-        }
-    }
-
-    protected synchronized boolean endGameIfLessThanTwoPlayersLeft() {
-        List<Player> players = getPlayersInMiniGame();
-        if (players.size() <= 1) {
-            if (players.isEmpty()) {
-                scheduleStopMiniGameAndSendReason("Koniec minigry! Napotkano błąd przy wyłanianiu zwycięzcy.", "&dKoniec minigry", "");
-            } else {
-                endGameWithWinner(players.get(0));
-            }
-            return true;
-        }
-        return false;
-    }
-
-    protected synchronized void endGameWithWinner(@NotNull Player winner) {
-        scheduleStopMiniGameAndSendReason("Koniec minigry! Wygrywa gracz &d" + winner.getName(), "&dKoniec minigry", "");
-        if (plugin.getIncognitoManager().isIncognito(winner.getUniqueId())) {
-            Logs.discord("Gracz **" + winner + "** wygrywa minigrę **" + getMiniGameName() + "**!");
-            return;
-        }
-        plugin.getChatMinecraft().sendMessage("Gracz **" + winner + "** wygrywa minigrę **" + getMiniGameName() + "**!", Prefix.MINI_GAMES.getDiscord());
-    }
-
-    protected synchronized void scheduleStopMiniGameAndSendReason(@NotNull String message, @NotNull String title, @NotNull String subtitle) {
-        lobby = true;
-
-        broadcastMessage(message);
-        showTitle(title, subtitle);
-
-        if (timer != null) timer.stopTimerAndHideBossBar();
-
-        cancelAllTasks();
-        runTaskLater(this::stopMiniGame, 100);
-    }
-
-    public synchronized boolean isInMiniGame(@NotNull Player player) {
-        return players.containsKey(player);
-    }
-
-    public synchronized @NotNull List<Player> getPlayers() {
-        return players.keySet().stream().toList();
-    }
-
-    public synchronized @NotNull List<Player> getPlayersInMiniGame() {
-        return players.keySet().stream().filter(player -> getPlayerStatus(player) == PlayerStatus.IN_MINI_GAME).toList();
-    }
-
-    public synchronized boolean isStarted() {
-        return isMiniGameStarted;
-    }
-
+    //<editor-fold defaultstate="collapsed" desc="join, quit, death handlers">
     public void onPlayerJoin(@NotNull Player player) {
         if (!isMiniGameStarted) return;
 
@@ -275,6 +318,42 @@ public abstract class MiniGame implements Listener {
             player.teleportAsync(spectatorSpawn);
         }, 3);
     }
+    //</editor-fold>
+
+    //<editor-fold defaultstate="collapsed" desc="minigame end logic">
+    protected synchronized boolean endGameIfLessThanTwoPlayersLeft() {
+        List<Player> players = getPlayersInMiniGame();
+        if (players.size() <= 1) {
+            if (players.isEmpty()) {
+                scheduleStopMiniGameAndSendReason("Koniec minigry! Napotkano błąd przy wyłanianiu zwycięzcy.", "&dKoniec minigry", "");
+            } else {
+                endGameWithWinner(players.get(0));
+            }
+            return true;
+        }
+        return false;
+    }
+
+    protected synchronized void endGameWithWinner(@NotNull Player winner) {
+        scheduleStopMiniGameAndSendReason("Koniec minigry! Wygrywa gracz &d" + winner.getName(), "&dKoniec minigry", "");
+        if (plugin.getIncognitoManager().isIncognito(winner.getUniqueId())) {
+            Logs.discord("Gracz **" + winner + "** wygrywa minigrę **" + getMiniGameName() + "**!");
+            return;
+        }
+        plugin.getChatMinecraft().sendMessage("Gracz **" + winner + "** wygrywa minigrę **" + getMiniGameName() + "**!", Prefix.MINI_GAMES.getDiscord());
+    }
+
+    protected synchronized void scheduleStopMiniGameAndSendReason(@NotNull String message, @NotNull String title, @NotNull String subtitle) {
+        lobby = true;
+
+        broadcastMessage(message);
+        showTitle(title, subtitle);
+
+        if (timer != null) timer.stopTimerAndHideBossBar();
+
+        cancelAllTasks();
+        runTaskLater(this::stopMiniGame, 100);
+    }
 
     public void stopMiniGame() {
         if (!isMiniGameStarted) return;
@@ -291,21 +370,5 @@ public abstract class MiniGame implements Listener {
         isMiniGameStarted = false;
     }
 
-    protected void registerEvents() {
-        Bukkit.getPluginManager().registerEvents(this, plugin);
-    }
-
-    public abstract @NotNull String getMiniGameName();
-    public abstract void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException;
-    protected abstract void onCountdownEnd();
-    protected abstract void miniGameTick();
-    public abstract @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount();
-    public abstract @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount();
-    public abstract @NotNull GameMode getSpectatorGameMode();
-
-    protected enum PlayerStatus {
-        IN_MINI_GAME,
-        SPECTATOR,
-        NOT_IN_MINI_GAME
-    }
+    //</editor-fold>
 }

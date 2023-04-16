@@ -76,8 +76,6 @@ public class SpawnCommand implements CommandHandler.Minecraft {
         final double cost;
         if (plugin.getConfig().getStringList("spawn.free-worlds").contains(player.getWorld().getName())) {
             cost = 0;
-        } else if (player.hasPermission("st14.spawn." + player.getWorld().getName())) {
-            cost = 0;
         } else {
             cost = Utils.round(plugin.getConfig().getDouble("spawn.cost") * (distance / 16), 2);
         }
@@ -103,11 +101,11 @@ public class SpawnCommand implements CommandHandler.Minecraft {
                         player.sendMessage(Utils.getComponentByString("&aPomyślnie przeteleportowano na spawn" + " za " + economy.format(cost)));
                         Logs.info("Gracz " + player.getName() + " przeteleportował się na spawn.");
                     }
-                    case MOVE -> player.sendMessage(Utils.getComponentByString("&cTeleportowanie anulowane, poruszyłeś się"));
+                    case PLAYER_MOVED -> player.sendMessage(Utils.getComponentByString("&cTeleportowanie anulowane, poruszyłeś się"));
                     case ALREADY_ACTIVE -> player.sendMessage(Utils.getComponentByString("&cProces teleportowania już został rozpoczęty."));
-                    case DISABLED -> player.sendMessage(Utils.getComponentByString("&cTeleportowanie anulowane."));
-                    case CANCELLED -> {}
-                    case ANTY_LOGOUT -> player.sendMessage(Utils.getComponentByString("&cNie możesz się teleportować z aktywnym anty-logoutem."));
+                    case PLUGIN_DISABLED -> player.sendMessage(Utils.getComponentByString("&cTeleportowanie anulowane."));
+                    case CANCELLED_AFTER_COUNTDOWN -> {}
+                    case CANCELLED_ANTY_LOGOUT -> player.sendMessage(Utils.getComponentByString("&cNie możesz się teleportować z aktywnym anty-logoutem."));
                     case FAILURE -> {
                         player.sendMessage(Utils.getComponentByString("&cNapotkano niespodziewany błąd."));
                         if (!economy.depositPlayer(player, cost).transactionSuccess()) {

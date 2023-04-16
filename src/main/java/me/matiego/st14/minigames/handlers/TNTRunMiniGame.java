@@ -1,6 +1,5 @@
 package me.matiego.st14.minigames.handlers;
 
-import com.sk89q.worldedit.math.BlockVector3;
 import me.matiego.st14.BossBarTimer;
 import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGame;
@@ -11,31 +10,24 @@ import me.matiego.st14.utils.Utils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 public class TNTRunMiniGame extends MiniGame {
-    public TNTRunMiniGame(@NotNull Main plugin, int totalGameTimeInSeconds) {
-        super(plugin, totalGameTimeInSeconds);
+    public TNTRunMiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime) {
+        super(plugin, totalMiniGameTime);
     }
 
-//    private final String CONFIG_PATH = "minigames.tnt-run.";
     private final int PREPARE_TIME_IN_SECONDS = 3;
-
-//    private String mapConfigPath = "minigames.skywars.maps";
     private Location spawn = null;
 
     @Override
@@ -44,18 +36,34 @@ public class TNTRunMiniGame extends MiniGame {
     }
 
     @Override
+    public @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount() {
+        return 2;
+    }
+
+    @Override
+    public @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount() {
+        return 15;
+    }
+
+    @Override
+    public @NotNull GameMode getSpectatorGameMode() {
+        return GameMode.SPECTATOR;
+    }
+
+    @Override
     public void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException {
-        if (isStarted()) throw new MiniGameException("minigame is already started");
+        if (isMiniGameStarted()) throw new MiniGameException("minigame is already started");
 
         clearExistingData();
         isMiniGameStarted = true;
         lobby = true;
-        configPath = "mini";
+
+        configPath = "minigames.tnt-run.";
 
         World world = MiniGamesUtils.getMiniGamesWorld();
         if (world == null) throw new MiniGameException("cannot load world");
 
-        setRandomMapConfigPath();
+        setRandomMapConfigPath(configPath + "maps");
         loadDataFromConfig(world);
         registerEvents();
         setUpGameRules(world);
@@ -69,7 +77,9 @@ public class TNTRunMiniGame extends MiniGame {
         sendActionBar("&eGenerowanie areny...");
         Utils.async(() -> {
             try {
-                pasteMap(world);
+                File file = getRandomMapFile();
+                if (file == null) throw new NullPointerException("map file is null");
+                pasteMap(world, file);
             } catch (Exception e) {
                 Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy generowaniu areny. Minigra anulowana.", "&dStart anulowany", ""));
                 Logs.error("An error occurred while pasting a map for the minigame", e);
@@ -91,25 +101,13 @@ public class TNTRunMiniGame extends MiniGame {
         });
     }
 
-    private void setRandomMapConfigPath() throws MiniGameException {
-        ConfigurationSection section = plugin.getConfig().getConfigurationSection(mapConfigPath);
-        if (section == null) throw new MiniGameException("cannot find any map");
-
-        List<String> maps = new ArrayList<>(section.getKeys(false));
-        if (maps.isEmpty()) throw new MiniGameException("cannot find any map");
-
-        Collections.shuffle(maps);
-
-        mapConfigPath += "." + maps.get(0);
-    }
-
     private void loadDataFromConfig(@NotNull World world) throws MiniGameException {
         baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
         if (baseLocation == null) throw new MiniGameException("cannot load base location");
 
-        spawn = MiniGamesUtils.getLocationFromConfig(world, mapConfigPath + "spawn");
+        spawn = MiniGamesUtils.getRelativeLocationFromConfig(baseLocation, mapConfigPath + "spawn");
         if (spawn == null) throw new MiniGameException("cannot load spawn location");
-        spectatorSpawn = MiniGamesUtils.getLocationFromConfig(world, mapConfigPath + "spectator-spawn");
+        spectatorSpawn = MiniGamesUtils.getRelativeLocationFromConfig(baseLocation, mapConfigPath + "spectator-spawn");
         if (spectatorSpawn == null) throw new MiniGameException("cannot load spectator spawn location");
     }
 
@@ -119,36 +117,6 @@ public class TNTRunMiniGame extends MiniGame {
         world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
         world.setGameRule(GameRule.DO_ENTITY_DROPS, false);
         world.setGameRule(GameRule.FALL_DAMAGE, false);
-    }
-
-    private void pasteMap(@NotNull World world) throws Exception {
-        File file = getRandomMapFile();
-        if (file == null) throw new NullPointerException("map file is null");
-
-        MiniGamesUtils.pasteSchematic(
-                world,
-                BlockVector3.at(baseLocation.getBlockX(), baseLocation.getBlockY(), baseLocation.getBlockZ()),
-                file
-        );
-    }
-
-    private @Nullable File getRandomMapFile() {
-        File dir = new File(plugin.getDataFolder(), "mini-games");
-        if (!dir.exists()) {
-            //noinspection ResultOfMethodCallIgnored
-            dir.mkdirs();
-        }
-
-        List<String> mapFiles = plugin.getConfig().getStringList(mapConfigPath + "map-files");
-        Collections.shuffle(mapFiles);
-
-        for (String mapFile : mapFiles) {
-            File file = new File(dir, mapFile);
-            if (file.exists()) {
-                return file;
-            }
-        }
-        return null;
     }
 
     @Override
@@ -176,33 +144,44 @@ public class TNTRunMiniGame extends MiniGame {
             timer.showBossBarToPlayer(player);
         });
 
-        runTaskTimer(this::breakBlockUnderPlayers, 1, 1);
+        runTaskTimer(this::breakBlocksUnderPlayers, 1, 1);
     }
 
-    private void breakBlockUnderPlayers() {
+    private void breakBlocksUnderPlayers() {
         if (miniGameTime < PREPARE_TIME_IN_SECONDS) return;
-        getPlayersInMiniGame().forEach(player -> {
-            Block block = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
-//            BoundingBox box = player.getBoundingBox().clone();
-            //TODO: sprawdzić, na którym z 4 bloków najbardziej stoi i nie jest to powietrze to go zniszczyć
-
-            runTaskLater(() -> {
-                breakBlocksIfNonAir(player.getWorld(), block.getX(), block.getY(), block.getZ());
-//                for (int x = NumberConversions.floor(box.getMinX()); x <= NumberConversions.floor(box.getMaxX()); x++) {
-//                    for (int z = NumberConversions.floor(box.getMinZ()); z <= NumberConversions.floor(box.getMaxZ()); z++) {
-//                        breakBlocksIfNonAir(world, x, NumberConversions.floor(box.getMinY()), z);
-//                    }
-//                }
-            }, 5);
-        });
+        getPlayersInMiniGame().forEach(this::breakBlocksUnderPlayer);
     }
 
-    private void breakBlocksIfNonAir(@NotNull World world, int x, int y, int z) {
+    private void breakBlocksUnderPlayer(@NotNull Player player) {
+        if (!MiniGamesUtils.isInAnyMiniGameWorld(player)) return;
+
+        BoundingBox box = player.getBoundingBox().clone();
+        World world = player.getWorld();
+
+        int y = (int) Math.floor(box.getMinY());
+        int centerX = (int) Math.floor(box.getCenterX());
+        int centerZ = (int) Math.floor(box.getCenterZ());
+
+        int oppositeX = (int) Math.floor(box.getMinX());
+        if (oppositeX == centerX) oppositeX = (int) Math.floor(box.getMaxX());
+
+        int oppositeZ = (int) Math.floor(box.getMinZ());
+        if (oppositeZ == centerZ) oppositeZ = (int) Math.floor(box.getMaxZ());
+
+        if (breakBlocksIfNotAir(world, centerX, y, centerZ)) return;
+        if (breakBlocksIfNotAir(world, centerX, y, oppositeZ)) return;
+        if (breakBlocksIfNotAir(world, oppositeX, y, centerZ)) return;
+        breakBlocksIfNotAir(world, oppositeX, y, oppositeZ);
+    }
+
+    private boolean breakBlocksIfNotAir(@NotNull World world, int x, int y, int z) {
         Block block = world.getBlockAt(x, y, z);
-        if (block.getType() == Material.AIR) return;
-        block.setType(Material.AIR);
-        world.getBlockAt(x, y - 1, z).setType(Material.AIR);
-        world.getBlockAt(x, y - 2, z).setType(Material.AIR);
+        if (block.getType().isAir()) return false;
+        runTaskLater(() -> {
+            block.setType(Material.AIR);
+            block.getRelative(BlockFace.DOWN).setType(Material.AIR);
+        }, 5);
+        return true;
     }
 
     @Override
@@ -236,24 +215,8 @@ public class TNTRunMiniGame extends MiniGame {
         });
     }
 
-    @Override
-    public @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount() {
-        return 2;
-    }
-
-    @Override
-    public @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount() {
-        return 15;
-    }
-
-    @Override
-    public @NotNull GameMode getSpectatorGameMode() {
-        return GameMode.SPECTATOR;
-    }
-
-    @EventHandler (ignoreCancelled = true)
+    @EventHandler(ignoreCancelled = true)
     public void onEntityDamageByEntity(@NotNull EntityDamageByEntityEvent event) {
-        if (event.getDamager().getType() == EntityType.SNOWBALL) return;
         if (!(event.getEntity() instanceof Player player)) return;
         if (!isInMiniGame(player)) return;
         event.setCancelled(true);
