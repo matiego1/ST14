@@ -102,12 +102,12 @@ public class RedGreenMiniGame extends MiniGame {
     }
 
     private void loadDataFromConfig(@NotNull World world) throws MiniGameException {
-        baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
-        if (baseLocation == null) throw new MiniGameException("cannot load base location");
+//        baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
+//        if (baseLocation == null) throw new MiniGameException("cannot load base location");
 
-        spawn = MiniGamesUtils.getRelativeLocationFromConfig(baseLocation, mapConfigPath + "spawn");
+        spawn = MiniGamesUtils.getLocationFromConfig(world, mapConfigPath + "spawn");
         if (spawn == null) throw new MiniGameException("cannot load spawn location");
-        spectatorSpawn = MiniGamesUtils.getRelativeLocationFromConfig(baseLocation, mapConfigPath + "spectator-spawn");
+        spectatorSpawn = MiniGamesUtils.getLocationFromConfig(world, mapConfigPath + "spectator-spawn");
         if (spectatorSpawn == null) throw new MiniGameException("cannot load spectator spawn location");
 
         minDelay = Math.max(2, plugin.getConfig().getInt(configPath + "min-delay", 3));
@@ -203,10 +203,10 @@ public class RedGreenMiniGame extends MiniGame {
     }
 
     private boolean isInArea(@NotNull Player player, @NotNull String area) {
-        int minX = plugin.getConfig().getInt(configPath + area + ".minX");
-        int minZ = plugin.getConfig().getInt(configPath + area + ".minZ");
-        int maxX = plugin.getConfig().getInt(configPath + area + ".maxX");
-        int maxZ = plugin.getConfig().getInt(configPath + area + ".maxZ");
+        int minX = plugin.getConfig().getInt(mapConfigPath + area + ".minX");
+        int minZ = plugin.getConfig().getInt(mapConfigPath + area + ".minZ");
+        int maxX = plugin.getConfig().getInt(mapConfigPath + area + ".maxX");
+        int maxZ = plugin.getConfig().getInt(mapConfigPath + area + ".maxZ");
 
         int x = player.getLocation().getBlockX();
         int z = player.getLocation().getBlockZ();

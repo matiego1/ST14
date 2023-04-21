@@ -191,7 +191,7 @@ public class TNTRunMiniGame extends MiniGame {
     }
 
     private void teleportSpectatorsBackIfTooFarAway() {
-        int maxDistance = Math.max(0, plugin.getConfig().getInt(configPath + "map-radius", 100));
+        int maxDistance = Math.max(0, plugin.getConfig().getInt(mapConfigPath + "map-radius", 100));
         getPlayers().stream()
                 .filter(player -> distanceSquared(player.getLocation(), spectatorSpawn) > maxDistance * maxDistance)
                 .filter(player -> getPlayerStatus(player) == PlayerStatus.SPECTATOR)

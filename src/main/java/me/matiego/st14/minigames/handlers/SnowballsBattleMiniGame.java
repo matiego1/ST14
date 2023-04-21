@@ -101,12 +101,12 @@ public class SnowballsBattleMiniGame extends MiniGame {
     }
 
     private void loadDataFromConfig(@NotNull World world) throws MiniGameException {
-        baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
-        if (baseLocation == null) throw new MiniGameException("cannot load base location");
+//        baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
+//        if (baseLocation == null) throw new MiniGameException("cannot load base location");
 
-        spawn = MiniGamesUtils.getRelativeLocationFromConfig(baseLocation, mapConfigPath + "spawn");
+        spawn = MiniGamesUtils.getLocationFromConfig(world, mapConfigPath + "spawn");
         if (spawn == null) throw new MiniGameException("cannot load spawn location");
-        spectatorSpawn = MiniGamesUtils.getRelativeLocationFromConfig(baseLocation, mapConfigPath + "spectator-spawn");
+        spectatorSpawn = MiniGamesUtils.getLocationFromConfig(world, mapConfigPath + "spectator-spawn");
         if (spectatorSpawn == null) throw new MiniGameException("cannot load spectator spawn location");
 
         prepareTime = Math.max(0, plugin.getConfig().getInt(configPath + "prepare-time", prepareTime));
