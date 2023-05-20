@@ -11,6 +11,7 @@ public class GameTime {
         this.incognito = incognito;
     }
 
+    public static final GameTime EMPTY = empty();
     @Getter @Setter private long normal;
     @Getter @Setter private long afk;
     @Getter @Setter private long incognito;

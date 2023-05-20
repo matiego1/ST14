@@ -64,6 +64,7 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
                 sender.sendMessage(Utils.getComponentByString(
                         Prefix.TIME + "&6==============================\n" +
                         Prefix.TIME + "&6&lCzasy gracza &6" + args[0] + "&e:\n" +
+                        Prefix.TIME + "&6Ostatnio online:&e " + formatMinecraft(console ? time.getLastOnline() : time.getFakeLastOnline()) + "\n" +
                         Prefix.TIME + "&6Aktualny czas&e: " + formatMinecraft(time.getSession(), console) + "\n" +
                         Prefix.TIME + "&6Czas dzienny &e: " + formatMinecraft(time.getDaily(), console) + "\n" +
                         Prefix.TIME + "&6Łączny czas  &e: " + formatMinecraft(time.getTotal(), console) + "\n" +
@@ -85,6 +86,7 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
             player.sendMessage(Utils.getComponentByString(
                     Prefix.TIME + "&6==============================\n" +
                     Prefix.TIME + "&6&lTwoje czasy:\n" +
+                    Prefix.TIME + "&6Ostatnio online:&e " + formatMinecraft(time.getLastOnline()) + "\n" +
                     Prefix.TIME + "&6Aktualny czas&e: " + formatMinecraft(time.getSession(), true) + "\n" +
                     Prefix.TIME + "&6Czas dzienny &e: " + formatMinecraft(time.getDaily(), true) + "\n" +
                     Prefix.TIME + "&6Łączny czas  &e: " + formatMinecraft(time.getTotal(), true) + "\n" +
@@ -130,8 +132,10 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
             EmbedBuilder eb = new EmbedBuilder();
             eb.setTitle(self ? "Twoje czasy gry" : "Czasy gry " + name);
             if (self) {
+                eb.setDescription("Ostatnio online: <t:" + time.getLastOnline() + ":R>");
                 eb.addField("Aktualny czas", formatDiscord(time.getSession(), true), false);
             } else {
+                eb.setDescription("Ostatnio online: <t:" + time.getFakeLastOnline() + ":R>");
                 eb.addField("Aktualny czas", formatDiscord(time.getFakeSession(), false), false);
             }
             eb.addField("Czas dzienny", formatDiscord(time.getDaily(), self), false);
@@ -144,7 +148,7 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
     }
 
     private @NotNull String formatDiscord(@NotNull GameTime time, boolean showIncognito) {
-        if (time.equals(GameTime.empty())) {
+        if (time.equals(GameTime.EMPTY)) {
             return "Gracz jest offline";
         }
         String result = "Razem: `" + Utils.parseMillisToString(time.getNormal() + time.getAfk() + (showIncognito ? time.getIncognito() : 0), false) + "` w tym:\n" +
@@ -157,7 +161,7 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
     }
 
     private @NotNull String formatMinecraft(@NotNull GameTime time, boolean showIncognito) {
-        if (time.equals(GameTime.empty())) {
+        if (time.equals(GameTime.EMPTY)) {
             return "&cGracz jest offline";
         }
         String result = Utils.parseMillisToString(time.getNormal() + time.getAfk() + (showIncognito ? time.getIncognito() : 0), false) +
@@ -168,6 +172,11 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
             result += " &6|&e " + Utils.parseMillisToString(time.getIncognito(), false);
         }
         return result + "&6]";
+    }
+    private @NotNull String formatMinecraft(long date) {
+        date = Utils.now() - date;
+        if (date <= 5 * 1000) return "&aGracz jest online";
+        return Utils.parseMillisToString(date, false) + "temu";
     }
 
     @Override
