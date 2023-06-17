@@ -132,10 +132,10 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
             EmbedBuilder eb = new EmbedBuilder();
             eb.setTitle(self ? "Twoje czasy gry" : "Czasy gry " + name);
             if (self) {
-                eb.setDescription("Ostatnio online: <t:" + time.getLastOnline() + ":R>");
+                eb.setDescription(formatDiscord(time.getLastOnline()));
                 eb.addField("Aktualny czas", formatDiscord(time.getSession(), true), false);
             } else {
-                eb.setDescription("Ostatnio online: <t:" + time.getFakeLastOnline() + ":R>");
+                eb.setDescription(formatDiscord(time.getFakeLastOnline()));
                 eb.addField("Aktualny czas", formatDiscord(time.getFakeSession(), false), false);
             }
             eb.addField("Czas dzienny", formatDiscord(time.getDaily(), self), false);
@@ -152,12 +152,18 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
             return "Gracz jest offline";
         }
         String result = "Razem: `" + Utils.parseMillisToString(time.getNormal() + time.getAfk() + (showIncognito ? time.getIncognito() : 0), false) + "` w tym:\n" +
-                " - Czas zwykły: `" + Utils.parseMillisToString(time.getNormal(), false) + "`\n" +
-                " - Czas AFK: `" + Utils.parseMillisToString(time.getAfk(), false) + "`";
+                "- Czas zwykły: `" + Utils.parseMillisToString(time.getNormal(), false) + "`\n" +
+                "- Czas AFK: `" + Utils.parseMillisToString(time.getAfk(), false) + "`";
         if (showIncognito) {
             result += "\n - Czas incognito: `" + Utils.parseMillisToString(time.getIncognito(), false) + "`";
         }
         return result;
+    }
+
+    private @NotNull String formatDiscord(long date) {
+        if (date <= 0) return "Ostatnio online przed <t:1684533600:D>";
+        if (Utils.now() - date <= 5) return "Gracz jest online";
+        return "Ostatnio online: <t:" + (date / 1000) + ":R>";
     }
 
     private @NotNull String formatMinecraft(@NotNull GameTime time, boolean showIncognito) {
@@ -174,9 +180,10 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
         return result + "&6]";
     }
     private @NotNull String formatMinecraft(long date) {
+        if (date <= 0) return "przed 20 maja 2023 roku";
         date = Utils.now() - date;
         if (date <= 5 * 1000) return "&aGracz jest online";
-        return Utils.parseMillisToString(date, false) + "temu";
+        return Utils.parseMillisToString(date, false) + " temu";
     }
 
     @Override

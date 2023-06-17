@@ -78,9 +78,10 @@ public class PlayerTime {
         if (type == GameTime.Type.INCOGNITO || newType == GameTime.Type.INCOGNITO) {
             fakeSession = GameTime.empty();
         }
+        boolean shouldUpdateFakeLastOnline = type != null && newType == GameTime.Type.INCOGNITO;
         type = newType;
         startOfCurrentType = Utils.now();
-        if (newType == GameTime.Type.INCOGNITO) {
+        if (shouldUpdateFakeLastOnline) {
             fakeLastOnline = startOfCurrentType;
         }
     }
@@ -118,6 +119,8 @@ public class PlayerTime {
     }
 
     public synchronized void save() {
+        if (type == null) return;
+
         updateCurrent();
 
         long now = Utils.now();
