@@ -1,7 +1,7 @@
 name: ST14
 version: '${project.version}'
 main: me.matiego.st14.Main
-api-version: 1.20
+api-version: '1.20'
 author: Matiego
 description: A plugin for ST14 server
 depend: [Vault, Graves]
