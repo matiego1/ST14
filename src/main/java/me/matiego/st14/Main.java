@@ -83,7 +83,7 @@ public final class Main extends JavaPlugin implements Listener {
         instance = this;
         long time = Utils.now();
         //Check Bukkit version
-        if (!Bukkit.getBukkitVersion().equals("1.19.4-R0.1-SNAPSHOT")) {
+        if (!Bukkit.getBukkitVersion().equals("1.20.1-R0.1-SNAPSHOT")) {
             Logs.error("Detected incompatible Bukkit version: " + Bukkit.getBukkitVersion() + ".");
             Bukkit.getPluginManager().disablePlugin(this);
             return;

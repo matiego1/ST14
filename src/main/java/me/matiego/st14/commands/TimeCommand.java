@@ -155,7 +155,7 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
                 "- Czas zwykły: `" + Utils.parseMillisToString(time.getNormal(), false) + "`\n" +
                 "- Czas AFK: `" + Utils.parseMillisToString(time.getAfk(), false) + "`";
         if (showIncognito) {
-            result += "\n - Czas incognito: `" + Utils.parseMillisToString(time.getIncognito(), false) + "`";
+            result += "\n- Czas incognito: `" + Utils.parseMillisToString(time.getIncognito(), false) + "`";
         }
         return result;
     }
