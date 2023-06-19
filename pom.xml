@@ -295,7 +295,7 @@
             <artifactId>crashclaim</artifactId>
             <version>1.0.38</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}\CrashClaim-1.0.38.jar</systemPath>
+            <systemPath>${project.basedir}\CrashClaim-1.0.39.jar</systemPath>
         </dependency>
         <!--Dynmap-->
         <dependency>
