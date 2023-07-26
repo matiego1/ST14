@@ -1,4 +1,4 @@
-package me.matiego.st14.utils;
+package me.matiego.st14.times;
 
 import lombok.Getter;
 import lombok.Setter;

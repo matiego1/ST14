@@ -1,4 +1,4 @@
-package me.matiego.st14.utils;
+package me.matiego.st14;
 
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;

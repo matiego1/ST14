@@ -1,12 +1,12 @@
 package me.matiego.st14.minigames.handlers;
 
 import com.sk89q.worldedit.math.BlockVector3;
-import me.matiego.st14.BossBarTimer;
+import me.matiego.st14.utils.BossBarTimer;
 import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGameException;
 import me.matiego.st14.minigames.MiniGamesUtils;
-import me.matiego.st14.utils.Logs;
+import me.matiego.st14.Logs;
 import me.matiego.st14.utils.Pair;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.*;

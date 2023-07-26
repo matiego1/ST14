@@ -1,4 +1,4 @@
-package me.matiego.st14;
+package me.matiego.st14.managers;
 
 import io.papermc.paper.network.ChannelInitializeListenerHolder;
 import me.matiego.st14.utils.ChatPacketHandler;

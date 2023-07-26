@@ -1,8 +1,9 @@
-package me.matiego.st14;
+package me.matiego.st14.managers;
 
-import me.matiego.st14.utils.GameTime;
-import me.matiego.st14.utils.PlayerTime;
-import me.matiego.st14.utils.Prefix;
+import me.matiego.st14.Main;
+import me.matiego.st14.times.GameTime;
+import me.matiego.st14.times.PlayerTime;
+import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -69,9 +70,7 @@ public class AfkManager {
     }
 
     public synchronized void start() {
-        if (task != null) {
-            task.cancel();
-        }
+        stop();
         task = Bukkit.getScheduler().runTaskTimer(
                 plugin,
                 () -> Bukkit.getOnlinePlayers().stream()

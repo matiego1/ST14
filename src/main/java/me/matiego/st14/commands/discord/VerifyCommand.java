@@ -3,7 +3,7 @@ package me.matiego.st14.commands.discord;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.CommandHandler;
 import me.matiego.st14.utils.DiscordUtils;
-import me.matiego.st14.utils.Logs;
+import me.matiego.st14.Logs;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -35,7 +35,7 @@ public class VerifyCommand implements CommandHandler.Discord {
 
         event.deferReply(true).queue();
         InteractionHook hook = event.getHook();
-        String sender = event.getUser().getAsTag();
+        String sender = DiscordUtils.getAsTag(event.getUser());
 
         Guild guild = event.getGuild();
         if (guild == null || plugin.getConfig().getLong("discord.guild-id") != guild.getIdLong()) {
@@ -68,7 +68,7 @@ public class VerifyCommand implements CommandHandler.Discord {
                     DiscordUtils.sendPrivateMessage(member.getUser(), DiscordUtils.checkLength(welcomeMessage, Message.MAX_CONTENT_LENGTH));
                     hook.sendMessage(DiscordUtils.checkLength("Sukces!\nWysłana wiadomość powitalna:\n" + welcomeMessage, Message.MAX_CONTENT_LENGTH)).queue();
 
-                    Logs.info(sender + " zweryfikował " + member.getUser().getAsTag() + " na serwerze Discord.");
+                    Logs.info(sender + " zweryfikował " + DiscordUtils.getAsTag(member) + " na serwerze Discord.");
                 },
                 failure -> hook.sendMessage("Napotkano niespodziewany błąd.").queue()
         );

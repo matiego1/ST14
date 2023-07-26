@@ -36,7 +36,7 @@ public class AllPlayersCommand implements CommandHandler.Discord {
 
         List<String> players = new ArrayList<>();
         int index = 1;
-        for (String name : plugin.getOfflinePlayers().getNames()) {
+        for (String name : plugin.getOfflinePlayersManager().getNames()) {
             players.add((index++) + ". " + name);
         }
 

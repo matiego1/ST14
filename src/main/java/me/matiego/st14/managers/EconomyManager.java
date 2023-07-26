@@ -1,8 +1,9 @@
-package me.matiego.st14;
+package me.matiego.st14.managers;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.matiego.st14.utils.Logs;
+import me.matiego.st14.Main;
+import me.matiego.st14.Logs;
 import me.matiego.st14.utils.Utils;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
@@ -17,10 +18,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class Economy implements net.milkbowl.vault.economy.Economy {
+public class EconomyManager implements net.milkbowl.vault.economy.Economy {
 
     private final Main plugin;
-    public Economy(@NotNull Main plugin, boolean enabled) {
+    public EconomyManager(@NotNull Main plugin, boolean enabled) {
         this.plugin = plugin;
         this.enabled = enabled;
     }
@@ -148,7 +149,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
     @Deprecated
     @Override
     public double getBalance(@NotNull String playerName) {
-        UUID uuid = plugin.getOfflinePlayers().getIdByName(playerName);
+        UUID uuid = plugin.getOfflinePlayersManager().getIdByName(playerName);
         if (uuid == null) return 0;
         return getBalance(Bukkit.getOfflinePlayer(uuid));
     }
@@ -221,7 +222,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
     @Deprecated
     @Override
     public boolean has(@NotNull String playerName, double amount) {
-        UUID uuid = plugin.getOfflinePlayers().getIdByName(playerName);
+        UUID uuid = plugin.getOfflinePlayersManager().getIdByName(playerName);
         if (uuid == null) return false;
         return has(Bukkit.getOfflinePlayer(uuid), amount);
     }
@@ -272,7 +273,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
     @Deprecated
     @Override
     public @NotNull EconomyResponse withdrawPlayer(@NotNull String playerName, double amount) {
-        UUID uuid = plugin.getOfflinePlayers().getIdByName(playerName);
+        UUID uuid = plugin.getOfflinePlayersManager().getIdByName(playerName);
         if (uuid == null) return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, null);
         return withdrawPlayer(Bukkit.getOfflinePlayer(uuid), amount);
     }
@@ -335,7 +336,7 @@ public class Economy implements net.milkbowl.vault.economy.Economy {
     @Deprecated
     @Override
     public @NotNull EconomyResponse depositPlayer(@NotNull String playerName, double amount) {
-        UUID uuid = plugin.getOfflinePlayers().getIdByName(playerName);
+        UUID uuid = plugin.getOfflinePlayersManager().getIdByName(playerName);
         if (uuid == null) return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, null);
         return depositPlayer(Bukkit.getOfflinePlayer(uuid), amount);
     }

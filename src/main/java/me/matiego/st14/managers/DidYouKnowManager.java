@@ -1,5 +1,6 @@
-package me.matiego.st14;
+package me.matiego.st14.managers;
 
+import me.matiego.st14.Main;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import org.bukkit.Bukkit;
@@ -68,6 +69,6 @@ public class DidYouKnowManager {
         eb.setTitle("Czy wiesz, że...");
         eb.setDescription(message);
         eb.setColor(Color.PINK);
-        plugin.getChatMinecraft().sendMessageEmbed(eb.build());
+        plugin.getChatMinecraftManager().sendMessageEmbed(eb.build());
     }
 }

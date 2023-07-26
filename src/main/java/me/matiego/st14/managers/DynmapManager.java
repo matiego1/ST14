@@ -1,9 +1,10 @@
-package me.matiego.st14;
+package me.matiego.st14.managers;
 
+import me.matiego.st14.Main;
 import me.matiego.st14.listeners.ClaimChangeListener;
 import me.matiego.st14.listeners.ClaimCreateListener;
 import me.matiego.st14.listeners.ClaimDeleteListener;
-import me.matiego.st14.utils.Logs;
+import me.matiego.st14.Logs;
 import me.matiego.st14.utils.Utils;
 import net.crashcraft.crashclaim.CrashClaim;
 import net.crashcraft.crashclaim.api.CrashClaimAPI;
@@ -21,8 +22,8 @@ import org.dynmap.markers.MarkerSet;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class Dynmap {
-    public Dynmap(@NotNull Main plugin) {
+public class DynmapManager {
+    public DynmapManager(@NotNull Main plugin) {
         this.plugin = plugin;
     }
 
@@ -190,7 +191,7 @@ public class Dynmap {
 
     private @NotNull String getClaimLabel(@NotNull Claim claim) {
         return plugin.getConfig().getString("claims-dynmap-label", "{name}")
-                .replace("{owner}", plugin.getOfflinePlayers().getEffectiveNameById(claim.getOwner()))
+                .replace("{owner}", plugin.getOfflinePlayersManager().getEffectiveNameById(claim.getOwner()))
                 .replace("{name}", claim.getName())
                 .replace("{minX}", String.valueOf(claim.getMinX()))
                 .replace("{maxX}", String.valueOf(claim.getMaxX()))

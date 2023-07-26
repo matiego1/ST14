@@ -1,6 +1,6 @@
 package me.matiego.st14.commands.discord;
 
-import me.matiego.st14.IncognitoManager;
+import me.matiego.st14.managers.IncognitoManager;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.CommandHandler;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;

@@ -1,6 +1,8 @@
 package me.matiego.st14.commands.minecraft;
 
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
+import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.*;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;

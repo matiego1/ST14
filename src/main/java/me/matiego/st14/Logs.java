@@ -1,6 +1,7 @@
-package me.matiego.st14.utils;
+package me.matiego.st14;
 
-import me.matiego.st14.Main;
+import me.matiego.st14.utils.DiscordUtils;
+import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;

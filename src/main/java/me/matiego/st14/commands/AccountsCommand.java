@@ -1,6 +1,8 @@
 package me.matiego.st14.commands;
 
-import me.matiego.st14.AccountsManager;
+import me.matiego.st14.Logs;
+import me.matiego.st14.Prefix;
+import me.matiego.st14.managers.AccountsManager;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.*;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -100,7 +102,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                                     success -> {},
                                     failure -> {
                                         if (failure instanceof ErrorResponseException e && e.getErrorCode() == 50007) {
-                                            Logs.warning("User " + user.getAsTag() + " doesn't allow private messages.");
+                                            Logs.warning("User " + DiscordUtils.getAsTag(user) + " doesn't allow private messages.");
                                         } else {
                                             Logs.error("An error occurred while sending a private message.", failure);
                                         }
@@ -136,7 +138,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
         if (uuid == null) return null;
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("Twoje konto minecraft:");
-        String playerName = plugin.getOfflinePlayers().getNameById(uuid);
+        String playerName = plugin.getOfflinePlayersManager().getNameById(uuid);
         eb.setDescription("**Nick:** `" + (playerName == null ? playerNameFallback : playerName) + "`\n**UUID:** `" + uuid + "`");
         eb.setColor(Color.BLUE);
         eb.setTimestamp(Instant.now());
@@ -200,7 +202,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
 
                     ));
                 } else {
-                    String user = jda == null ? "&cBRAK" : jda.retrieveUserById(id.getId()).complete().getAsTag();
+                    String user = jda == null ? "&cBRAK" : DiscordUtils.getAsTag(jda.retrieveUserById(id.getId()).complete());
                     inv.setItem(1, GUI.createGuiItem(
                             Material.LEAD,
                             "&9Konto Discord",
@@ -221,7 +223,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                         Material.REDSTONE,
                         "&9Bot Discord",
                         "&bAktualny status: &aONLINE",
-                        "&bNick: &9" + jda.getSelfUser().getAsTag()
+                        "&bNick: &9" + DiscordUtils.getAsTag(jda.getSelfUser())
                 ));
             }
             inv.setItem(7, GUI.createGuiItem(Material.PAPER, "&9Serwer Discord", "&bKliknij, aby wyświetlić zaproszenie!"));

@@ -1,5 +1,8 @@
-package me.matiego.st14;
+package me.matiego.st14.managers;
 
+import me.matiego.st14.Logs;
+import me.matiego.st14.Main;
+import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.*;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -36,7 +39,7 @@ public class AccountsManager {
         int x = 0;
         while (verificationCodes.get(code) != null) {
             code = RandomStringUtils.random(6, CODE_CHARS);
-            if (x++ > 100) throw new RuntimeException("infinite loop");
+            if (x++ > 1000) throw new RuntimeException("infinite loop");
         }
         verificationCodes.entrySet().removeIf(e -> e.getValue().getFirst().getFirst().equals(uuid));
         verificationCodes.put(code, new Pair<>(new Pair<>(uuid, name), Utils.now()));
@@ -103,20 +106,20 @@ public class AccountsManager {
             stmt.setString(2, id.getId());
             stmt.setString(3, uuid.toString());
             stmt.setString(4, id.getId());
-            if (!(stmt.executeUpdate() > 0)) return false;
+            if (stmt.executeUpdate() == 0) return false;
 
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) {
                 player.sendMessage(Utils.getComponentByString(Prefix.DISCORD + "Pomyślnie połączono to konto z kontem Discord!"));
             }
 
-            String playerName = plugin.getOfflinePlayers().getEffectiveNameById(uuid);
+            String playerName = plugin.getOfflinePlayersManager().getEffectiveNameById(uuid);
             JDA jda = plugin.getJda();
             if (jda == null) {
                 Logs.info(playerName + " has linked his account with Discord account " + id.getId());
             } else {
                 jda.retrieveUserById(id.getId()).queue(
-                        user -> Logs.info(playerName + " has linked his account with Discord account " + user.getAsTag()),
+                        user -> Logs.info(playerName + " has linked his account with Discord account " + DiscordUtils.getAsTag(user)),
                         failure -> Logs.info(playerName + " has linked his account with Discord account " + id.getId())
                 );
             }
@@ -140,7 +143,7 @@ public class AccountsManager {
             if (stmt.executeUpdate() > 0) {
                 Player player = Bukkit.getPlayer(uuid);
                 if (player != null && isRequired(uuid)) Utils.sync(() -> player.kick(Utils.getComponentByString(Prefix.DISCORD + "Twoje konto zostało rozłączone z kontem Discord!")));
-                Logs.info(plugin.getOfflinePlayers().getEffectiveNameById(uuid) + " has unlinked his account.");
+                Logs.info(plugin.getOfflinePlayersManager().getEffectiveNameById(uuid) + " has unlinked his account.");
                 return true;
             }
         } catch (SQLException e) {
@@ -210,13 +213,12 @@ public class AccountsManager {
         guild.retrieveMember(id).queue(member -> {
             try {
                 member.modifyNickname(nickname).queue(
-                        success -> {
-                        },
-                        failure -> Logs.warning("An error occurred while modifying the nickname of user " + member.getUser().getAsTag())
+                        success -> {},
+                        failure -> Logs.warning("An error occurred while modifying the nickname of user " + DiscordUtils.getAsTag(member))
                 );
             } catch (HierarchyException ignored) {
             } catch (Exception e) {
-                Logs.warning("An error occurred while modifying the nickname of user " + member.getUser().getAsTag());
+                Logs.warning("An error occurred while modifying the nickname of user " + DiscordUtils.getAsTag(member));
             }
         }, failure -> {});
     }

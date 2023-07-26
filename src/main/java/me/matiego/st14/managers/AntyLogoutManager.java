@@ -1,7 +1,8 @@
-package me.matiego.st14;
+package me.matiego.st14.managers;
 
+import me.matiego.st14.Main;
 import me.matiego.st14.utils.Pair;
-import me.matiego.st14.utils.Prefix;
+import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
@@ -22,7 +23,7 @@ public class AntyLogoutManager {
     private final Main plugin;
     private BukkitTask task;
     //ANTY-LOGOUT XXs (https://rgb.birdflop.com/)
-    private final String ACTION_BAR = "&x&f&b&0&0&0&0A&x&f&b&1&2&0&0N&x&f&b&2&4&0&0T&x&f&b&3&7&0&0Y&x&f&c&4&9&0&0-&x&f&c&5&b&0&0L&x&f&c&6&d&0&0O&x&f&c&8&0&0&0G&x&f&c&9&2&0&0O&x&f&c&a&4&0&0U&x&f&d&b&6&0&0T &x&f&d&c&9&0&0X&x&f&d&d&b&0&0X&x&f&d&e&d&0&0s";
+    private final String ACTION_BAR_MSG = "&x&f&b&0&0&0&0A&x&f&b&1&2&0&0N&x&f&b&2&4&0&0T&x&f&b&3&7&0&0Y&x&f&c&4&9&0&0-&x&f&c&5&b&0&0L&x&f&c&6&d&0&0O&x&f&c&8&0&0&0G&x&f&c&9&2&0&0O&x&f&c&a&4&0&0U&x&f&d&b&6&0&0T &x&f&d&c&9&0&0X&x&f&d&d&b&0&0X&x&f&d&e&d&0&0s";
     private final int TIME_SECONDS = 15;
     private final HashMap<UUID, Pair<UUID, Integer>> logout = new HashMap<>();
 
@@ -106,7 +107,7 @@ public class AntyLogoutManager {
     }
 
     private @NotNull String getActionBar(int time) {
-        return ACTION_BAR
+        return ACTION_BAR_MSG
                 .replaceFirst("X", time >= 10 ? String.valueOf(time / 10) : "")
                 .replaceFirst("X", String.valueOf(time % 10));
     }

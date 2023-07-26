@@ -4,10 +4,10 @@ import com.sk89q.worldedit.math.BlockVector3;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.Synchronized;
-import me.matiego.st14.BossBarTimer;
+import me.matiego.st14.utils.BossBarTimer;
 import me.matiego.st14.Main;
-import me.matiego.st14.utils.Logs;
-import me.matiego.st14.utils.Prefix;
+import me.matiego.st14.Logs;
+import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title;
@@ -77,7 +77,9 @@ public abstract class MiniGame implements Listener {
     }
 
     public abstract @NotNull String getMiniGameName();
+    @SuppressWarnings("SameReturnValue")
     public abstract @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount();
+    @SuppressWarnings("SameReturnValue")
     public abstract @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount();
     public abstract @NotNull GameMode getSpectatorGameMode();
 
@@ -340,7 +342,7 @@ public abstract class MiniGame implements Listener {
             Logs.discord("Gracz **" + winner + "** wygrywa minigrę **" + getMiniGameName() + "**!");
             return;
         }
-        plugin.getChatMinecraft().sendMessage("Gracz **" + winner + "** wygrywa minigrę **" + getMiniGameName() + "**!", Prefix.MINI_GAMES.getDiscord());
+        plugin.getChatMinecraftManager().sendMessage("Gracz **" + winner + "** wygrywa minigrę **" + getMiniGameName() + "**!", Prefix.MINI_GAMES.getDiscord());
     }
 
     protected synchronized void scheduleStopMiniGameAndSendReason(@NotNull String message, @NotNull String title, @NotNull String subtitle) {

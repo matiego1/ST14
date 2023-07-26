@@ -3,7 +3,7 @@ package me.matiego.st14.commands.minecraft;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.CommandHandler;
 import me.matiego.st14.utils.DiscordUtils;
-import me.matiego.st14.utils.Logs;
+import me.matiego.st14.Logs;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -58,7 +58,7 @@ public class SayCommand implements CommandHandler.Minecraft {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setDescription(DiscordUtils.checkLength(message, MessageEmbed.DESCRIPTION_MAX_LENGTH));
         eb.setColor(Color.GREEN);
-        plugin.getChatMinecraft().sendMessageEmbed(eb.build());
+        plugin.getChatMinecraftManager().sendMessageEmbed(eb.build());
         return 0;
     }
 }

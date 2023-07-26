@@ -1,5 +1,9 @@
-package me.matiego.st14;
+package me.matiego.st14.managers;
 
+import me.matiego.st14.Logs;
+import me.matiego.st14.Main;
+import me.matiego.st14.times.GameTime;
+import me.matiego.st14.times.PlayerTime;
 import me.matiego.st14.utils.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -18,9 +22,9 @@ import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 import java.util.UUID;
 
-public class ChatMinecraft extends ListenerAdapter {
+public class ChatMinecraftManager extends ListenerAdapter {
     private final Main plugin;
-    public ChatMinecraft(@NotNull Main plugin) {
+    public ChatMinecraftManager(@NotNull Main plugin) {
         this.plugin = plugin;
     }
 

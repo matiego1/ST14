@@ -1,6 +1,8 @@
 package me.matiego.st14.commands.minecraft;
 
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
+import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -112,8 +114,8 @@ public class WorldsCommand implements CommandHandler.Minecraft {
 
         player.sendMessage(Utils.getComponentByString(Prefix.WORLDS + "Zostaniesz przeteleportowany za 5 sekund. Nie ruszaj się!"));
 
-        plugin.getWorldsLastLocation().setLastLocation(player.getUniqueId(), player.getLocation());
-        Location loc = plugin.getWorldsLastLocation().getLastLocation(player.getUniqueId(), target);
+        plugin.getWorldsLastLocationManager().setLastLocation(player.getUniqueId(), player.getLocation());
+        Location loc = plugin.getWorldsLastLocationManager().getLastLocation(player.getUniqueId(), target);
 
         Utils.async(() -> {
             try {

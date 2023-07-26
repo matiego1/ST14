@@ -1,6 +1,6 @@
 package me.matiego.st14.listeners;
 
-import me.matiego.st14.MiniGamesManager;
+import me.matiego.st14.managers.MiniGamesManager;
 import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGamesUtils;
 import org.bukkit.entity.Player;

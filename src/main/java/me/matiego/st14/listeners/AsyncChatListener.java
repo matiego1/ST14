@@ -40,6 +40,6 @@ public class AsyncChatListener implements Listener {
                         .append(Utils.getComponentByString("&f: "))
                         .append(message)
         );
-        plugin.getChatMinecraft().sendChatMessage(PlainTextComponentSerializer.plainText().serialize(message), player);
+        plugin.getChatMinecraftManager().sendChatMessage(PlainTextComponentSerializer.plainText().serialize(message), player);
     }
 }

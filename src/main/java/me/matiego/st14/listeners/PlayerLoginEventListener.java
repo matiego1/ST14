@@ -1,7 +1,7 @@
 package me.matiego.st14.listeners;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.PremiumManager;
+import me.matiego.st14.managers.PremiumManager;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.entities.UserSnowflake;
 import org.bukkit.event.EventHandler;

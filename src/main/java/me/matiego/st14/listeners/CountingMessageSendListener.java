@@ -3,7 +3,7 @@ package me.matiego.st14.listeners;
 import me.matiego.counting.ChannelData;
 import me.matiego.counting.utils.CountingMessageSendEvent;
 import me.matiego.st14.Main;
-import me.matiego.st14.RewardsManager;
+import me.matiego.st14.managers.RewardsManager;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.entities.UserSnowflake;
 import org.bukkit.Bukkit;
@@ -36,7 +36,7 @@ public class CountingMessageSendListener implements Listener {
         if (plugin.getConfig().getLongList("counting-rewards.disabled-ids").contains(channel.getChannelId())) return;
         if (plugin.getConfig().getLongList("counting-rewards.disabled-ids").contains(user)) return;
 
-        RewardsManager.Data data = plugin.getRewardsManager().getCounting(uuid);
+        RewardsManager.Data data = plugin.getRewardsManager().getRewardForCounting().get(uuid);
         if (data == null) return;
         if (now - data.getLast() <= 15 * 60 * 1000) return;
 
@@ -57,10 +57,10 @@ public class CountingMessageSendListener implements Listener {
 
         data.setLast(now);
         data.setLimit(limit);
-        if (!plugin.getRewardsManager().setCounting(uuid, data)) return;
+        if (!plugin.getRewardsManager().getRewardForCounting().set(uuid, data)) return;
 
-        if (plugin.getEconomy().depositPlayer(Bukkit.getOfflinePlayer(uuid), amount).transactionSuccess()) {
-            event.setDisplayName("[" + plugin.getEconomy().format(amount) + "] " + event.getDisplayName());
+        if (plugin.getEconomyManager().depositPlayer(Bukkit.getOfflinePlayer(uuid), amount).transactionSuccess()) {
+            event.setDisplayName("[" + plugin.getEconomyManager().format(amount) + "] " + event.getDisplayName());
         }
     }
 

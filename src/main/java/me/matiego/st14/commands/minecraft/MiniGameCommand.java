@@ -1,7 +1,9 @@
 package me.matiego.st14.commands.minecraft;
 
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
-import me.matiego.st14.MiniGamesManager;
+import me.matiego.st14.Prefix;
+import me.matiego.st14.managers.MiniGamesManager;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGameType;
 import me.matiego.st14.minigames.MiniGamesUtils;

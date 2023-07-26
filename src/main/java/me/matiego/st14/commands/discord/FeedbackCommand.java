@@ -31,7 +31,7 @@ public class FeedbackCommand implements Discord {
     public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
         event.replyModal(
                 Modal.create("feedback-modal", "Wyślij twoją opinię")
-                        .addActionRows(
+                        .addComponents(
                                 ActionRow.of(TextInput.create("subject", "Temat", TextInputStyle.SHORT)
                                         .setRequired(true)
                                         .setPlaceholder("zgłoszenie błędu, propozycja...")
@@ -57,7 +57,7 @@ public class FeedbackCommand implements Discord {
         eb.setDescription(DiscordUtils.checkLength(description, MessageEmbed.DESCRIPTION_MAX_LENGTH));
         eb.setTimestamp(Instant.now());
         eb.setColor(Color.MAGENTA);
-        eb.setFooter(event.getUser().getAsTag());
+        eb.setFooter(DiscordUtils.getAsTag(event.getUser()));
 
         event.deferReply(true).queue();
 

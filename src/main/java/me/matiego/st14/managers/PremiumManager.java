@@ -1,5 +1,10 @@
-package me.matiego.st14;
+package me.matiego.st14.managers;
 
+import me.matiego.st14.Logs;
+import me.matiego.st14.Main;
+import me.matiego.st14.Prefix;
+import me.matiego.st14.times.GameTime;
+import me.matiego.st14.times.PlayerTime;
 import me.matiego.st14.utils.*;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
@@ -41,8 +46,7 @@ public class PremiumManager {
             ResultSet result = stmt.executeQuery();
             if (result.next()) {
                 long time = result.getLong("time");
-                if (time <= Utils.now()) return 0;
-                return time;
+                return time <= Utils.now() ? 0 : time;
             }
         } catch (SQLException e) {
             Logs.error(ERROR_MSG, e);
@@ -75,7 +79,7 @@ public class PremiumManager {
         for (Player player : players) {
             PlayerTime playerTime = plugin.getTimeManager().getTime(player.getUniqueId());
             if (playerTime == null) continue;
-            GameTime gameTime = playerTime.getSession();
+            GameTime gameTime = playerTime.getDaily();
             long time = gameTime.getNormal() + gameTime.getAfk() + gameTime.getIncognito();
             if (time > max) {
                 max = time;
@@ -90,7 +94,7 @@ public class PremiumManager {
     private void kickPlayer(@NotNull Player player) {
         player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Za 10 sekund zostaniesz wyrzucony z serwera, żeby zrobić miejsce innemu graczowi."));
         player.showTitle(Title.title(Utils.getComponentByString("&6UWAGA!"), Utils.getComponentByString("&ePRZECZYTAJ CZAT")));
-        player.playSound(player, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.NEUTRAL, 5, 1);
+        player.playSound(player, Sound.ENTITY_CREEPER_PRIMED, SoundCategory.NEUTRAL, 5, 1);
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (!player.isOnline()) return;
             player.kick(Utils.getComponentByString(Prefix.PREMIUM + "Zostałeś wyrzucony z serwera, żeby zrobić miejsce graczowi z wyższym priorytetem. Wybór padł na ciebie, ponieważ grałeś dzisiaj najdłużej."));

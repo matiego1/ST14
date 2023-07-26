@@ -1,7 +1,10 @@
 package me.matiego.st14.utils;
 
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
+import me.matiego.st14.Prefix;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -55,6 +58,10 @@ public class Utils {
 
     public static @NotNull Component getComponentByString(@NotNull String string) {
         return LegacyComponentSerializer.legacyAmpersand().deserialize(string).asComponent();
+    }
+
+    public static @NotNull String getJsonByLegacyString(@NotNull String string) {
+        return JSONComponentSerializer.json().serialize(Utils.getComponentByString(string));
     }
 
     public static double round(double number, int decimalPlaces) {
@@ -194,7 +201,7 @@ public class Utils {
             Logs.discord(discord);
             return;
         }
-        Main.getInstance().getChatMinecraft().sendMessage(discord, prefix.getDiscord());
+        Main.getInstance().getChatMinecraftManager().sendMessage(discord, prefix.getDiscord());
     }
 
     public static @NotNull String formatDouble(double number) {

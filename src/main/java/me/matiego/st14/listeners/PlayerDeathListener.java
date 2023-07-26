@@ -30,6 +30,6 @@ public class PlayerDeathListener implements Listener {
             msg = PlainTextComponentSerializer.plainText().serialize(component);
         }
         event.deathMessage(Utils.getComponentByString("&4[" + Utils.getWorldPrefix(player.getWorld()) + "]&c " + msg));
-        plugin.getChatMinecraft().sendDeathMessage("**[" + Utils.getWorldPrefix(player.getWorld()) + "]** " + msg, event.getPlayer());
+        plugin.getChatMinecraftManager().sendDeathMessage("**[" + Utils.getWorldPrefix(player.getWorld()) + "]** " + msg, event.getPlayer());
     }
 }

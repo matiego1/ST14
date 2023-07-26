@@ -8,9 +8,10 @@ import me.matiego.st14.commands.*;
 import me.matiego.st14.commands.discord.*;
 import me.matiego.st14.commands.minecraft.*;
 import me.matiego.st14.listeners.*;
+import me.matiego.st14.managers.*;
+import me.matiego.st14.rewards.RewardForPlaying;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.GUI;
-import me.matiego.st14.utils.Logs;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -41,11 +42,11 @@ import java.util.stream.Collectors;
 public final class Main extends JavaPlugin implements Listener {
     @Getter private static Main instance;
     private MySQL mySQL;
-    @Getter private OfflinePlayers offlinePlayers;
-    @Getter private Economy economy;
+    @Getter private OfflinePlayersManager offlinePlayersManager;
+    @Getter private EconomyManager economyManager;
     @Getter private IncognitoManager incognitoManager;
     @Getter private AccountsManager accountsManager;
-    @Getter private ChatMinecraft chatMinecraft;
+    @Getter private ChatMinecraftManager chatMinecraftManager;
     @Getter private AfkManager afkManager;
     @Getter private TimeManager timeManager;
     @Getter private PremiumManager premiumManager;
@@ -56,8 +57,8 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private AntyLogoutManager antyLogoutManager;
     @Getter private MiniGamesManager miniGamesManager;
     @Getter private BanknoteManager banknoteManager;
-    @Getter private WorldsLastLocation worldsLastLocation;
-    @Getter private Dynmap dynmap;
+    @Getter private WorldsLastLocationManager worldsLastLocationManager;
+    @Getter private DynmapManager dynmapManager;
     @Getter private ListenersManager listenersManager;
     private TabListManager tabListManager;
     private ChatReportsManager chatReportsManager;
@@ -124,12 +125,12 @@ public final class Main extends JavaPlugin implements Listener {
 
         //Register managers
         incognitoManager = new IncognitoManager(this);
-        offlinePlayers = new OfflinePlayers(this);
+        offlinePlayersManager = new OfflinePlayersManager(this);
         accountsManager = new AccountsManager(this);
-        chatMinecraft = new ChatMinecraft(this);
+        chatMinecraftManager = new ChatMinecraftManager(this);
         afkManager = new AfkManager(this);
         timeManager = new TimeManager(this);
-        economy = new Economy(this, true);
+        economyManager = new EconomyManager(this, true);
         premiumManager = new PremiumManager(this);
         tabListManager = new TabListManager(this);
         teleportsManager = new TeleportsManager(this);
@@ -141,10 +142,10 @@ public final class Main extends JavaPlugin implements Listener {
         listenersManager = new ListenersManager(this);
         didYouKnowManager = new DidYouKnowManager(this);
         banknoteManager = new BanknoteManager(this);
-        worldsLastLocation = new WorldsLastLocation(this);
-        dynmap = new Dynmap(this);
+        worldsLastLocationManager = new WorldsLastLocationManager(this);
+        dynmapManager = new DynmapManager(this);
 
-        Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomy(), vault, ServicePriority.High);
+        Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomyManager(), vault, ServicePriority.High);
 
         //Register listeners
         playerBedEnterListener = new PlayerBedEnterListener();
@@ -196,7 +197,7 @@ public final class Main extends JavaPlugin implements Listener {
 
         );
         listenersManager.registerListener("minecraft:brand", new PluginMessageReceivedListener(this));
-        getDynmap().registerListeners();
+        getDynmapManager().registerListeners();
 
         //Counting plugin
         if (Bukkit.getPluginManager().getPlugin("Counting") != null) {
@@ -239,7 +240,7 @@ public final class Main extends JavaPlugin implements Listener {
                     .setActivity(Activity.playing("Serwer ST14"))
                     .addEventListeners(
                             new DiscordMessageReceivedListener(),
-                            getChatMinecraft()
+                            getChatMinecraftManager()
                     )
                     .build();
             jda.awaitReady();
@@ -296,9 +297,9 @@ public final class Main extends JavaPlugin implements Listener {
         commandManager.setEnabled(true);
         getAfkManager().start();
         tabListManager.start();
-        getRewardsManager().start();
+        getRewardsManager().getRewardForPlaying().start();
         getAntyLogoutManager().start();
-        getChatMinecraft().unblock();
+        getChatMinecraftManager().unblock();
         didYouKnowManager.start();
         Utils.registerRecipes();
         Utils.kickPlayersAtMidnightTask();
@@ -306,19 +307,19 @@ public final class Main extends JavaPlugin implements Listener {
         Utils.async(() -> {
             Utils.deleteOldLogFiles();
 
-            Updates updates = new Updates();
-            HashMap<Plugin, Updates.Response> versions = new Updates().checkSpigotMc(
+            UpdatesManager updates = new UpdatesManager();
+            HashMap<Plugin, UpdatesManager.Response> versions = new UpdatesManager().checkSpigotMc(
                     Arrays.stream(Bukkit.getPluginManager().getPlugins())
                             .filter(Plugin::isEnabled)
                             .filter(p -> !p.equals(this))
                             .collect(Collectors.toList())
             );
-            Iterator<Map.Entry<Plugin, Updates.Response>> it = versions.entrySet().iterator();
+            Iterator<Map.Entry<Plugin, UpdatesManager.Response>> it = versions.entrySet().iterator();
             while (it.hasNext()) {
-                Updates.Response response = it.next().getValue();
-                if (response == Updates.Response.UNKNOWN_ID) it.remove();
-                else if (response == Updates.Response.UP_TO_DATE) it.remove();
-                else if (response == Updates.Response.NEWER) it.remove();
+                UpdatesManager.Response response = it.next().getValue();
+                if (response == UpdatesManager.Response.UNKNOWN_ID) it.remove();
+                else if (response == UpdatesManager.Response.UP_TO_DATE) it.remove();
+                else if (response == UpdatesManager.Response.NEWER) it.remove();
             }
             updates.log(versions);
         });
@@ -341,12 +342,15 @@ public final class Main extends JavaPlugin implements Listener {
         if (antyLogoutManager != null) antyLogoutManager.stop();
         if (afkManager != null) afkManager.stop();
         if (tabListManager != null) tabListManager.stop();
-        if (rewardsManager != null) rewardsManager.stop();
-        if (chatMinecraft != null) chatMinecraft.block();
+        if (chatMinecraftManager != null) chatMinecraftManager.block();
         if (teleportsManager != null) teleportsManager.cancelAll();
-        if (economy != null) economy.setEnabled(false);
+        if (economyManager != null) economyManager.setEnabled(false);
         if (chatReportsManager != null) chatReportsManager.stop();
         if (didYouKnowManager != null) didYouKnowManager.stop();
+        if (rewardsManager != null) {
+            RewardForPlaying rewardForPlaying = rewardsManager.getRewardForPlaying();
+            if (rewardForPlaying != null) rewardForPlaying.stop();
+        }
         //unregister all events
         HandlerList.unregisterAll((Plugin) this);
         //disable Discord bot

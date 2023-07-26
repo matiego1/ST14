@@ -1,6 +1,7 @@
-package me.matiego.st14;
+package me.matiego.st14.managers;
 
-import me.matiego.st14.utils.Logs;
+import me.matiego.st14.Main;
+import me.matiego.st14.Logs;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -14,9 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class OfflinePlayers {
+public class OfflinePlayersManager {
     private final Main plugin;
-    public OfflinePlayers(@NotNull Main plugin) {
+    public OfflinePlayersManager(@NotNull Main plugin) {
         this.plugin = plugin;
         refreshCache();
     }

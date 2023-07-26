@@ -1,5 +1,10 @@
-package me.matiego.st14;
+package me.matiego.st14.managers;
 
+import me.matiego.st14.Logs;
+import me.matiego.st14.Main;
+import me.matiego.st14.Prefix;
+import me.matiego.st14.times.GameTime;
+import me.matiego.st14.times.PlayerTime;
 import me.matiego.st14.utils.*;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -35,21 +40,21 @@ public class IncognitoManager {
         if (value) {
             if (player != null) {
                 if (plugin.getAfkManager().isAfk(player)) {
-                    plugin.getChatMinecraft().sendMessage("Gracz **" + player.getName() + "** już nie jest AFK!", Prefix.AFK.getDiscord());
+                    plugin.getChatMinecraftManager().sendMessage("Gracz **" + player.getName() + "** już nie jest AFK!", Prefix.AFK.getDiscord());
                 }
-                plugin.getChatMinecraft().sendFakeQuitMessage(player);
+                plugin.getChatMinecraftManager().sendFakeQuitMessage(player);
                 player.sendMessage(Utils.getComponentByString(Prefix.INCOGNITO + "Jesteś incognito!"));
 
                 PlayerTime time = plugin.getTimeManager().getTime(uuid);
                 if (time != null) time.setType(GameTime.Type.INCOGNITO);
             }
             incognito.add(uuid);
-            Logs.info("Gracz " + plugin.getOfflinePlayers().getEffectiveNameById(uuid) + " jest incognito.");
+            Logs.info("Gracz " + plugin.getOfflinePlayersManager().getEffectiveNameById(uuid) + " jest incognito.");
         } else {
             if (player != null) {
-                plugin.getChatMinecraft().sendFakeJoinMessage(player);
+                plugin.getChatMinecraftManager().sendFakeJoinMessage(player);
                 if (plugin.getAfkManager().isAfk(player)) {
-                    plugin.getChatMinecraft().sendMessage("Gracz **" + player.getName() + "** jest AFK!", Prefix.AFK.getDiscord());
+                    plugin.getChatMinecraftManager().sendMessage("Gracz **" + player.getName() + "** jest AFK!", Prefix.AFK.getDiscord());
                 }
                 player.sendMessage(Utils.getComponentByString(Prefix.INCOGNITO + "Już nie jesteś incognito!"));
 
@@ -57,7 +62,7 @@ public class IncognitoManager {
                 if (time != null) time.setType(plugin.getAfkManager().isAfk(player) ? GameTime.Type.AFK : GameTime.Type.NORMAL);
             }
             incognito.remove(uuid);
-            Logs.info("Gracz " + plugin.getOfflinePlayers().getEffectiveNameById(uuid) + " nie jest już incognito.");
+            Logs.info("Gracz " + plugin.getOfflinePlayersManager().getEffectiveNameById(uuid) + " nie jest już incognito.");
         }
     }
 

@@ -1,7 +1,7 @@
 package me.matiego.st14.listeners;
 
 import me.matiego.st14.utils.DiscordUtils;
-import me.matiego.st14.utils.Logs;
+import me.matiego.st14.Logs;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
@@ -37,7 +37,7 @@ public class DiscordMessageReceivedListener extends ListenerAdapter {
         eb.setDescription(DiscordUtils.checkLength(content, MessageEmbed.DESCRIPTION_MAX_LENGTH));
         eb.setFooter("Received at", DiscordUtils.getBotIcon());
         eb.setTimestamp(Instant.now());
-        eb.setAuthor(user.getAsTag(), null, user.getEffectiveAvatarUrl());
+        eb.setAuthor(DiscordUtils.getAsTag(user), null, user.getEffectiveAvatarUrl());
         eb.setColor(Color.GREEN);
         Utils.async(() -> {
             MessageCreateAction messageAction = console.sendMessageEmbeds(eb.build());

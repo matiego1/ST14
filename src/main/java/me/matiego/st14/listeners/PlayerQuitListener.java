@@ -32,15 +32,15 @@ public class PlayerQuitListener implements Listener {
         plugin.getBackpackManager().clearCache(player.getUniqueId());
         plugin.getMiniGamesManager().onPlayerQuit(player);
         plugin.getTeleportsManager().onPlayerQuit(player);
-        plugin.getDynmap().refreshPlayerClaims(player);
+        plugin.getDynmapManager().refreshPlayerClaims(player);
 
         event.quitMessage(Utils.getComponentByString("&eGracz " + player.getName() + " opuścił grę"));
-        plugin.getChatMinecraft().sendConsoleQuitMessage(player);
-        plugin.getChatMinecraft().sendQuitMessage(player);
+        plugin.getChatMinecraftManager().sendConsoleQuitMessage(player);
+        plugin.getChatMinecraftManager().sendQuitMessage(player);
 
         Utils.async(() -> {
             plugin.getTimeManager().quit(player);
-            plugin.getRewardsManager().unload(player.getUniqueId());
+            plugin.getRewardsManager().getRewardForPlaying().unloadFromCache(player.getUniqueId());
         });
 
         disableIncognitoTasks.put(

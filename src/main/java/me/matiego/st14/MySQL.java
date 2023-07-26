@@ -2,6 +2,7 @@ package me.matiego.st14;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import me.matiego.st14.managers.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.Connection;
@@ -58,14 +59,15 @@ public class MySQL {
     }
 
     public boolean createTables() {
-        if (!Economy.createTable()) return false;
-        if (!OfflinePlayers.createTable()) return false;
+        if (!EconomyManager.createTable()) return false;
+        if (!OfflinePlayersManager.createTable()) return false;
         if (!IncognitoManager.createTable()) return false;
         if (!TimeManager.createTable()) return false;
         if (!PremiumManager.createTable()) return false;
-        if (!WorldsLastLocation.createTable()) return false;
+        if (!WorldsLastLocationManager.createTable()) return false;
         if (!BackpackManager.createTable()) return false;
         if (!RewardsManager.createTable()) return false;
+        if (!BanknoteManager.createTable()) return false;
         return AccountsManager.createTable();
     }
 }

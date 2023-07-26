@@ -1,6 +1,8 @@
 package me.matiego.st14.commands.minecraft;
 
-import me.matiego.st14.Economy;
+import me.matiego.st14.Logs;
+import me.matiego.st14.Prefix;
+import me.matiego.st14.managers.EconomyManager;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.*;
 import net.kyori.adventure.text.Component;
@@ -169,7 +171,7 @@ public class TpaCommand implements CommandHandler.Minecraft {
             cost = Utils.round(plugin.getConfig().getDouble("tpa.cost") * (distance / 16), 2);
         }
 
-        Economy economy = plugin.getEconomy();
+        EconomyManager economy = plugin.getEconomyManager();
         if (cost != 0 && !economy.has(player, cost)) {
             requester.sendMessage(Utils.getComponentByString(Prefix.TPA + "Aby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.getBalance(player) + "."));
             return;
@@ -213,9 +215,9 @@ public class TpaCommand implements CommandHandler.Minecraft {
                     case FAILURE -> {
                         player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + requester.getName() + " nie może się do ciebie przeteleportować."));
                         requester.sendMessage(Utils.getComponentByString(Prefix.TPA + "Napotkano błąd teleportowaniu."));
-                        if (!plugin.getEconomy().depositPlayer(requester, cost).transactionSuccess()) {
+                        if (!plugin.getEconomyManager().depositPlayer(requester, cost).transactionSuccess()) {
                             requester.sendMessage(Utils.getComponentByString(Prefix.TPA + "&c&lNapotkano błąd przy oddawaniu pieniędzy! Zgłoś się do administratora, aby je odzyskać. Przepraszamy."));
-                            Logs.warning("Gracz " + requester.getName() + " (" + requester.getUniqueId() + ") stracił " + plugin.getEconomy().format(cost) + " ze swojego konta! Kwota musi być przywrócona ręcznie.");
+                            Logs.warning("Gracz " + requester.getName() + " (" + requester.getUniqueId() + ") stracił " + plugin.getEconomyManager().format(cost) + " ze swojego konta! Kwota musi być przywrócona ręcznie.");
                         }
                     }
                 }

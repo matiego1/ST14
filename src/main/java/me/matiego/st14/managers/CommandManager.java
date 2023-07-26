@@ -1,8 +1,10 @@
-package me.matiego.st14;
+package me.matiego.st14.managers;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.Synchronized;
+import me.matiego.st14.Logs;
+import me.matiego.st14.Main;
 import me.matiego.st14.utils.*;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
@@ -136,7 +138,7 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
             return;
         }
 
-        Logs.info(user.getAsTag() + " [" + user.getId() + "]: /" + command);
+        Logs.info(DiscordUtils.getAsTag(user) + " [" + user.getId() + "]: /" + event.getFullCommandName());
         //execute command
         try {
             int cooldown = handler.onSlashCommandInteraction(event.getInteraction());

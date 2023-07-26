@@ -1,6 +1,7 @@
-package me.matiego.st14;
+package me.matiego.st14.managers;
 
-import me.matiego.st14.utils.Logs;
+import me.matiego.st14.Main;
+import me.matiego.st14.Logs;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
@@ -11,8 +12,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
-public class WorldsLastLocation {
-    public WorldsLastLocation(@NotNull Main plugin) {
+public class WorldsLastLocationManager {
+    public WorldsLastLocationManager(@NotNull Main plugin) {
         this.plugin = plugin;
     }
 

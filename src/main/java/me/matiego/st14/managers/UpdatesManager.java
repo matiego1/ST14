@@ -1,6 +1,7 @@
-package me.matiego.st14;
+package me.matiego.st14.managers;
 
-import me.matiego.st14.utils.Logs;
+import me.matiego.st14.Main;
+import me.matiego.st14.Logs;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -10,7 +11,7 @@ import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Updates {
+public class UpdatesManager {
 
     public @NotNull HashMap<Plugin, Response> checkSpigotMc(@NotNull List<Plugin> plugins) {
         HashMap<Plugin, Response> result = new HashMap<>();
@@ -26,6 +27,7 @@ public class Updates {
         try (InputStream inputStream = new URL("https://api.spigotmc.org/legacy/update.php?resource=" + id).openStream();
              Scanner scanner = new Scanner(inputStream)) {
             if (!scanner.hasNext()) return Response.FAILURE;
+            //noinspection deprecation
             return compareVersions(plugin.getDescription().getVersion(), scanner.next());
         } catch (IOException e) {
             return Response.FAILURE;

@@ -1,7 +1,11 @@
 package me.matiego.st14.commands;
 
 import lombok.ToString;
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
+import me.matiego.st14.Prefix;
+import me.matiego.st14.times.GameTime;
+import me.matiego.st14.times.PlayerTime;
 import me.matiego.st14.utils.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.interactions.InteractionHook;
@@ -50,7 +54,7 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
                 return 5;
             }
             Utils.async(() -> {
-                UUID uuid = plugin.getOfflinePlayers().getIdByName(args[0]);
+                UUID uuid = plugin.getOfflinePlayersManager().getIdByName(args[0]);
                 if (uuid == null) {
                     sender.sendMessage(Utils.getComponentByString(Prefix.TIME + "&cNieznany gracz."));
                     return;
@@ -115,7 +119,7 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
         String name = event.getOption("gracz", "", OptionMapping::getAsString);
         InteractionHook hook = event.getHook();
         Utils.async(() -> {
-            UUID uuid = plugin.getOfflinePlayers().getIdByName(name);
+            UUID uuid = plugin.getOfflinePlayersManager().getIdByName(name);
             if (uuid == null) {
                 hook.sendMessage("Nieznany gracz.").queue();
                 return;
@@ -189,7 +193,7 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
     @Override
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args) {
         if (args.length == 1) {
-            return plugin.getOfflinePlayers().getNames();
+            return plugin.getOfflinePlayersManager().getNames();
         }
         return new ArrayList<>();
     }
@@ -197,7 +201,7 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
     @Override
     public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteraction event) {
         if (!event.getName().equals(getDiscordCommand().getName())) return;
-        event.replyChoices(plugin.getOfflinePlayers().getNames().stream()
+        event.replyChoices(plugin.getOfflinePlayersManager().getNames().stream()
                 .filter(name -> name.toLowerCase().startsWith(event.getFocusedOption().getValue().toLowerCase()))
                 .map(name -> new Command.Choice(name, name))
                 .collect(Collectors.toList())

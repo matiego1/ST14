@@ -1,7 +1,7 @@
 package me.matiego.st14.listeners;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.utils.Prefix;
+import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.World;
 import org.bukkit.entity.Player;

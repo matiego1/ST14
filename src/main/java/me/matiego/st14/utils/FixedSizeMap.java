@@ -36,6 +36,7 @@ public class FixedSizeMap<K, V> {
         return value == null ? def : value;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public @Nullable V remove(@NotNull K key) {
         return map.remove(key);
     }

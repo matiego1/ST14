@@ -2,7 +2,7 @@ package me.matiego.st14.listeners;
 
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.NonPremiumUtils;
-import me.matiego.st14.utils.Prefix;
+import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
@@ -26,7 +26,7 @@ public class PlayerJoinListener implements Listener {
         UUID uuid = player.getUniqueId();
 
         //claims
-        plugin.getDynmap().refreshPlayerClaims(player);
+        plugin.getDynmapManager().refreshPlayerClaims(player);
         //load player times
         if (!plugin.getTimeManager().join(player)) {
             player.kick(Utils.getComponentByString("&cNapotkano niespodziewany błąd przy ładowaniu twoich czasów. Spróbuj ponownie."));
@@ -34,7 +34,7 @@ public class PlayerJoinListener implements Listener {
         }
         //load rewards
         Utils.async(() -> {
-            if (!plugin.getRewardsManager().load(uuid)) {
+            if (!plugin.getRewardsManager().getRewardForPlaying().loadToCache(uuid)) {
                 player.sendMessage(Utils.getComponentByString("&cNapotkano niespodziewany błąd! Aby dostawać pieniądze za granie, dołącz ponownie."));
             }
         });
@@ -52,8 +52,8 @@ public class PlayerJoinListener implements Listener {
         }
         //join messages
         event.joinMessage(Utils.getComponentByString("&eGracz " + player.getName() + " dołączył do gry"));
-        plugin.getChatMinecraft().sendJoinMessage(player);
-        plugin.getChatMinecraft().sendConsoleJoinMessage(player);
+        plugin.getChatMinecraftManager().sendJoinMessage(player);
+        plugin.getChatMinecraftManager().sendConsoleJoinMessage(player);
         //handle minigame
         plugin.getMiniGamesManager().onPlayerJoin(player);
         //non-premium warning

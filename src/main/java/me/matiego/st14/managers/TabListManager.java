@@ -1,6 +1,7 @@
-package me.matiego.st14;
+package me.matiego.st14.managers;
 
-import me.matiego.st14.utils.Logs;
+import me.matiego.st14.Main;
+import me.matiego.st14.Logs;
 import me.matiego.st14.utils.NonPremiumUtils;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;
@@ -18,7 +19,7 @@ public class TabListManager {
     private boolean log15 = false;
     private boolean log10 = false;
 
-    private void run() {
+    private void refreshTabList() {
         String tps = formatTps(Utils.getTps());
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.sendPlayerListHeaderAndFooter(Utils.getComponentByString("&a&lSerwer ST14"), Utils.getComponentByString("&aTPS: " + tps + "&a; PING: " + (player.getPing() == 0 ? "&cWczytywanie..." : player.getPing() + " ms")));
@@ -74,7 +75,7 @@ public class TabListManager {
         if (task != null) {
             task.cancel();
         }
-        task = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::run, 20, 20);
+        task = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::refreshTabList, 20, 20);
     }
 
     public synchronized void stop() {

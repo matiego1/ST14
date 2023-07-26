@@ -1,8 +1,9 @@
-package me.matiego.st14;
+package me.matiego.st14.managers;
 
+import me.matiego.st14.Main;
 import me.matiego.st14.utils.FixedSizeMap;
 import me.matiego.st14.utils.GUI;
-import me.matiego.st14.utils.Logs;
+import me.matiego.st14.Logs;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -50,9 +51,7 @@ public class BackpackManager {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, string);
             stmt.setString(3, string);
-            if (stmt.executeUpdate() > 0) {
-                return true;
-            }
+            if (stmt.executeUpdate() > 0) return true;
         } catch (SQLException e) {
             Logs.error(ERROR_MSG, e);
         }

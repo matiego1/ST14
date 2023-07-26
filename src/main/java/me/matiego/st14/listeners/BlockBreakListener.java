@@ -1,7 +1,7 @@
 package me.matiego.st14.listeners;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.utils.Logs;
+import me.matiego.st14.Logs;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -34,12 +34,12 @@ public class BlockBreakListener implements Listener {
         }
 
         if (material.contains("SIGN")) {
-            plugin.getDynmap().deleteSignMarker(block.getLocation());
+            plugin.getDynmapManager().deleteSignMarker(block.getLocation());
         }
 
         Block up = event.getBlock().getRelative(BlockFace.UP);
         if (up.getType().name().contains("SIGN")) {
-            plugin.getDynmap().deleteSignMarker(up.getLocation());
+            plugin.getDynmapManager().deleteSignMarker(up.getLocation());
         }
     }
 

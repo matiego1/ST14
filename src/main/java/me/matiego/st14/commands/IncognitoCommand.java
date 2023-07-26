@@ -1,9 +1,14 @@
 package me.matiego.st14.commands;
 
-import me.matiego.st14.AccountsManager;
-import me.matiego.st14.IncognitoManager;
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
-import me.matiego.st14.utils.*;
+import me.matiego.st14.Prefix;
+import me.matiego.st14.managers.AccountsManager;
+import me.matiego.st14.managers.IncognitoManager;
+import me.matiego.st14.utils.CommandHandler;
+import me.matiego.st14.utils.DiscordUtils;
+import me.matiego.st14.utils.GUI;
+import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.interactions.InteractionHook;
@@ -15,7 +20,6 @@ import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
@@ -29,10 +33,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandler.Discord, Listener {
     private final Main plugin;
@@ -95,7 +97,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
                 inv.setItem(17, GUI.createGuiItem(Material.ARROW, "&8Ups...", "&7Ufasz za dużej ilości graczy!", "&7Na liście zostało wyświetlone pierwsze 8 pozycji"));
                 return;
             }
-            inv.setItem(index, GUI.createPlayerSkull(Bukkit.getOfflinePlayer(uuid), "&8" + plugin.getOfflinePlayers().getEffectiveNameById(uuid), "&7Ufasz temu graczowi!", "&7Kliknij, aby przestać mu ufać."));
+            inv.setItem(index, GUI.createPlayerSkull(Bukkit.getOfflinePlayer(uuid), "&8" + plugin.getOfflinePlayersManager().getEffectiveNameById(uuid), "&7Ufasz temu graczowi!", "&7Kliknij, aby przestać mu ufać."));
             index++;
         }
         for (int i = index; i < 18; i++) {
@@ -136,13 +138,15 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
             }
         } else if (slot == 2) {
             new AnvilGUI.Builder()
-                    .title(ChatColor.translateAlternateColorCodes('&', Prefix.INCOGNITO + "Podaj nick gracza"))
+                    .jsonTitle(Utils.getJsonByLegacyString(Prefix.INCOGNITO + "Podaj nick gracza"))
                     .text("Podaj nick...")
                     .itemLeft(GUI.createGuiItem(Material.PAPER, "&8Wprowadź nick gracza...", "&7Kliknij &8ESC&7, aby wyjść", "&7Kliknij przedmiot po prawej, aby zaakceptować"))
                     .plugin(plugin)
-                    .interactableSlots(AnvilGUI.Slot.INPUT_RIGHT)
-                    .onComplete(completion -> {
-                        UUID trustedUuid = plugin.getOfflinePlayers().getIdByName(completion.getText());
+                    .interactableSlots(AnvilGUI.Slot.OUTPUT)
+                    .onClick((anvilSlot, state) -> {
+                        if (anvilSlot != AnvilGUI.Slot.OUTPUT) return Collections.emptyList();
+
+                        UUID trustedUuid = plugin.getOfflinePlayersManager().getIdByName(state.getText());
                         if (trustedUuid == null) {
                             return List.of(AnvilGUI.ResponseAction.replaceInputText("Zły nick!"));
                         }
@@ -156,7 +160,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
                     .open(player);
         } else if (slot >= 9) {
             if (item.getType() == Material.BARRIER) return;
-            UUID trustedUuid = plugin.getOfflinePlayers().getIdByName(PlainTextComponentSerializer.plainText().serialize(Objects.requireNonNull(item.getItemMeta().displayName())));
+            UUID trustedUuid = plugin.getOfflinePlayersManager().getIdByName(PlainTextComponentSerializer.plainText().serialize(Objects.requireNonNull(item.getItemMeta().displayName())));
             if (trustedUuid == null) {
                 player.sendMessage(Utils.getComponentByString(Prefix.INCOGNITO + "Napotkano niespodziewany błąd. Spróbuj później."));
                 player.closeInventory();
@@ -199,7 +203,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
             EmbedBuilder eb = new EmbedBuilder();
             eb.setTitle("__**Ustawienia**__");
             eb.setColor(Color.LIGHT_GRAY);
-            eb.setDescription("**Gracz:** `" + plugin.getOfflinePlayers().getEffectiveNameById(uuid) + "`");
+            eb.setDescription("**Gracz:** `" + plugin.getOfflinePlayersManager().getEffectiveNameById(uuid) + "`");
             eb.addField("**Status incognito:**", manager.isIncognito(uuid) ? "`Włączone` :green_circle:" : "`Wyłączone` :red_circle:", false);
             eb.setFooter(DiscordUtils.getName(user, event.getMember()), DiscordUtils.getAvatar(user, event.getMember()));
             eb.setTimestamp(Instant.now());

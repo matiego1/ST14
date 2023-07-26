@@ -4,6 +4,7 @@ import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
@@ -217,7 +218,7 @@ public class DiscordUtils {
                             if (failure instanceof ErrorResponseException e && e.getErrorCode() == 50007) {
                                 long now = Utils.now();
                                 if (now - privateMessages.getOrDefault(user.getIdLong(), 0L) >= 15 * 60 * 1000L) {
-                                    Logs.warning("User " + user.getAsTag() + " doesn't allow private messages.");
+                                    Logs.warning("User " + DiscordUtils.getAsTag(user) + " doesn't allow private messages.");
                                     privateMessages.put(user.getIdLong(), now);
                                 }
                             } else {
@@ -266,6 +267,15 @@ public class DiscordUtils {
     }
 
     public static boolean hasRole(@NotNull Member member, long role) {
-        return member.getRoles().stream().map(ISnowflake::getIdLong).anyMatch(id -> role == id);
+        return member.getRoles().stream().map(ISnowflake::getIdLong).anyMatch(id -> id == role);
+    }
+
+    @SuppressWarnings("deprecation")
+    public static @NotNull String getAsTag(@NotNull User user) {
+        return user.getDiscriminator().equals("0000") ? user.getName() : user.getAsTag();
+    }
+
+    public static @NotNull String getAsTag(@NotNull Member member) {
+        return getAsTag(member.getUser());
     }
 }

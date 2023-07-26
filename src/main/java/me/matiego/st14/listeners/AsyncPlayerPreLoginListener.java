@@ -1,10 +1,10 @@
 package me.matiego.st14.listeners;
 
-import me.matiego.st14.IncognitoManager;
+import me.matiego.st14.managers.IncognitoManager;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.DiscordUtils;
-import me.matiego.st14.utils.Logs;
-import me.matiego.st14.utils.Prefix;
+import me.matiego.st14.Logs;
+import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -93,7 +93,7 @@ public class AsyncPlayerPreLoginListener implements Listener {
             disallow(event, Prefix.DISCORD + "Twoje konto zostało rozłączone przed administratora. Dołącz ponownie, aby je połączyć.");
         }
         //refresh player name
-        plugin.getOfflinePlayers().refresh(uuid, event.getName());
+        plugin.getOfflinePlayersManager().refresh(uuid, event.getName());
     }
     private void disallow(@NotNull AsyncPlayerPreLoginEvent event, @NotNull String msg) {
         event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Utils.getComponentByString(msg));

@@ -14,6 +14,6 @@ public class ClaimChangeListener implements Listener {
 
     @EventHandler
     public void onClaimChange(@NotNull ClaimChangeEvent event) {
-        plugin.getDynmap().refreshClaim(event.getClaim());
+        plugin.getDynmapManager().refreshClaim(event.getClaim());
     }
 }

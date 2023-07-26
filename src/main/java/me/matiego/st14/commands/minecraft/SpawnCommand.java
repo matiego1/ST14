@@ -1,10 +1,10 @@
 package me.matiego.st14.commands.minecraft;
 
-import me.matiego.st14.Economy;
+import me.matiego.st14.managers.EconomyManager;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.CommandHandler;
-import me.matiego.st14.utils.Logs;
-import me.matiego.st14.utils.Prefix;
+import me.matiego.st14.Logs;
+import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.Utils;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
@@ -80,7 +80,7 @@ public class SpawnCommand implements CommandHandler.Minecraft {
             cost = Utils.round(plugin.getConfig().getDouble("spawn.cost") * (distance / 16), 2);
         }
 
-        Economy economy = plugin.getEconomy();
+        EconomyManager economy = plugin.getEconomyManager();
         if (cost != 0 && !economy.has(player, cost)) {
             player.sendMessage(Utils.getComponentByString("&aAby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.getBalance(player) + "."));
             return 3;

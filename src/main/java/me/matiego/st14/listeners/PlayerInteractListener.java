@@ -1,8 +1,8 @@
 package me.matiego.st14.listeners;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.utils.Logs;
-import me.matiego.st14.utils.Prefix;
+import me.matiego.st14.Logs;
+import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -41,12 +41,12 @@ public class PlayerInteractListener implements Listener {
         event.setUseInteractedBlock(Event.Result.DENY);
         event.setUseItemInHand(Event.Result.DENY);
 
-        if (!plugin.getEconomy().depositPlayer(player, amount).transactionSuccess()) {
+        if (!plugin.getEconomyManager().depositPlayer(player, amount).transactionSuccess()) {
             player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Napotkano niespodziewany błąd. Spróbuj później."));
             return;
         }
 
-        Logs.info("Gracz " + player.getName() + " wpłacił banknot o wartości " + plugin.getEconomy().format(amount));
+        Logs.info("Gracz " + player.getName() + " wpłacił banknot o wartości " + plugin.getEconomyManager().format(amount));
 
         player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie wpłacono pieniądze na twoje konto!"));
         player.getInventory().getItemInMainHand().setAmount(player.getInventory().getItemInMainHand().getAmount() - 1);

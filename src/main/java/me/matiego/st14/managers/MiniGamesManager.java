@@ -1,11 +1,12 @@
-package me.matiego.st14;
+package me.matiego.st14.managers;
 
 import lombok.Getter;
 import lombok.Synchronized;
+import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGamesUtils;
-import me.matiego.st14.utils.Logs;
-import me.matiego.st14.utils.Prefix;
+import me.matiego.st14.Logs;
+import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.Utils;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.data.NodeMap;

@@ -1,6 +1,7 @@
-package me.matiego.st14;
+package me.matiego.st14.managers;
 
 import lombok.Getter;
+import me.matiego.st14.Main;
 import me.matiego.st14.utils.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

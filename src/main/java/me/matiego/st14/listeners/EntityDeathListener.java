@@ -1,6 +1,6 @@
 package me.matiego.st14.listeners;
 
-import me.matiego.st14.AntyLogoutManager;
+import me.matiego.st14.managers.AntyLogoutManager;
 import me.matiego.st14.Main;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
