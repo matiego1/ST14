@@ -1,7 +1,7 @@
 package me.matiego.st14.commands.minecraft;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.utils.CommandHandler;
+import me.matiego.st14.objects.CommandHandler;
 import me.matiego.st14.Logs;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.block.Block;

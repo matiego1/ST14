@@ -1,65 +1,16 @@
 package me.matiego.st14.rewards;
 
-import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
-import me.matiego.st14.managers.RewardsManager;
-import me.matiego.st14.utils.Utils;
+import me.matiego.st14.objects.Reward;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.UUID;
-
-public class RewardForCounting {
+public class RewardForCounting extends Reward {
     public RewardForCounting(@NotNull Main plugin) {
-        this.plugin = plugin;
+        super(plugin);
     }
 
-    private final Main plugin;
-    private final String ERROR_MSG = "An error occurred while modifying values in \"st14_rewards_counting\" table in the database.";
-
-    public @Nullable RewardsManager.Data get(@NotNull UUID uuid) {
-        try (Connection conn = plugin.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT amount, last FROM st14_rewards_counting WHERE uuid = ?")) {
-            stmt.setString(1, uuid.toString());
-            ResultSet result = stmt.executeQuery();
-            if (!result.next()) return new RewardsManager.Data(0, 0);
-            if (Utils.isDifferentDay(Utils.now(), result.getLong("last"))) return new RewardsManager.Data(0, 0);
-            return new RewardsManager.Data(result.getDouble("amount"), result.getLong("last"));
-        } catch (SQLException e) {
-            Logs.error(ERROR_MSG, e);
-        }
-        return null;
-    }
-
-    public boolean set(@NotNull UUID uuid, @NotNull RewardsManager.Data data) {
-        try (Connection conn = plugin.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_rewards_counting(uuid, amount, last) VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE amount = ?, last = ?")) {
-            stmt.setString(1, uuid.toString());
-            stmt.setDouble(2, data.getLimit());
-            stmt.setLong(3, data.getLast());
-
-            stmt.setDouble(4, data.getLimit());
-            stmt.setLong(5, data.getLast());
-            stmt.execute();
-            return true;
-        } catch (SQLException e) {
-            Logs.error(ERROR_MSG, e);
-        }
-        return false;
-    }
-
-    public static boolean createTable() {
-        try (Connection conn = Main.getInstance().getConnection();
-             PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_rewards_rfp(uuid VARCHAR(36) NOT NULL, amount INT NOT NULL, last BIGINT NOT NULL, PRIMARY KEY (uuid))")) {
-            stmt.execute();
-            return true;
-        } catch (SQLException e) {
-            Logs.error("An error occurred while creating the database table \"st14_rewards_rfp\"", e);
-        }
-        return false;
+    @Override
+    protected @NotNull String getTableSuffix() {
+        return "counting";
     }
 }

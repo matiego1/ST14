@@ -1,4 +1,4 @@
-package me.matiego.st14.utils;
+package me.matiego.st14.objects;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

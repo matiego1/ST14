@@ -1,7 +1,7 @@
 package me.matiego.st14.managers;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.utils.Pair;
+import me.matiego.st14.objects.Pair;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;

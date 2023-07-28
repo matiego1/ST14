@@ -1,7 +1,7 @@
 package me.matiego.st14.managers;
 
 import io.papermc.paper.network.ChannelInitializeListenerHolder;
-import me.matiego.st14.utils.ChatPacketHandler;
+import me.matiego.st14.objects.ChatPacketHandler;
 import net.kyori.adventure.key.Key;
 
 //Based on https://github.com/e-im/FreedomChat/tree/9e58cde2d95d6c472eb28f93c7acb1063e069964

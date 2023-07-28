@@ -2,8 +2,8 @@ package me.matiego.st14.managers;
 
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
-import me.matiego.st14.times.GameTime;
-import me.matiego.st14.times.PlayerTime;
+import me.matiego.st14.Prefix;
+import me.matiego.st14.objects.*;
 import me.matiego.st14.utils.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -132,8 +132,7 @@ public class ChatMinecraftManager extends ListenerAdapter {
         } else if (pair.getSecond() < 2) {
             joinCooldown.put(uuid, new Pair<>(now, pair.getSecond() + 1));
         } else {
-            //TODO: ban for 15 seconds
-            player.kick(Utils.getComponentByString("&cNie możesz dołączać do serwera tak często."));
+            plugin.getBansManager().setBan(new Ban(player.getUniqueId(), Prefix.AUTO_MOD + "Nie możesz dołączać do serwera tak często.", Utils.now() + (30 * 1000L)));
         }
     }
 

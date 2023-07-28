@@ -1,4 +1,4 @@
-package me.matiego.st14.utils;
+package me.matiego.st14.objects;
 
 import com.google.gson.JsonObject;
 import com.mojang.serialization.JsonOps;

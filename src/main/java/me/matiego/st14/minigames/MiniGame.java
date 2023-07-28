@@ -4,7 +4,7 @@ import com.sk89q.worldedit.math.BlockVector3;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.Synchronized;
-import me.matiego.st14.utils.BossBarTimer;
+import me.matiego.st14.objects.BossBarTimer;
 import me.matiego.st14.Main;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Prefix;
@@ -343,6 +343,7 @@ public abstract class MiniGame implements Listener {
             return;
         }
         plugin.getChatMinecraftManager().sendMessage("Gracz **" + winner + "** wygrywa minigrę **" + getMiniGameName() + "**!", Prefix.MINI_GAMES.getDiscord());
+        plugin.getMiniGamesManager().giveRewardToWinner(winner, Utils.round(plugin.getConfig().getDouble(configPath + "winner-reward", 20), 2));
     }
 
     protected synchronized void scheduleStopMiniGameAndSendReason(@NotNull String message, @NotNull String title, @NotNull String subtitle) {

@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
+import me.matiego.st14.objects.FixedSizeMap;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;

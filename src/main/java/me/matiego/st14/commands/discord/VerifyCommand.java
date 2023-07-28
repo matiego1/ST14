@@ -1,7 +1,7 @@
 package me.matiego.st14.commands.discord;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.utils.CommandHandler;
+import me.matiego.st14.objects.CommandHandler;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.Logs;
 import net.dv8tion.jda.api.Permission;

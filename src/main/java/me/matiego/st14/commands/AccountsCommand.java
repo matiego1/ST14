@@ -4,6 +4,9 @@ import me.matiego.st14.Logs;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.AccountsManager;
 import me.matiego.st14.Main;
+import me.matiego.st14.objects.CommandHandler;
+import me.matiego.st14.objects.GUI;
+import me.matiego.st14.objects.Pair;
 import me.matiego.st14.utils.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -259,9 +262,10 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                     JDA jda = plugin.getJda();
                     if (jda == null || id == null || !success) return;
 
-                    User user = jda.retrieveUserById(id.getId()).complete();
-                    if (user == null) return;
-                    DiscordUtils.sendPrivateMessage(user, "Twoje konto zostało rozłączone z kontem minecraft!");
+                    jda.retrieveUserById(id.getId()).queue(
+                            user -> DiscordUtils.sendPrivateMessage(user, "Twoje konto zostało rozłączone z kontem minecraft!"),
+                            failure -> {}
+                    );
                 } else {
                     String code = plugin.getAccountsManager().getNewVerificationCode(uuid, player.getName());
                     player.sendMessage(Utils.getComponentByString(

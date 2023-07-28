@@ -1,8 +1,8 @@
 package me.matiego.st14.managers;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.times.GameTime;
-import me.matiego.st14.times.PlayerTime;
+import me.matiego.st14.objects.GameTime;
+import me.matiego.st14.objects.PlayerTime;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;

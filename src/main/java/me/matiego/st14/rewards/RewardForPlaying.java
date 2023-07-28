@@ -1,35 +1,33 @@
 package me.matiego.st14.rewards;
 
-import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.managers.EconomyManager;
 import me.matiego.st14.managers.RewardsManager;
-import me.matiego.st14.times.GameTime;
-import me.matiego.st14.times.PlayerTime;
+import me.matiego.st14.objects.Reward;
+import me.matiego.st14.objects.GameTime;
+import me.matiego.st14.objects.PlayerTime;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.UUID;
 
-public class RewardForPlaying {
+public class RewardForPlaying extends Reward {
     public RewardForPlaying(@NotNull Main plugin) {
-        this.plugin = plugin;
+        super(plugin);
     }
 
-    private final Main plugin;
     private final HashMap<UUID, RewardsManager.Data> cache = new HashMap<>();
-    private final String ERROR_MSG = "An error occurred while modifying values in \"st14_rewards_rfp\" table in the database.";
     private final long INTERVAL_MS = 5 * 60 * 1000;
     private BukkitTask task;
+
+    @Override
+    protected @NotNull String getTableSuffix() {
+        return "rfp";
+    }
 
     public synchronized void start() {
         stop();
@@ -55,7 +53,7 @@ public class RewardForPlaying {
                     double amount = plugin.getConfig().getDouble("reward-for-playing.amount", 5) * difference;
 
                     double limit = data.getLimit();
-                    final double max = getMaxRFP();
+                    final double max = getMax();
                     if (limit >= max) {
                         sendActionBar(player, "&cUzbierałeś dzienny limit pieniędzy za granie");
                         cache.put(uuid, data);
@@ -78,7 +76,7 @@ public class RewardForPlaying {
         }, 20, 100);
     }
 
-    private double getMaxRFP() {
+    private double getMax() {
         double max = Utils.round(plugin.getConfig().getDouble("reward-for-playing.max"), 2);
         return max <= 0 ? 100 : max;
     }
@@ -95,43 +93,14 @@ public class RewardForPlaying {
     }
 
     public boolean loadToCache(@NotNull UUID uuid) {
-        RewardsManager.Data rfp = get(uuid);
-        if (rfp == null) return false;
-        cache.put(uuid, rfp);
+        RewardsManager.Data data = get(uuid);
+        if (data == null) return false;
+        cache.put(uuid, data);
         return true;
     }
 
     public void unloadFromCache(@NotNull UUID uuid) {
-        RewardsManager.Data rfp = cache.remove(uuid);
-        if (rfp != null) set(uuid, rfp);
-    }
-
-    private @Nullable RewardsManager.Data get(@NotNull UUID uuid) {
-        try (Connection conn = plugin.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT amount, last FROM st14_rewards_rfp WHERE uuid = ?")) {
-            stmt.setString(1, uuid.toString());
-            ResultSet result = stmt.executeQuery();
-            if (!result.next()) return new RewardsManager.Data(0, 0);
-            if (Utils.isDifferentDay(Utils.now(), result.getLong("last"))) return new RewardsManager.Data(0, 0);
-            return new RewardsManager.Data(result.getDouble("amount"), 0);
-        } catch (SQLException e) {
-            Logs.error(ERROR_MSG, e);
-        }
-        return null;
-    }
-
-    private void set(@NotNull UUID uuid, @NotNull RewardsManager.Data data) {
-        long now = Utils.now();
-        try (Connection conn = plugin.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_rewards_rfp(uuid, amount, last) VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE amount = ?, last = ?")) {
-            stmt.setString(1, uuid.toString());
-            stmt.setDouble(2, data.getLimit());
-            stmt.setLong(3, now);
-            stmt.setDouble(4, data.getLimit());
-            stmt.setLong(5, now);
-            stmt.execute();
-        } catch (SQLException e) {
-            Logs.error(ERROR_MSG, e);
-        }
+        RewardsManager.Data data = cache.remove(uuid);
+        if (data != null) set(uuid, data);
     }
 }

@@ -2,7 +2,7 @@ package me.matiego.st14.listeners;
 
 import io.papermc.paper.event.player.PlayerItemFrameChangeEvent;
 import me.matiego.st14.Main;
-import me.matiego.st14.utils.FixedSizeMap;
+import me.matiego.st14.objects.FixedSizeMap;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;

@@ -77,6 +77,9 @@ commands:
   minigame:
     permission: st14.minigame
     usage: 'Poprawne użycie /minigame'
+  ban:
+    permission: st14.ban
+    usage: 'Poprawne użycie /ban [get|set|pardon] <gracz> <czas*> <powód*>'
 permissions:
   st14.st14:
     default: op
@@ -118,3 +121,5 @@ permissions:
     default: true
   st14.minigame:
     default: true
+  st14.ban:
+    default: op

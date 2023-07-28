@@ -1,6 +1,6 @@
 package me.matiego.st14.minigames.handlers;
 
-import me.matiego.st14.utils.BossBarTimer;
+import me.matiego.st14.objects.BossBarTimer;
 import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGameException;

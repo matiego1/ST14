@@ -1,12 +1,16 @@
 package me.matiego.st14.rewards;
 
 import me.matiego.st14.Main;
+import me.matiego.st14.objects.Reward;
 import org.jetbrains.annotations.NotNull;
 
-public class RewardForMiniGame {
+public class RewardForMiniGame extends Reward {
     public RewardForMiniGame(@NotNull Main plugin) {
-        this.plugin = plugin;
+        super(plugin);
     }
 
-    private final Main plugin;
+    @Override
+    protected @NotNull String getTableSuffix() {
+        return "mg";
+    }
 }

@@ -26,9 +26,12 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 public class Utils {
+    public static Pattern STRING_TO_MILLIS = Pattern.compile("([1-9][0-9]{0,3}d)?(([1-9]|1[0-9]|2[0-3])h)?(([1-9]|[1-5][0-9])m)?(([1-9]|[1-5][0-9])s)?");
 
     /**
      * Runs the given task async.
@@ -89,10 +92,6 @@ public class Utils {
         int x = useMilliseconds ? 1000 : 1;
         String result = "";
 
-        //months
-        int msc = (int) (time / (30L * 3600 * 24 * x));
-        time -= (long) msc * 30 * 3600 * 24 * x;
-        if (msc != 0) result += msc + "msc ";
         //days
         int d = (int) (time / (3600 * 24 * x));
         time -= (long) d * 3600 * 24 * x;
@@ -115,6 +114,25 @@ public class Utils {
 
         if (result.isEmpty()) return useMilliseconds ? "0ms" : "0s";
         return result.substring(0, result.length() - 1);
+    }
+
+    public static long parseStringToMillis(@NotNull String time) throws IllegalArgumentException {
+        Matcher matcher = STRING_TO_MILLIS.matcher(time);
+        if (!matcher.matches()) throw new IllegalArgumentException("incorrect time");
+        long days = getGroup(matcher, 1, "d");
+        long hours = getGroup(matcher, 2, "h");
+        long minutes = getGroup(matcher, 4, "m");
+        long seconds = getGroup(matcher, 6, "s");
+
+        return (((days * 24 + hours) * 60 + minutes) * 60 + seconds) * 1000;
+    }
+
+    private static int getGroup(@NotNull Matcher matcher, int group, @NotNull String c) {
+        try {
+            return Integer.parseInt(matcher.group(group).replace(c, ""));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     public static double getTps() {

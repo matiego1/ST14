@@ -11,7 +11,7 @@ import me.matiego.st14.listeners.*;
 import me.matiego.st14.managers.*;
 import me.matiego.st14.rewards.RewardForPlaying;
 import me.matiego.st14.utils.DiscordUtils;
-import me.matiego.st14.utils.GUI;
+import me.matiego.st14.objects.GUI;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -60,6 +60,7 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private WorldsLastLocationManager worldsLastLocationManager;
     @Getter private DynmapManager dynmapManager;
     @Getter private ListenersManager listenersManager;
+    @Getter private BansManager bansManager;
     private TabListManager tabListManager;
     private ChatReportsManager chatReportsManager;
     private DidYouKnowManager didYouKnowManager;
@@ -144,6 +145,7 @@ public final class Main extends JavaPlugin implements Listener {
         banknoteManager = new BanknoteManager(this);
         worldsLastLocationManager = new WorldsLastLocationManager(this);
         dynmapManager = new DynmapManager(this);
+        bansManager = new BansManager(this);
 
         Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomyManager(), vault, ServicePriority.High);
 
@@ -268,6 +270,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new TimeCommand(this),
                 new EconomyCommand(this),
                 new CoordinatesCommand(this),
+                new BanCommand(this),
                 //Minecraft commands
                 new SayCommand(this),
                 new St14Command(this),

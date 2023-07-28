@@ -1,7 +1,7 @@
 package me.matiego.st14.listeners;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.utils.GUI;
+import me.matiego.st14.objects.GUI;
 import me.matiego.st14.Logs;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;

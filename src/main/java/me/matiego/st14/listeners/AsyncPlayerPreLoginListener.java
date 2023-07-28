@@ -1,10 +1,10 @@
 package me.matiego.st14.listeners;
 
-import me.matiego.st14.managers.IncognitoManager;
-import me.matiego.st14.Main;
-import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.Logs;
+import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
+import me.matiego.st14.managers.IncognitoManager;
+import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -31,7 +31,7 @@ public class AsyncPlayerPreLoginListener implements Listener {
     @EventHandler
     public void onAsyncPlayerPreLogin(@NotNull AsyncPlayerPreLoginEvent event) {
         UUID uuid = event.getUniqueId();
-        //check whitelist & bans
+        //check vanilla whitelist & bans
         if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) return;
         if (Bukkit.hasWhitelist() && Bukkit.getWhitelistedPlayers().stream()
                 .map(OfflinePlayer::getUniqueId)
@@ -43,10 +43,16 @@ public class AsyncPlayerPreLoginListener implements Listener {
                 .anyMatch(uuid::equals)) {
             return;
         }
+        //check bans
+        if (plugin.getBansManager().isBanned(uuid)) {
+            disallow(event, plugin.getBansManager().getKickMessage(plugin.getBansManager().getBan(uuid)));
+            return;
+        }
         //check real time
         int seconds = LocalDateTime.now().toLocalTime().toSecondOfDay();
         if (seconds >= 24 * 60 * 60 - 7 || seconds <= 3) {
             disallow(event, "&cNa serwer możesz ponownie dołączyć 3 sekundy po północy. Przepraszamy.");
+            return;
         }
 
         //check player's nick length

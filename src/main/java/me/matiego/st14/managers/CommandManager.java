@@ -5,6 +5,8 @@ import lombok.Setter;
 import lombok.Synchronized;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
+import me.matiego.st14.objects.CommandHandler;
+import me.matiego.st14.objects.FixedSizeMap;
 import me.matiego.st14.utils.*;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;

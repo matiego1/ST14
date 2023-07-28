@@ -164,4 +164,31 @@ public class MiniGamesManager {
             });
         } catch (Exception ignored) {}
     }
+
+    public void giveRewardToWinner(@NotNull Player player, double reward) {
+        long now = Utils.now();
+
+        RewardsManager.Data data = plugin.getRewardsManager().getRewardForMiniGame().get(player.getUniqueId());
+        if (data == null) return;
+        if (now - data.getLast() <= 15 * 60 * 1000) return;
+
+        if (reward <= 0) return;
+
+        double limit = data.getLimit();
+        final double max = plugin.getConfig().getDouble("minigames.max-winner-reward", 100);
+        if (limit >= max) return;
+        limit += reward;
+        if (limit >= max) {
+            reward -= Math.max(0, limit - max);
+            limit = max;
+        }
+
+        data.setLast(now);
+        data.setLimit(limit);
+        if (!plugin.getRewardsManager().getRewardForCounting().set(player.getUniqueId(), data)) return;
+
+        if (plugin.getEconomyManager().depositPlayer(player, reward).transactionSuccess()) {
+            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Dostałeś " + plugin.getEconomyManager().format(reward) + " za wygraną minigrę!"));
+        }
+    }
 }

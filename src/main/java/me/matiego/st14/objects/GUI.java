@@ -1,5 +1,7 @@
-package me.matiego.st14.utils;
+package me.matiego.st14.objects;
 
+import me.matiego.st14.utils.Base64Utils;
+import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;

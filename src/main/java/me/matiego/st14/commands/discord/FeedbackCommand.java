@@ -1,6 +1,6 @@
 package me.matiego.st14.commands.discord;
 
-import me.matiego.st14.utils.CommandHandler.Discord;
+import me.matiego.st14.objects.CommandHandler.Discord;
 import me.matiego.st14.utils.DiscordUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;

@@ -3,6 +3,7 @@ package me.matiego.st14.managers;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
+import me.matiego.st14.objects.Pair;
 import me.matiego.st14.utils.*;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;

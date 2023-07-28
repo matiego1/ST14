@@ -1,7 +1,7 @@
 package me.matiego.st14.managers;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.utils.GUI;
+import me.matiego.st14.objects.GUI;
 import me.matiego.st14.Logs;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;

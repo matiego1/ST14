@@ -17,7 +17,8 @@ public enum Prefix {
     GAMEMODE("", "Tryb gry"),
     ANTY_LOGOUT("&4[&cANTY-LOGOUT&4]&c ", "Anty-logout"),
     SLEEPING_THROUGH_NIGHT("", "Przesypianie nocy"),
-    MINI_GAMES("&d[&9MG&d]&e ", "Minigry");
+    MINI_GAMES("&d[&9MG&d]&e ", "Minigry"),
+    AUTO_MOD("[AutoMod]", "");
 
     @Getter private final String minecraft;
     @Getter private final String discord;
