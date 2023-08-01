@@ -31,8 +31,6 @@ public class PlayerInteractListener implements Listener {
         if (item == null) return;
 
         if (!plugin.getBanknoteManager().isBanknote(item)) return;
-        double amount = plugin.getBanknoteManager().getAmount(item);
-        if (amount <= 0) return;
 
         Player player = event.getPlayer();
         if (!plugin.getConfig().getStringList("economy-worlds").contains(player.getWorld().getName())) return;
@@ -41,14 +39,17 @@ public class PlayerInteractListener implements Listener {
         event.setUseInteractedBlock(Event.Result.DENY);
         event.setUseItemInHand(Event.Result.DENY);
 
-        if (!plugin.getEconomyManager().depositPlayer(player, amount).transactionSuccess()) {
-            player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Napotkano niespodziewany błąd. Spróbuj później."));
-            return;
-        }
+        Utils.async(() -> {
+            double amount = plugin.getBanknoteManager().getAmount(item);
+            if (amount <= 0 || !plugin.getEconomyManager().depositPlayer(player, amount).transactionSuccess()) {
+                player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Napotkano niespodziewany błąd. Spróbuj później."));
+                return;
+            }
 
-        Logs.info("Gracz " + player.getName() + " wpłacił banknot o wartości " + plugin.getEconomyManager().format(amount));
+            Logs.info("Gracz " + player.getName() + " wpłacił banknot o wartości " + plugin.getEconomyManager().format(amount));
 
-        player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie wpłacono pieniądze na twoje konto!"));
-        player.getInventory().getItemInMainHand().setAmount(player.getInventory().getItemInMainHand().getAmount() - 1);
+            player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie wpłacono pieniądze na twoje konto!"));
+            player.getInventory().getItemInMainHand().setAmount(player.getInventory().getItemInMainHand().getAmount() - 1);
+        });
     }
 }

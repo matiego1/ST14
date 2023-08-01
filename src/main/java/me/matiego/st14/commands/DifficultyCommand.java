@@ -1,11 +1,16 @@
-package me.matiego.st14.commands.minecraft;
+package me.matiego.st14.commands;
 
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.objects.CommandHandler;
 import me.matiego.st14.objects.GUI;
-import me.matiego.st14.utils.*;
+import me.matiego.st14.utils.Utils;
+import net.dv8tion.jda.api.interactions.commands.*;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -13,11 +18,14 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.generator.WorldInfo;
 import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class DifficultyCommand implements CommandHandler.Minecraft {
+import java.util.stream.Collectors;
+
+public class DifficultyCommand implements CommandHandler.Minecraft, CommandHandler.Discord {
     public DifficultyCommand(@NotNull Main plugin) {
         command = plugin.getCommand("difficulty");
         if (command == null) {
@@ -85,5 +93,56 @@ public class DifficultyCommand implements CommandHandler.Minecraft {
                 "&aGracz &2" + player.getName() + "&a zmienił poziom trudności na &2" + name + "&a.",
                 "**[" + Utils.getWorldName(world) + "]** Gracz **" + player.getName() + "** zmienił poziom trudności na **" + name + "**."
         );
+    }
+
+    @Override
+    public @NotNull CommandData getDiscordCommand() {
+        return Commands.slash("difficulty", "Sprawdź poziom trudności w wybranym świecie")
+                .addOptions(
+                        new OptionData(OptionType.STRING, "swiat", "nazwa świata, w którym chcesz sprawdzić poziom trudności", true, true),
+                        new OptionData(OptionType.STRING, "incognito", "czy wiadomość ma być widoczna tylko dla ciebie", false)
+                                .addChoice("Tak", "True")
+                                .addChoice("Nie", "False")
+                )
+                .setGuildOnly(true);
+    }
+
+    @Override
+    public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
+        boolean ephemeral = event.getOption("incognito", "False", OptionMapping::getAsString).equals("True");
+
+        String worldName = event.getOption("swiat", null, OptionMapping::getAsString);
+        if (worldName == null) {
+            event.reply("Nie istnieje świat o takiej nazwie.").setEphemeral(ephemeral).queue();
+            return 3;
+        }
+
+        World world = Bukkit.getWorld(worldName);
+        if (world == null) {
+            event.reply("Nie istnieje świat o takiej nazwie.").setEphemeral(ephemeral).queue();
+            return 3;
+        }
+
+        String difficulty = switch (world.getDifficulty()) {
+            case PEACEFUL -> "pokojowy";
+            case EASY -> "łatwy";
+            case NORMAL -> "normalny";
+            case HARD -> "trudny";
+        };
+
+        event.reply("W świecie **" + world.getName() + "** obowiązuje **" + difficulty + "** poziom trudności.").setEphemeral(ephemeral).queue();
+        return 5;
+    }
+
+    @Override
+    public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteraction event) {
+        if (!event.getName().equals(getDiscordCommand().getName())) return;
+        if (!event.getFocusedOption().getName().equals("swiat")) return;
+        event.replyChoices(Bukkit.getWorlds().stream()
+                .map(WorldInfo::getName)
+                .filter(name -> name.toLowerCase().startsWith(event.getFocusedOption().getValue().toLowerCase()))
+                .map(name -> new Command.Choice(name, name))
+                .collect(Collectors.toList())
+        ).queue();
     }
 }

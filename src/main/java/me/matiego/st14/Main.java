@@ -61,6 +61,7 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private DynmapManager dynmapManager;
     @Getter private ListenersManager listenersManager;
     @Getter private BansManager bansManager;
+    @Getter private HomeManager homeManager;
     private TabListManager tabListManager;
     private ChatReportsManager chatReportsManager;
     private DidYouKnowManager didYouKnowManager;
@@ -87,6 +88,15 @@ public final class Main extends JavaPlugin implements Listener {
         //Check Bukkit version
         if (!Bukkit.getBukkitVersion().equals("1.20.1-R0.1-SNAPSHOT")) {
             Logs.error("Detected incompatible Bukkit version: " + Bukkit.getBukkitVersion() + ".");
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        }
+
+        //Check if server is PaperMC
+        try {
+            Class.forName("io.papermc.paper.event.player.AsyncChatEvent");
+        } catch (ClassNotFoundException e) {
+            Logs.error("This plugin is compatible only with PaperMC!");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
@@ -146,6 +156,7 @@ public final class Main extends JavaPlugin implements Listener {
         worldsLastLocationManager = new WorldsLastLocationManager(this);
         dynmapManager = new DynmapManager(this);
         bansManager = new BansManager(this);
+        homeManager = new HomeManager(this);
 
         Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomyManager(), vault, ServicePriority.High);
 
@@ -264,38 +275,41 @@ public final class Main extends JavaPlugin implements Listener {
         suicideCommand = new SuicideCommand(this);
         incognitoCommand = new IncognitoCommand(this);
         commandManager = new CommandManager(Arrays.asList(
-                incognitoCommand,
                 new AccountsCommand(this),
-                new VersionCommand(this),
-                new TimeCommand(this),
-                new EconomyCommand(this),
-                new CoordinatesCommand(this),
                 new BanCommand(this),
-                //Minecraft commands
-                new SayCommand(this),
-                new St14Command(this),
+                new CoordinatesCommand(this),
                 new DifficultyCommand(this),
+                new EconomyCommand(this),
                 new GameModeCommand(this),
-                new ReplyCommand(this),
-                new McreloadCommand(this),
-                new WorldsCommand(this),
-                new StopCommand(this),
+                incognitoCommand,
+                new PremiumCommand(this),
+                new SayCommand(this),
+                new TimeCommand(this),
+                new VersionCommand(this),
+                //Minecraft commands
                 new BackpackCommand(this),
-                new SpawnCommand(this),
+                new HomeCommand(this),
+                new McreloadCommand(this),
                 new MiniGameCommand(this),
+                new ReplyCommand(this),
+                new SpawnCommand(this),
+                new St14Command(this),
+                new StopCommand(this),
+                suicideCommand,
                 tellCommand,
                 tpaCommand,
-                suicideCommand,
+                new WorldsCommand(this),
                 //Discord commands
-                new PingCommand(),
-                new ListCommand(this),
-                new FeedbackCommand(),
                 new AllPlayersCommand(this),
+                new FeedbackCommand(),
+                new ListCommand(this),
+                new PingCommand(),
                 new VerifyCommand(this)
         ));
         listenersManager.registerListener(commandManager);
         jda.addEventListener(commandManager);
 
+        //start managers
         chatReportsManager.start();
         commandManager.setEnabled(true);
         getAfkManager().start();
@@ -369,6 +383,10 @@ public final class Main extends JavaPlugin implements Listener {
                 Logs.error("An error occurred while shutting down Discord bot.", e);
             }
         }
+        if (callbackThreadPool != null) {
+            callbackThreadPool.shutdownNow();
+            callbackThreadPool = null;
+        }
         //end all tasks
         Bukkit.getScheduler().cancelTasks(this);
         for (BukkitWorker task : Bukkit.getScheduler().getActiveWorkers()) {
@@ -394,10 +412,6 @@ public final class Main extends JavaPlugin implements Listener {
         jda.shutdownNow();
         if (jda.awaitShutdown(3, TimeUnit.SECONDS)) return;
         jda = null;
-
-        if (callbackThreadPool == null) return;
-        callbackThreadPool.shutdownNow();
-        callbackThreadPool = null;
     }
 
     public @NotNull Connection getConnection() throws SQLException {

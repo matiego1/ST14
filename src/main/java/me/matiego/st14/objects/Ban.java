@@ -9,8 +9,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
 public class Ban {
-    public Ban(@NotNull UUID uniqueId) {
-        this(uniqueId, null, 0);
+    public Ban(@NotNull UUID uuid) {
+        this(uuid, null, 0);
     }
     public Ban(@NotNull UUID uuid, @Nullable String reason, long expiration) {
         this.uuid = uuid;

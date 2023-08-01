@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class CommandManager extends ListenerAdapter implements CommandExecutor, TabCompleter, Listener {
     public CommandManager(@NotNull List<CommandHandler> handlers) {
@@ -109,7 +110,9 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
 
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, org.bukkit.command.@NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        return minecraftCommands.get(command.getName()).onTabComplete(sender, args);
+        return minecraftCommands.get(command.getName()).onTabComplete(sender, args).stream()
+                .filter(complete -> complete.toLowerCase().startsWith(args[args.length - 1].toLowerCase()))
+                .collect(Collectors.toList());
     }
 
     @Override

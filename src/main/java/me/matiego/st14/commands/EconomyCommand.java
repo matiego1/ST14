@@ -6,8 +6,8 @@ import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.AccountsManager;
 import me.matiego.st14.managers.EconomyManager;
 import me.matiego.st14.objects.CommandHandler;
-import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.objects.GUI;
+import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.User;
@@ -235,26 +235,29 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                             return List.of(AnvilGUI.ResponseAction.replaceInputText("Brak środków"));
                         }
 
-                        ItemStack banknote = plugin.getBanknoteManager().createBanknote(amount);
-                        if (banknote == null) {
-                            player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd. Spróbuj później."));
-                            return List.of(AnvilGUI.ResponseAction.close());
-                        }
+                        final double finalAmount = amount;
+                        Utils.async(() -> {
+                            ItemStack banknote = plugin.getBanknoteManager().createBanknote(finalAmount);
+                            if (banknote == null) {
+                                player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd. Spróbuj później."));
+                                return;
+                            }
 
-                        EconomyResponse response = economy.withdrawPlayer(player, amount);
-                        if (!response.transactionSuccess()) {
-                            player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd. Spróbuj później."));
-                            return List.of(AnvilGUI.ResponseAction.close());
-                        }
+                            EconomyResponse response = economy.withdrawPlayer(player, finalAmount);
+                            if (!response.transactionSuccess()) {
+                                player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd. Spróbuj później."));
+                                return;
+                            }
 
-                        HashMap<Integer, ItemStack> drop = player.getInventory().addItem();
-                        for (ItemStack item : drop.values()) {
-                            player.getWorld().dropItem(player.getLocation().add(0, 0.5, 0), item);
-                        }
+                            HashMap<Integer, ItemStack> drop = player.getInventory().addItem();
+                            for (ItemStack item : drop.values()) {
+                                player.getWorld().dropItem(player.getLocation().add(0, 0.5, 0), item);
+                            }
 
-                        Logs.info("Gracz " + player.getName() + " wypłacił " + economy.format(amount) + " ze swojego konta. (Na ziemi? " + (drop.isEmpty() ? "Nie" : "Tak") + ")");
+                            Logs.info("Gracz " + player.getName() + " wypłacił " + economy.format(finalAmount) + " ze swojego konta. (Na ziemi? " + (drop.isEmpty() ? "Nie" : "Tak") + ")");
 
-                        player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie wypłacono &9" + economy.format(amount) + "&b z twojego konta."));
+                            player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie wypłacono &9" + economy.format(finalAmount) + "&b z twojego konta."));
+                        });
                         return List.of(AnvilGUI.ResponseAction.close());
                     })
                     .open(player);

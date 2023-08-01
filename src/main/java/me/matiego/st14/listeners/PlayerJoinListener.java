@@ -46,10 +46,14 @@ public class PlayerJoinListener implements Listener {
         //afk
         plugin.getAfkManager().move(player);
         //premium
-        long time = plugin.getPremiumManager().getRemainingTime(uuid);
-        if (time > 0) {
-            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Jesteś graczem premium! Twój status premium wygaśnie za &6" + Utils.parseMillisToString(time, false) + "&d."));
-        }
+        Utils.async(() -> {
+            long time = plugin.getPremiumManager().getRemainingTime(uuid);
+            if (plugin.getPremiumManager().isSuperPremium(uuid)) {
+                player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Jesteś graczem super premium!"));
+            } else if (time > 0) {
+                player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Jesteś graczem premium! Twój status premium wygaśnie za &6" + Utils.parseMillisToString(time, false) + "&d."));
+            }
+        });
         //join messages
         event.joinMessage(Utils.getComponentByString("&eGracz " + player.getName() + " dołączył do gry"));
         plugin.getChatMinecraftManager().sendJoinMessage(player);

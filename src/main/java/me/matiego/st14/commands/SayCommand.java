@@ -1,12 +1,20 @@
-package me.matiego.st14.commands.minecraft;
+package me.matiego.st14.commands;
 
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.objects.CommandHandler;
 import me.matiego.st14.utils.DiscordUtils;
-import me.matiego.st14.Logs;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
@@ -16,7 +24,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 
-public class SayCommand implements CommandHandler.Minecraft {
+public class SayCommand implements CommandHandler.Minecraft, CommandHandler.Discord {
     private final PluginCommand command;
     private final Main plugin;
     public SayCommand(@NotNull Main plugin) {
@@ -51,6 +59,33 @@ public class SayCommand implements CommandHandler.Minecraft {
             }
         }
 
+        broadcastMessage(message);
+
+        return 0;
+    }
+
+    @SuppressWarnings("SpellCheckingInspection")
+    @Override
+    public @NotNull CommandData getDiscordCommand() {
+        return Commands.slash("say", "wyślij wiadomość na serwer minecraft")
+                .setGuildOnly(true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+                .addOptions(new OptionData(OptionType.STRING, "wiadomosc", "wiadomość, która ma być wysłana", true));
+    }
+
+    @Override
+    public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
+        String message = event.getOption("wiadomosc", null, OptionMapping::getAsString);
+        if (message == null || message.isBlank()) {
+            event.reply("Nie możesz wysłać pustej wiadomości.").setEphemeral(true).queue();
+            return 0;
+        }
+
+        broadcastMessage(message);
+        return 0;
+    }
+
+    private void broadcastMessage(@NotNull String message) {
         Bukkit.broadcast(Utils.getComponentByString("&2[&aSerwer&2]:&r " + message));
 
         Logs.discord("**[Serwer]:**" + message);
@@ -59,6 +94,5 @@ public class SayCommand implements CommandHandler.Minecraft {
         eb.setDescription(DiscordUtils.checkLength(message, MessageEmbed.DESCRIPTION_MAX_LENGTH));
         eb.setColor(Color.GREEN);
         plugin.getChatMinecraftManager().sendMessageEmbed(eb.build());
-        return 0;
     }
 }

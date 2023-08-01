@@ -130,7 +130,7 @@ public class Utils {
     private static int getGroup(@NotNull Matcher matcher, int group, @NotNull String c) {
         try {
             return Integer.parseInt(matcher.group(group).replace(c, ""));
-        } catch (NumberFormatException e) {
+        } catch (Exception e) {
             return 0;
         }
     }

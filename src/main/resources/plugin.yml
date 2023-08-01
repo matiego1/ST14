@@ -80,6 +80,12 @@ commands:
   ban:
     permission: st14.ban
     usage: 'Poprawne użycie /ban [get|set|pardon] <gracz> <czas*> <powód*>'
+  home:
+    permission: st14.home
+    usage: 'Poprawne użycie /home'
+  premium:
+    permission: st14.premium
+    usage: 'Poprawne użycie /premium [get|remove|extend|set|reduce] <gracz> <czas*>'
 permissions:
   st14.st14:
     default: op
@@ -123,3 +129,7 @@ permissions:
     default: true
   st14.ban:
     default: op
+  st14.home:
+    default: true
+  st14.premium:
+    default: true

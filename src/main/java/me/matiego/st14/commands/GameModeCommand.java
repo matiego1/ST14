@@ -1,12 +1,18 @@
-package me.matiego.st14.commands.minecraft;
+package me.matiego.st14.commands;
 
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.objects.CommandHandler;
 import me.matiego.st14.objects.GUI;
-import me.matiego.st14.utils.*;
-import org.bukkit.*;
+import me.matiego.st14.utils.Utils;
+import net.dv8tion.jda.api.interactions.commands.*;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
@@ -15,7 +21,9 @@ import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class GameModeCommand implements CommandHandler.Minecraft {
+import java.util.stream.Collectors;
+
+public class GameModeCommand implements CommandHandler.Minecraft, CommandHandler.Discord {
     public GameModeCommand(@NotNull Main plugin) {
         command = plugin.getCommand("gamemode");
         if (command == null) {
@@ -88,5 +96,56 @@ public class GameModeCommand implements CommandHandler.Minecraft {
                 "&aGracz &2" + player.getName() + "&a zmienił swój tryb gry na &2" + name + "&a w świecie &2" + Utils.getWorldName(player.getWorld()) + "&a.",
                 "**[" + Utils.getWorldName(player.getWorld()) + "]** Gracz **" + player.getName() + "** zmienił swój tryb gry na **" + name + "**."
         );
+    }
+
+    @Override
+    public @NotNull CommandData getDiscordCommand() {
+        return Commands.slash("gamemode", "Sprawdź tryb gry gracza")
+                .addOptions(
+                        new OptionData(OptionType.STRING, "gracz", "nick gracza, którego tryb gry chcesz sprawdzić", true, true),
+                        new OptionData(OptionType.STRING, "incognito", "czy wiadomość ma być widoczna tylko dla ciebie", false)
+                                .addChoice("Tak", "True")
+                                .addChoice("Nie", "False")
+                )
+                .setGuildOnly(true);
+    }
+
+    @Override
+    public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
+        boolean ephemeral = event.getOption("incognito", "False", OptionMapping::getAsString).equals("True");
+
+        String playerName = event.getOption("gracz", null, OptionMapping::getAsString);
+        if (playerName == null) {
+            event.reply("Zły nick.").setEphemeral(ephemeral).queue();
+            return 3;
+        }
+
+        Player player = Bukkit.getPlayerExact(playerName);
+        if (player == null) {
+            event.reply("Zły nick.").setEphemeral(ephemeral).queue();
+            return 3;
+        }
+
+        String difficulty = switch (player.getGameMode()) {
+            case CREATIVE -> "kreatywny";
+            case SURVIVAL -> "przetrwania";
+            case ADVENTURE -> "przygodowy";
+            case SPECTATOR -> "obserwatora";
+        };
+
+        event.reply("Tryb gry gracza **" + player.getName() + "** to **" + difficulty + "**.").setEphemeral(ephemeral).queue();
+        return 5;
+    }
+
+    @Override
+    public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteraction event) {
+        if (!event.getName().equals(getDiscordCommand().getName())) return;
+        if (!event.getFocusedOption().getName().equals("gracz")) return;
+        event.replyChoices(Bukkit.getOnlinePlayers().stream()
+                .map(Player::getName)
+                .filter(name -> name.toLowerCase().startsWith(event.getFocusedOption().getValue().toLowerCase()))
+                .map(name -> new Command.Choice(name, name))
+                .collect(Collectors.toList())
+        ).queue();
     }
 }
