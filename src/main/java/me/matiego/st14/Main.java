@@ -32,10 +32,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
@@ -274,7 +271,7 @@ public final class Main extends JavaPlugin implements Listener {
         tpaCommand = new TpaCommand(this);
         suicideCommand = new SuicideCommand(this);
         incognitoCommand = new IncognitoCommand(this);
-        commandManager = new CommandManager(Arrays.asList(
+        commandManager = new CommandManager(Objects.requireNonNull(getJda()), Arrays.asList(
                 new AccountsCommand(this),
                 new BanCommand(this),
                 new CoordinatesCommand(this),

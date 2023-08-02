@@ -79,7 +79,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                     hook.sendMessage("Twoje konto już jest połączone z kontem minecraft.").queue();
                     return;
                 }
-                Pair<UUID, String> pair = manager.checkVerificationCode(code);
+                Pair<UUID, String> pair = manager.checkVerificationCode(code.toUpperCase());
                 if (pair == null) {
                     hook.sendMessage("Twój kod jest niepoprawny. Aby wygenerować nowy, dołącz do serwera.").queue();
                     return;

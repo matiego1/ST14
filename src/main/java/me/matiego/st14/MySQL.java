@@ -59,15 +59,17 @@ public class MySQL {
     }
 
     public boolean createTables() {
-        if (!EconomyManager.createTable()) return false;
-        if (!OfflinePlayersManager.createTable()) return false;
-        if (!IncognitoManager.createTable()) return false;
-        if (!TimeManager.createTable()) return false;
-        if (!PremiumManager.createTable()) return false;
-        if (!WorldsLastLocationManager.createTable()) return false;
-        if (!BackpackManager.createTable()) return false;
         if (!RewardsManager.createTable()) return false;
+        if (!AccountsManager.createTable()) return false;
+        if (!BackpackManager.createTable()) return false;
         if (!BanknoteManager.createTable()) return false;
-        return AccountsManager.createTable();
+        if (!BansManager.createTable()) return false;
+        if (!EconomyManager.createTable()) return false;
+        if (!HomeManager.createTable()) return false;
+        if (!IncognitoManager.createTable()) return false;
+        if (!OfflinePlayersManager.createTable()) return false;
+        if (!PremiumManager.createTable()) return false;
+        if (!TimeManager.createTable()) return false;
+        return WorldsLastLocationManager.createTable();
     }
 }

@@ -114,7 +114,7 @@ public class GameModeCommand implements CommandHandler.Minecraft, CommandHandler
     public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
         boolean ephemeral = event.getOption("incognito", "False", OptionMapping::getAsString).equals("True");
 
-        String playerName = event.getOption("gracz", null, OptionMapping::getAsString);
+        String playerName = event.getOption("gracz", OptionMapping::getAsString);
         if (playerName == null) {
             event.reply("Zły nick.").setEphemeral(ephemeral).queue();
             return 3;

@@ -95,6 +95,7 @@ public class RewardForPlaying extends Reward {
     public boolean loadToCache(@NotNull UUID uuid) {
         RewardsManager.Data data = get(uuid);
         if (data == null) return false;
+        data.setLast(0);
         cache.put(uuid, data);
         return true;
     }

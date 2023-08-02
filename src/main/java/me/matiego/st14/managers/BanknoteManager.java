@@ -96,6 +96,29 @@ public class BanknoteManager {
         return false;
     }
 
+    public void removeBanknote(@NotNull ItemStack item) {
+        String id = null;
+        try {
+            id = item.getItemMeta().getPersistentDataContainer().get(idKey, PersistentDataType.STRING);
+        } catch (Exception ignored) {}
+        if (id == null) {
+            Logs.error("Nie udało się usunąć wpłaconego banknotu z ich listy, ponieważ nie udało się odczytać jego ID!");
+            return;
+        }
+
+        try (Connection conn = plugin.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("DELETE FROM st14_banknote WHERE id = ?")) {
+            stmt.setString(1, id);
+            if (stmt.executeUpdate() == 0) {
+                Logs.error("Nie udało się usunąć wpłaconego banknotu z ich listy! ID: " + id);
+            }
+            return;
+        } catch (Exception e) {
+            Logs.error(ERROR_MSG, e);
+        }
+        Logs.error("Nie udało się usunąć wpłaconego banknotu z ich listy! ID: " + id);
+    }
+
     public static boolean createTable() {
         try (Connection conn = Main.getInstance().getConnection();
              PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_banknote(id VARCHAR(36) NOT NULL, amount DECIMAL(12, 2) NOT NULL, date VARCHAR(19), PRIMARY KEY (id))")) {

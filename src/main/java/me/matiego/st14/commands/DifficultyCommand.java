@@ -18,7 +18,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.generator.WorldInfo;
 import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -111,13 +110,19 @@ public class DifficultyCommand implements CommandHandler.Minecraft, CommandHandl
     public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
         boolean ephemeral = event.getOption("incognito", "False", OptionMapping::getAsString).equals("True");
 
-        String worldName = event.getOption("swiat", null, OptionMapping::getAsString);
+        String worldName = event.getOption("swiat", OptionMapping::getAsString);
         if (worldName == null) {
             event.reply("Nie istnieje świat o takiej nazwie.").setEphemeral(ephemeral).queue();
             return 3;
         }
 
-        World world = Bukkit.getWorld(worldName);
+        World world = null;
+        for (World candidate : Bukkit.getWorlds()) {
+            if (worldName.equals(Utils.getWorldName(candidate))) {
+                world = candidate;
+                break;
+            }
+        }
         if (world == null) {
             event.reply("Nie istnieje świat o takiej nazwie.").setEphemeral(ephemeral).queue();
             return 3;
@@ -139,7 +144,7 @@ public class DifficultyCommand implements CommandHandler.Minecraft, CommandHandl
         if (!event.getName().equals(getDiscordCommand().getName())) return;
         if (!event.getFocusedOption().getName().equals("swiat")) return;
         event.replyChoices(Bukkit.getWorlds().stream()
-                .map(WorldInfo::getName)
+                .map(Utils::getWorldName)
                 .filter(name -> name.toLowerCase().startsWith(event.getFocusedOption().getValue().toLowerCase()))
                 .map(name -> new Command.Choice(name, name))
                 .collect(Collectors.toList())

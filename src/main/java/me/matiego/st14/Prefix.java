@@ -7,7 +7,7 @@ public enum Prefix {
     AFK("&5[&dAFK&5]&d ", "AFK"),
     INCOGNITO("&8[&7INC&8]&f ", ""),
     TIME("&6[&eCzas&6]&e ", ""),
-    PREMIUM("&6[&dPremium&6]&d ", "Premium"),
+    PREMIUM("&6[&bPremium&6]&b ", "Premium"),
     WORLDS("&1[&3Światy&1]&3 ", "Światy"),
     TPA("&2[&6TPA&2]&e ", "TPA"),
     ECONOMY("&9[&b$&9]&b ", "**[$]** "),

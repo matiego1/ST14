@@ -249,7 +249,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                                 return;
                             }
 
-                            HashMap<Integer, ItemStack> drop = player.getInventory().addItem();
+                            HashMap<Integer, ItemStack> drop = player.getInventory().addItem(banknote);
                             for (ItemStack item : drop.values()) {
                                 player.getWorld().dropItem(player.getLocation().add(0, 0.5, 0), item);
                             }

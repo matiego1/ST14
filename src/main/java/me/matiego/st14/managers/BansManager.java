@@ -64,12 +64,12 @@ public class BansManager {
 
     public @NotNull String getKickMessage(@Nullable Ban ban) {
         if (ban == null) {
-            return "&4Jesteś zbanowany!\n" +
+            return "&c&lJesteś zbanowany!&r\n" +
                     "\n" +
                     "&7Niestety nie udało się wczytać więcej informacji o twoim banie.\n" +
                     "Przepraszamy.";
         }
-        return "&4Jesteś zbanowany!\n" +
+        return "&c&lJesteś zbanowany!&r\n" +
                 "\n" +
                 "&cPozostały czas: &7" + Utils.parseMillisToString(ban.getExpiration() - Utils.now(), false) + "\n" +
                 "&cPowód: &7" + ban.getReason() + "\n" +

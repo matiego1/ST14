@@ -67,7 +67,7 @@ public class BanCommand implements CommandHandler.Minecraft, CommandHandler.Disc
                     sender.sendMessage(Utils.getComponentByString("&cTen gracz jest zbanowany, ale nie udało się wczytać więcej informacji."));
                     return 0;
                 }
-                sender.sendMessage(Utils.getComponentByString("&aPozostały czas: &2" + Utils.parseMillisToString(ban.getExpiration() - Utils.now(), true) + "&a; Powód: &2" + ban.getReason()));
+                sender.sendMessage(Utils.getComponentByString("&aPozostały czas: &2" + Utils.parseMillisToString(ban.getExpiration() - Utils.now(), false) + "&a; Powód: &2" + ban.getReason()));
                 return 0;
             }
             case "pardon" -> {
@@ -84,7 +84,7 @@ public class BanCommand implements CommandHandler.Minecraft, CommandHandler.Disc
                 return 0;
             }
             case "set" -> {
-                if (args.length < 3) return -1;
+                if (args.length < 4) return -1;
                 if (manager.isBanned(uuid)) {
                     sender.sendMessage(Utils.getComponentByString("&cTen gracz już jest zbanowany."));
                     return 0;
@@ -92,14 +92,14 @@ public class BanCommand implements CommandHandler.Minecraft, CommandHandler.Disc
 
                 long time;
                 try {
-                    time = Utils.parseStringToMillis(args[1]);
+                    time = Utils.parseStringToMillis(args[2]);
                 } catch (IllegalArgumentException e) {
                     sender.sendMessage(Utils.getComponentByString("&cZły czas."));
                     return 0;
                 }
 
                 StringBuilder reason = new StringBuilder();
-                for (int i = 2; i < args.length; i++) {
+                for (int i = 3; i < args.length; i++) {
                     reason.append(args[i]).append(" ");
                 }
                 reason.deleteCharAt(reason.length() - 1);
@@ -164,7 +164,7 @@ public class BanCommand implements CommandHandler.Minecraft, CommandHandler.Disc
         event.deferReply(true).queue();
         InteractionHook hook = event.getHook();
 
-        String playerName = event.getOption("gracz", null, OptionMapping::getAsString);
+        String playerName = event.getOption("gracz", OptionMapping::getAsString);
         if (playerName == null) {
             hook.sendMessage("Zły nick.").queue();
             return 1;
@@ -224,7 +224,7 @@ public class BanCommand implements CommandHandler.Minecraft, CommandHandler.Disc
 
                     if (manager.setBan(new Ban(
                             uuid,
-                            event.getOption("powod", null, OptionMapping::getAsString),
+                            event.getOption("powod", OptionMapping::getAsString),
                             time
                     ))) {
                         hook.sendMessage("Pomyślnie zbanowano gracza").queue();

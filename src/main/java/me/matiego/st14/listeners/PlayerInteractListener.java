@@ -50,6 +50,8 @@ public class PlayerInteractListener implements Listener {
 
             player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie wpłacono pieniądze na twoje konto!"));
             player.getInventory().getItemInMainHand().setAmount(player.getInventory().getItemInMainHand().getAmount() - 1);
+
+            plugin.getBanknoteManager().removeBanknote(item);
         });
     }
 }

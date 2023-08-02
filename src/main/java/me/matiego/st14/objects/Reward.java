@@ -38,16 +38,16 @@ public abstract class Reward {
     }
 
     public boolean set(@NotNull UUID uuid, @NotNull RewardsManager.Data data) {
+        long now = Utils.now();
         try (Connection conn = plugin.getConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_rewards_" + getTableSuffix() + "(uuid, amount, last) VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE amount = ?, last = ?")) {
             stmt.setString(1, uuid.toString());
             stmt.setDouble(2, data.getLimit());
-            stmt.setLong(3, data.getLast());
+            stmt.setLong(3, now);
 
             stmt.setDouble(4, data.getLimit());
-            stmt.setLong(5, data.getLast());
-            stmt.execute();
-            return true;
+            stmt.setLong(5, now);
+            return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             Logs.error(ERROR_MSG, e);
         }

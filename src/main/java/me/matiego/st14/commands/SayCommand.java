@@ -75,13 +75,15 @@ public class SayCommand implements CommandHandler.Minecraft, CommandHandler.Disc
 
     @Override
     public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
-        String message = event.getOption("wiadomosc", null, OptionMapping::getAsString);
+        String message = event.getOption("wiadomosc", OptionMapping::getAsString);
         if (message == null || message.isBlank()) {
             event.reply("Nie możesz wysłać pustej wiadomości.").setEphemeral(true).queue();
             return 0;
         }
-
         broadcastMessage(message);
+
+        event.reply("Sukces!").setEphemeral(true).queue();
+
         return 0;
     }
 

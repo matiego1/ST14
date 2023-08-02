@@ -4,12 +4,13 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.Synchronized;
 import me.matiego.st14.Logs;
-import me.matiego.st14.Main;
 import me.matiego.st14.objects.CommandHandler;
 import me.matiego.st14.objects.FixedSizeMap;
-import me.matiego.st14.utils.*;
+import me.matiego.st14.utils.DiscordUtils;
+import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.UserSnowflake;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -40,7 +41,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class CommandManager extends ListenerAdapter implements CommandExecutor, TabCompleter, Listener {
-    public CommandManager(@NotNull List<CommandHandler> handlers) {
+    public CommandManager(@NotNull JDA jda, @NotNull List<CommandHandler> handlers) {
         List<CommandData> dc = new ArrayList<>();
         handlers.forEach(handler -> {
             if (handler instanceof CommandHandler.Discord discord) {
@@ -59,8 +60,6 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
                 minecraftCommands.put(cmd.getName().toLowerCase(), minecraft);
             }
         });
-        JDA jda = Main.getInstance().getJda();
-        if (jda == null) throw new NullPointerException("JDA is null");
         jda.updateCommands().addCommands(dc).queue();
     }
 

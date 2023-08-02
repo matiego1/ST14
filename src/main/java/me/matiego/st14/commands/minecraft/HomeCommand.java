@@ -61,8 +61,8 @@ public class HomeCommand implements CommandHandler.Minecraft {
 
         Utils.async(() -> {
             if (manager.isHomeLocationSet(uuid)) {
-                inv.setItem(2, GUI.createGuiItem(Material.ENDER_PEARL, "&aTeleportuj do domu", "&aKliknij, aby przeteleportować się do domu"));
-                inv.setItem(4, GUI.createGuiItem(Material.RED_BED, "&eTwój dom", parseLocationToString(manager.getHomeLocation(uuid))));
+                inv.setItem(2, GUI.createGuiItem(Material.ENDER_PEARL, "&6Teleportuj do domu", "&aKliknij, aby przeteleportować się do domu"));
+                inv.setItem(4, GUI.createGuiItem(Material.RED_BED, "&6Twój dom", parseLocationToString(manager.getHomeLocation(uuid))));
                 inv.setItem(6, GUI.createGuiItem(Material.BARRIER, "&6Usuń swój dom", "&aKliknij, aby usunąć swój dom"));
             } else {
                 inv.setItem(4, GUI.createGuiItem(Material.RED_BED, "&6Nie ustawiłeś jeszcze domu!", "&aKliknij, aby ustawić swój dom", "&aw miejscu, w którym stoisz."));
@@ -78,7 +78,7 @@ public class HomeCommand implements CommandHandler.Minecraft {
         }
         return new String[]{
                 "&6X: &a" + Utils.round(location.getX(), 2) + "&6 Y: &a" + Utils.round(location.getY(), 2) + "&6 Z: &a" + Utils.round(location.getZ(), 2),
-                "&6Świat: &a" + location.getWorld().getName()
+                "&6Świat: &a" + Utils.getWorldName(location.getWorld())
         };
     }
 
@@ -100,7 +100,7 @@ public class HomeCommand implements CommandHandler.Minecraft {
         switch (slot) {
             case 2 -> Utils.async(() -> {
                 Location location = manager.getHomeLocation(uuid);
-                event.getInventory().close();
+                closeInventory(event);
                 if (location == null) {
                     player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
                     return;
@@ -109,7 +109,7 @@ public class HomeCommand implements CommandHandler.Minecraft {
             });
             case 4 -> Utils.async(() -> {
                 if (getItemName(event.getCurrentItem()).equals("Twój dom")) return;
-                event.getInventory().close();
+                closeInventory(event);
                 if (manager.setHomeLocation(uuid, player.getLocation())) {
                     player.sendMessage(Utils.getComponentByString(Prefix.HOME + "Pomyślnie ustawiono twój dom."));
                 } else {
@@ -117,7 +117,7 @@ public class HomeCommand implements CommandHandler.Minecraft {
                 }
             });
             case 6 -> Utils.async(() -> {
-                event.getInventory().close();
+                closeInventory(event);
                 if (manager.removeHome(uuid)) {
                     player.sendMessage(Utils.getComponentByString(Prefix.HOME + "Pomyślnie usunięto twój dom."));
                 } else {
@@ -125,6 +125,10 @@ public class HomeCommand implements CommandHandler.Minecraft {
                 }
             });
         }
+    }
+
+    private void closeInventory(@NotNull InventoryClickEvent event) {
+        Utils.sync(() -> event.getInventory().close());
     }
 
     private void teleportPlayer(@NotNull Player player, @NotNull Location location) {

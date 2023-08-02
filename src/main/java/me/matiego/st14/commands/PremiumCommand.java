@@ -61,7 +61,7 @@ public class PremiumCommand implements CommandHandler.Minecraft, CommandHandler.
                     return;
                 }
                 if (time > 0) {
-                    sender.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Temu graczowi pozostało " + Utils.parseMillisToString(time, false) + " do wygaśnięcia statusu premium."));
+                    sender.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Temu graczowi pozostało &6" + Utils.parseMillisToString(time, false) + "&b do wygaśnięcia statusu premium."));
                 } else {
                     sender.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Ten gracz nie jest premium."));
                 }
@@ -171,7 +171,7 @@ public class PremiumCommand implements CommandHandler.Minecraft, CommandHandler.
     public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
         boolean ephemeral = event.getOption("incognito", "False", OptionMapping::getAsString).equals("True");
 
-        String playerName = event.getOption("gracz", null, OptionMapping::getAsString);
+        String playerName = event.getOption("gracz", OptionMapping::getAsString);
         if (playerName == null) {
             event.reply("Zły nick.").setEphemeral(ephemeral).queue();
             return 3;
