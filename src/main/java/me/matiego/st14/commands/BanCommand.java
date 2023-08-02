@@ -58,57 +58,63 @@ public class BanCommand implements CommandHandler.Minecraft, CommandHandler.Disc
         switch (args[0]) {
             case "get" -> {
                 if (args.length != 2) return -1;
-                if (!manager.isBanned(uuid)) {
-                    sender.sendMessage(Utils.getComponentByString("&cTen gracz nie jest zbanowany."));
-                    return 0;
-                }
-                Ban ban = manager.getBan(uuid);
-                if (ban == null) {
-                    sender.sendMessage(Utils.getComponentByString("&cTen gracz jest zbanowany, ale nie udało się wczytać więcej informacji."));
-                    return 0;
-                }
-                sender.sendMessage(Utils.getComponentByString("&aPozostały czas: &2" + Utils.parseMillisToString(ban.getExpiration() - Utils.now(), false) + "&a; Powód: &2" + ban.getReason()));
+                Utils.async(() -> {
+                    if (!manager.isBanned(uuid)) {
+                        sender.sendMessage(Utils.getComponentByString("&cTen gracz nie jest zbanowany."));
+                        return;
+                    }
+                    Ban ban = manager.getBan(uuid);
+                    if (ban == null) {
+                        sender.sendMessage(Utils.getComponentByString("&cTen gracz jest zbanowany, ale nie udało się wczytać więcej informacji."));
+                        return;
+                    }
+                    sender.sendMessage(Utils.getComponentByString("&aPozostały czas: &2" + Utils.parseMillisToString(ban.getExpiration() - Utils.now(), false) + "&a; Powód: &2" + ban.getReason()));
+                });
                 return 0;
             }
             case "pardon" -> {
                 if (args.length != 2) return -1;
-                if (!manager.isBanned(uuid)) {
-                    sender.sendMessage(Utils.getComponentByString("&cTen gracz nie jest zbanowany."));
-                    return 0;
-                }
-                if (manager.setBan(new Ban(uuid))) {
-                    sender.sendMessage(Utils.getComponentByString("&aPomyślnie odbanowano gracza."));
-                } else {
-                    sender.sendMessage(Utils.getComponentByString("&cNapotkano błąd przy odbanowywaniu gracza."));
-                }
+                Utils.async(() -> {
+                    if (!manager.isBanned(uuid)) {
+                        sender.sendMessage(Utils.getComponentByString("&cTen gracz nie jest zbanowany."));
+                        return;
+                    }
+                    if (manager.setBan(new Ban(uuid))) {
+                        sender.sendMessage(Utils.getComponentByString("&aPomyślnie odbanowano gracza."));
+                    } else {
+                        sender.sendMessage(Utils.getComponentByString("&cNapotkano błąd przy odbanowywaniu gracza."));
+                    }
+                });
                 return 0;
             }
             case "set" -> {
                 if (args.length < 4) return -1;
-                if (manager.isBanned(uuid)) {
-                    sender.sendMessage(Utils.getComponentByString("&cTen gracz już jest zbanowany."));
-                    return 0;
-                }
+                Utils.async(() -> {
+                    if (manager.isBanned(uuid)) {
+                        sender.sendMessage(Utils.getComponentByString("&cTen gracz już jest zbanowany."));
+                        return;
+                    }
 
-                long time;
-                try {
-                    time = Utils.parseStringToMillis(args[2]);
-                } catch (IllegalArgumentException e) {
-                    sender.sendMessage(Utils.getComponentByString("&cZły czas."));
-                    return 0;
-                }
+                    long time;
+                    try {
+                        time = Utils.parseStringToMillis(args[2]);
+                    } catch (IllegalArgumentException e) {
+                        sender.sendMessage(Utils.getComponentByString("&cZły czas."));
+                        return;
+                    }
 
-                StringBuilder reason = new StringBuilder();
-                for (int i = 3; i < args.length; i++) {
-                    reason.append(args[i]).append(" ");
-                }
-                reason.deleteCharAt(reason.length() - 1);
+                    StringBuilder reason = new StringBuilder();
+                    for (int i = 3; i < args.length; i++) {
+                        reason.append(args[i]).append(" ");
+                    }
+                    reason.deleteCharAt(reason.length() - 1);
 
-                if (manager.setBan(new Ban(uuid, reason.toString(), Utils.now() + time))) {
-                    sender.sendMessage(Utils.getComponentByString("&aPomyślnie zbanowano tego gracza."));
-                } else {
-                    sender.sendMessage(Utils.getComponentByString("&cNapotkano błąd przy banowaniu gracza."));
-                }
+                    if (manager.setBan(new Ban(uuid, reason.toString(), Utils.now() + time))) {
+                        sender.sendMessage(Utils.getComponentByString("&aPomyślnie zbanowano tego gracza."));
+                    } else {
+                        sender.sendMessage(Utils.getComponentByString("&cNapotkano błąd przy banowaniu gracza."));
+                    }
+                });
                 return 0;
             }
             default -> {

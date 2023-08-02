@@ -79,8 +79,8 @@ public class AsyncPlayerPreLoginListener implements Listener {
             disallow(event, Prefix.DISCORD + "\n" +
                     "Nie połączyłeś konta Discord z twoim kontem minecraft!\n\n" +
                     "Użyj komendy &9/accounts &bna Discord\n" +
-                    "z kodem &9" + code + "&b\n" +
-                    plugin.getConfig().getString("discord.invite-link", "---") + "\n\n" +
+                    "z kodem &9" + code + "&b\n\n" +
+                    "(" + plugin.getConfig().getString("discord.invite-link", "---") + ")\n\n" +
                     "&cUWAGA! &bKod będzie ważny tylko 5 minut.");
             return;
         }

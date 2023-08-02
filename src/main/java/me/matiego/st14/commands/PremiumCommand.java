@@ -69,8 +69,8 @@ public class PremiumCommand implements CommandHandler.Minecraft, CommandHandler.
             return getCooldown(sender, 5);
         }
 
-        if (sender instanceof Player player && !player.isOp()) {
-            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cBrak uprawnień!"));
+        if (!isAdmin(sender)) {
+            sender.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cBrak uprawnień!"));
             return 3;
         }
 
@@ -142,17 +142,28 @@ public class PremiumCommand implements CommandHandler.Minecraft, CommandHandler.
     @Override
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args) {
         if (args.length == 1) {
-            return Arrays.asList("get", "extend", "reduce", "set", "remove");
+            if (isAdmin(sender)) {
+                return Arrays.asList("get", "extend", "reduce", "set", "remove");
+            } else {
+                return List.of("get");
+            }
         }
         if (args.length == 2) {
             return plugin.getOfflinePlayersManager().getNames();
         }
+        if (!isAdmin(sender)) return new ArrayList<>();
         if (!(args[0].equalsIgnoreCase("extend") || args[0].equalsIgnoreCase("reduce") || args[0].equalsIgnoreCase("set"))) return new ArrayList<>();
         if (args.length == 3) {
             List<String> list = plugin.getConfig().getStringList("premium.popular-times");
             return list.isEmpty() ? Arrays.asList("30s", "30m", "1h", "1h30m", "1d") : list;
         }
         return new ArrayList<>();
+    }
+
+    private boolean isAdmin(@NotNull CommandSender sender) {
+        if (!(sender instanceof Player player)) return true;
+        if (player.isOp()) return true;
+        return player.hasPermission("st14.premium.admin");
     }
 
     @Override
