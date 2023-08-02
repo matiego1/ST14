@@ -166,6 +166,12 @@ public class TpaCommand implements CommandHandler.Minecraft {
         }
 
         double distance = requester.getLocation().distance(destination);
+        if (distance <= plugin.getConfig().getInt("tpa.min", 0)) {
+            requester.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cJesteś za blisko drugiego gracza!"));
+            player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cTen gracz jest za blisko ciebie."));
+            return;
+        }
+
         final double cost;
         if (plugin.getConfig().getStringList("tpa.free-worlds").contains(destination.getWorld().getName())) {
             cost = 0;

@@ -31,7 +31,7 @@ public class PremiumManager {
     private final String ERROR_MSG = "An error occurred while modifying values in \"st14_premium\" table in the database.";
 
     public boolean isSuperPremium(@NotNull UUID uuid) {
-        return plugin.getConfig().getStringList("super-premium-players").contains(uuid.toString());
+        return plugin.getConfig().getStringList("premium.super-premium-players").contains(uuid.toString());
     }
     public boolean isPremium(@NotNull UUID uuid) {
         return isSuperPremium(uuid) || getRemainingTime(uuid) > 0;

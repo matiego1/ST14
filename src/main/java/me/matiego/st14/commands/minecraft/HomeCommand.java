@@ -49,7 +49,7 @@ public class HomeCommand implements CommandHandler.Minecraft {
             return 0;
         }
         if (args.length != 0) return -1;
-        if (Utils.checkIfCanNotExecuteCommandInWorld(player, "home")) {
+        if (Utils.checkIfCanNotExecuteCommandInWorld(player, "home", '.')) {
             player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cNie możesz użyć tej komendy w tym świecie."));
             return 3;
         }
@@ -91,13 +91,14 @@ public class HomeCommand implements CommandHandler.Minecraft {
         UUID uuid = player.getUniqueId();
         int slot = event.getSlot();
 
-        if (Utils.checkIfCanNotExecuteCommandInWorld(player, "home")) {
+        if (Utils.checkIfCanNotExecuteCommandInWorld(player, "home", '.')) {
+            event.getInventory().close();
             player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cNie możesz użyć tej komendy w tym świecie."));
             return;
         }
 
         switch (slot) {
-            case 2 -> {
+            case 2 -> Utils.async(() -> {
                 Location location = manager.getHomeLocation(uuid);
                 event.getInventory().close();
                 if (location == null) {
@@ -105,8 +106,8 @@ public class HomeCommand implements CommandHandler.Minecraft {
                     return;
                 }
                 teleportPlayer(player, location);
-            }
-            case 4 -> {
+            });
+            case 4 -> Utils.async(() -> {
                 if (getItemName(event.getCurrentItem()).equals("Twój dom")) return;
                 event.getInventory().close();
                 if (manager.setHomeLocation(uuid, player.getLocation())) {
@@ -114,15 +115,15 @@ public class HomeCommand implements CommandHandler.Minecraft {
                 } else {
                     player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
                 }
-            }
-            case 6 -> {
+            });
+            case 6 -> Utils.async(() -> {
                 event.getInventory().close();
                 if (manager.removeHome(uuid)) {
                     player.sendMessage(Utils.getComponentByString(Prefix.HOME + "Pomyślnie usunięto twój dom."));
                 } else {
                     player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
                 }
-            }
+            });
         }
     }
 
@@ -133,6 +134,12 @@ public class HomeCommand implements CommandHandler.Minecraft {
         }
 
         double distance = player.getLocation().distance(location);
+
+        if (distance <= plugin.getConfig().getInt("home.min", 0)) {
+            player.sendMessage(Utils.getComponentByString("&cJesteś za blisko twojego domu!"));
+            return;
+        }
+
         final double cost = Utils.round(plugin.getConfig().getDouble("home.cost") * (distance / 16), 2);
 
         EconomyManager economy = plugin.getEconomyManager();
