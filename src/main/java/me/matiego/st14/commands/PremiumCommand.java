@@ -188,8 +188,8 @@ public class PremiumCommand implements CommandHandler.Minecraft, CommandHandler.
             return 3;
         }
 
-        Player player = Bukkit.getPlayerExact(playerName);
-        if (player == null) {
+        UUID uuid = plugin.getOfflinePlayersManager().getIdByName(playerName);
+        if (uuid == null) {
             event.reply("Zły nick.").setEphemeral(ephemeral).queue();
             return 3;
         }
@@ -199,13 +199,13 @@ public class PremiumCommand implements CommandHandler.Minecraft, CommandHandler.
 
         PremiumManager manager = plugin.getPremiumManager();
         Utils.async(() -> {
-            if (manager.isSuperPremium(player.getUniqueId())) {
-                hook.sendMessage("Gracz **" + player.getName() + "** jest graczem super premium.").queue();
+            if (manager.isSuperPremium(uuid)) {
+                hook.sendMessage("Gracz **" + playerName + "** jest graczem super premium.").queue();
                 return;
             }
-            long time = manager.getRemainingTime(player.getUniqueId());
+            long time = manager.getRemainingTime(uuid);
             if (time > 0) {
-                hook.sendMessage("Graczowi pozostało " + Utils.parseMillisToString(time, false) + " do wygaśnięcia statusu premium.").queue();
+                hook.sendMessage("Graczowi **" + playerName + "** pozostało " + Utils.parseMillisToString(time, false) + " do wygaśnięcia statusu premium.").queue();
             } else {
                 hook.sendMessage("Ten gracz nie jest graczem premium.").queue();
             }

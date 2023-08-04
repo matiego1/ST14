@@ -135,7 +135,7 @@ public class DifficultyCommand implements CommandHandler.Minecraft, CommandHandl
             case HARD -> "trudny";
         };
 
-        event.reply("W świecie **" + world.getName() + "** obowiązuje **" + difficulty + "** poziom trudności.").setEphemeral(ephemeral).queue();
+        event.reply("W świecie **" + Utils.getWorldName(world) + "** obowiązuje **" + difficulty + "** poziom trudności.").setEphemeral(ephemeral).queue();
         return 5;
     }
 

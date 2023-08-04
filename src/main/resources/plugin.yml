@@ -73,19 +73,22 @@ commands:
     usage: 'Poprawne użycie: /coordinates <gracz>'
   spawn:
     permission: st14.spawn
-    usage: 'Poprawne użycie /spawn'
+    usage: 'Poprawne użycie: /spawn'
   minigame:
     permission: st14.minigame
-    usage: 'Poprawne użycie /minigame'
+    usage: 'Poprawne użycie: /minigame'
   ban:
     permission: st14.ban
-    usage: 'Poprawne użycie /ban [get|set|pardon] <gracz> <czas*> <powód*>'
+    usage: 'Poprawne użycie: /ban [get|set|pardon] <gracz> <czas*> <powód*>'
   home:
     permission: st14.home
-    usage: 'Poprawne użycie /home'
+    usage: 'Poprawne użycie: /home'
   premium:
     permission: st14.premium
-    usage: 'Poprawne użycie /premium [get|remove|extend|set|reduce] <gracz> <czas*>'
+    usage: 'Poprawne użycie: /premium [get|remove|extend|set|reduce] <gracz> <czas*>'
+  nonpremium:
+    permission: st14.nonpremium
+    usage: 'Poprawne użycie: /nonpremium <hasło>'
 permissions:
   st14.st14:
     default: op

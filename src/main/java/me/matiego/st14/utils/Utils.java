@@ -196,7 +196,7 @@ public class Utils {
         LocalTime midnight = LocalTime.of(23, 59, 55);
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime task = LocalDateTime.of(now.toLocalDate(), midnight);
-        if (!task.isAfter(now)) {
+        if (task.isBefore(now)) {
             task = task.plusDays(1);
         }
         long seconds = Duration.between(now.atZone(ZoneId.systemDefault()).toInstant(), task.atZone(ZoneId.systemDefault()).toInstant()).getSeconds();

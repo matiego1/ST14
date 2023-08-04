@@ -37,8 +37,6 @@ import java.util.List;
 import java.util.*;
 
 public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandler.Discord, Listener {
-    private final Main plugin;
-    private final PluginCommand command;
     public IncognitoCommand(@NotNull Main plugin) {
         this.plugin = plugin;
         command = plugin.getCommand("incognito");
@@ -47,6 +45,8 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
         }
     }
 
+    private final Main plugin;
+    private final PluginCommand command;
     private final Material BLOCK_ON = Material.LIME_WOOL;
     private final Material BLOCK_OFF = Material.RED_WOOL;
     private final HashMap<UUID, Boolean> inventory = new HashMap<>();

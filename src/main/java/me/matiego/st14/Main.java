@@ -59,6 +59,7 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private ListenersManager listenersManager;
     @Getter private BansManager bansManager;
     @Getter private HomeManager homeManager;
+    @Getter private NonPremiumManager nonPremiumManager;
     private TabListManager tabListManager;
     private ChatReportsManager chatReportsManager;
     private DidYouKnowManager didYouKnowManager;
@@ -154,6 +155,7 @@ public final class Main extends JavaPlugin implements Listener {
         dynmapManager = new DynmapManager(this);
         bansManager = new BansManager(this);
         homeManager = new HomeManager(this);
+        nonPremiumManager = new NonPremiumManager(this);
 
         Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomyManager(), vault, ServicePriority.High);
 
@@ -279,6 +281,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new EconomyCommand(this),
                 new GameModeCommand(this),
                 incognitoCommand,
+                new NonPremiumCommand(this),
                 new PremiumCommand(this),
                 new SayCommand(this),
                 new TimeCommand(this),
