@@ -33,7 +33,6 @@ public class PlayerQuitListener implements Listener {
         plugin.getMiniGamesManager().onPlayerQuit(player);
         plugin.getTeleportsManager().onPlayerQuit(player);
         plugin.getDynmapManager().refreshPlayerClaims(player);
-        plugin.getNonPremiumManager().logOut(player);
 
         event.quitMessage(Utils.getComponentByString("&eGracz " + player.getName() + " opuścił grę"));
         plugin.getChatMinecraftManager().sendConsoleQuitMessage(player);

@@ -25,22 +25,23 @@ public class NonPremiumManager {
 
     private final Main plugin;
     private final String ERROR_MSG = "An error occurred while modifying values in \"st14_non_premium\" table in the database.";
-    private final Set<UUID> loggedInPlayers = new HashSet<>();
+    private final Set<UUID> loggedPlayers = new HashSet<>();
     private static final byte[] HEX_ARRAY = "0123456789ABCDEF".getBytes(StandardCharsets.US_ASCII);
 
     public synchronized boolean isLoggedIn(@NotNull Player player) {
         if (!NonPremiumUtils.isNonPremiumUuid(player.getUniqueId())) return true; //normal players do not require login
-        return loggedInPlayers.contains(player.getUniqueId());
+        return loggedPlayers.contains(player.getUniqueId());
     }
 
     public synchronized void logIn(@NotNull Player player) {
         if (!NonPremiumUtils.isNonPremiumUuid(player.getUniqueId())) return;
-        loggedInPlayers.add(player.getUniqueId());
+        loggedPlayers.add(player.getUniqueId());
     }
 
+    //TODO: execute logOut method somewhere
     public synchronized void logOut(@NotNull Player player) {
         if (!NonPremiumUtils.isNonPremiumUuid(player.getUniqueId())) return;
-        loggedInPlayers.remove(player.getUniqueId());
+        loggedPlayers.remove(player.getUniqueId());
     }
 
     public boolean set(@NotNull UUID uuid, @NotNull String playerName, @NotNull String password) {

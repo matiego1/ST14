@@ -109,6 +109,7 @@ public class NonPremiumCommand implements CommandHandler.Minecraft, CommandHandl
         }
 
         hook.sendMessage("Możliwość gry na kontach non-premium już wkrótce!").queue();
-        return 10;
+        return 5;
+
     }
 }
