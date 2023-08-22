@@ -70,7 +70,6 @@ public class MySQL {
         if (!OfflinePlayersManager.createTable()) return false;
         if (!PremiumManager.createTable()) return false;
         if (!TimeManager.createTable()) return false;
-        if (!NonPremiumManager.createTable()) return false;
         return WorldsLastLocationManager.createTable();
     }
 }
