@@ -30,6 +30,7 @@ public class TabListManager {
                     (NonPremiumUtils.isNonPremiumUuid(player.getUniqueId()) ? "&c" : "") +
                     (plugin.getPremiumManager().isPremium(player.getUniqueId()) ? "&e" : "") +
                     (plugin.getPremiumManager().isSuperPremium(player.getUniqueId()) ? "&6" : "") +
+                    (plugin.getNonPremiumManager().isLoggedIn(player.getUniqueId()) ? "" : "&0") +
                     player.getName()
             ));
         }

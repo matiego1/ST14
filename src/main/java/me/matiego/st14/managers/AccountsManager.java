@@ -40,7 +40,7 @@ public class AccountsManager {
         int x = 0;
         while (verificationCodes.get(code) != null) {
             code = RandomStringUtils.random(6, CODE_CHARS);
-            if (x++ > 1000) throw new RuntimeException("infinite loop");
+            if (x++ > 5000) throw new RuntimeException("infinite loop");
         }
         verificationCodes.entrySet().removeIf(e -> e.getValue().getFirst().getFirst().equals(uuid));
         verificationCodes.put(code, new Pair<>(new Pair<>(uuid, name), Utils.now()));

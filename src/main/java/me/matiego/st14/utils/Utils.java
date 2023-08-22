@@ -199,6 +199,7 @@ public class Utils {
         if (task.isBefore(now)) {
             task = task.plusDays(1);
         }
+        //todo: move to AsyncScheduler?
         long seconds = Duration.between(now.atZone(ZoneId.systemDefault()).toInstant(), task.atZone(ZoneId.systemDefault()).toInstant()).getSeconds();
         Executors.newScheduledThreadPool(1).schedule(() -> Utils.sync(() -> {
             for (Player player : Bukkit.getOnlinePlayers()) {

@@ -60,9 +60,10 @@ public class PlayerJoinListener implements Listener {
         plugin.getChatMinecraftManager().sendConsoleJoinMessage(player);
         //handle minigame
         plugin.getMiniGamesManager().onPlayerJoin(player);
-        //non-premium warning
+        //non-premium
         if (NonPremiumUtils.isNonPremiumUuid(uuid)) {
-            player.sendMessage(Utils.getComponentByString("&eSystem umożliwiający grę graczom non-premium jest w wersji BETA. Zgłaszaj wszystkie napotkane błędy!"));
+            player.sendMessage(Utils.getComponentByString("&e&lSystem umożliwiający grę graczom non-premium jest w wersji BETA. Zgłaszaj wszystkie napotkane błędy!"));
+            Bukkit.getScheduler().runTaskLater(plugin, () -> player.kick(Utils.getComponentByString("&cNie zalogowałeś się w przeciągu 30 sekund! Ponownie rozpocznij sesję.")), 20 * 30);
         }
         //unlock recipes
         Bukkit.recipeIterator().forEachRemaining(recipe -> {
