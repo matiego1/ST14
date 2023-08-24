@@ -284,6 +284,8 @@ public final class Main extends JavaPlugin implements Listener {
                 new NonPremiumCommand(this),
                 new PremiumCommand(this),
                 new SayCommand(this),
+                new SpawnCommand(this),
+                new StopCommand(this),
                 new TimeCommand(this),
                 new VersionCommand(this),
                 //Minecraft commands
@@ -292,9 +294,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new McreloadCommand(this),
                 new MiniGameCommand(this),
                 new ReplyCommand(this),
-                new SpawnCommand(this),
                 new St14Command(this),
-                new StopCommand(this),
                 suicideCommand,
                 tellCommand,
                 tpaCommand,

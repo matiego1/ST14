@@ -110,16 +110,32 @@ public class HomeCommand implements CommandHandler.Minecraft {
             case 4 -> Utils.async(() -> {
                 if (getItemName(event.getCurrentItem()).equals("Twój dom")) return;
                 closeInventory(event);
+
+                double deposit = Math.max(0, Utils.round(plugin.getConfig().getDouble("home.deposit"), 2));
+                EconomyManager economy = plugin.getEconomyManager();
+                if (deposit != 0) {
+                    if (!economy.withdrawPlayer(player, deposit).transactionSuccess()) {
+                        player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cUstawienie domu kosztuje " + economy.format(deposit) + ", a masz tylko " + economy.format(economy.getBalance(player)) + "."));
+                        return;
+                    }
+                }
+
                 if (manager.setHomeLocation(uuid, player.getLocation())) {
-                    player.sendMessage(Utils.getComponentByString(Prefix.HOME + "Pomyślnie ustawiono twój dom."));
+                    player.sendMessage(Utils.getComponentByString(Prefix.HOME + "Pomyślnie ustawiono twój dom za " + economy.format(deposit) + "."));
+                    Logs.info("Gracz " + player.getName() + " ustawił swój dom. (`" + player.getLocation() + "`)");
                 } else {
                     player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
+                    if (deposit != 0 && !economy.depositPlayer(player, deposit).transactionSuccess()) {
+                        player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&c&lNapotkano niespodziewany błąd przy zwracaniu pobranych pieniędzy. Zgłoś się do administratora, aby je odzyskać. Przepraszamy."));
+                        Logs.warning("Gracz " + player.getName() + " (" + player.getUniqueId() + ") stracił " + economy.format(deposit) + " ze swojego konta! Kwota musi być przywrócona ręcznie.");
+                    }
                 }
             });
             case 6 -> Utils.async(() -> {
                 closeInventory(event);
                 if (manager.removeHome(uuid)) {
                     player.sendMessage(Utils.getComponentByString(Prefix.HOME + "Pomyślnie usunięto twój dom."));
+                    Logs.info("Gracz " + player.getName() + " usunął swój dom.");
                 } else {
                     player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
                 }

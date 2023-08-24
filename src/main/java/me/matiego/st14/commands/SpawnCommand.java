@@ -1,11 +1,17 @@
-package me.matiego.st14.commands.minecraft;
+package me.matiego.st14.commands;
 
-import me.matiego.st14.managers.EconomyManager;
-import me.matiego.st14.Main;
-import me.matiego.st14.objects.CommandHandler;
 import me.matiego.st14.Logs;
+import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
+import me.matiego.st14.managers.EconomyManager;
+import me.matiego.st14.objects.CommandHandler;
 import me.matiego.st14.utils.Utils;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.interactions.InteractionHook;
+import net.dv8tion.jda.api.interactions.commands.*;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -15,7 +21,9 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class SpawnCommand implements CommandHandler.Minecraft {
+import java.util.stream.Collectors;
+
+public class SpawnCommand implements CommandHandler.Minecraft, CommandHandler.Discord {
     public SpawnCommand(@NotNull Main plugin) {
         this.plugin = plugin;
         command = plugin.getCommand("spawn");
@@ -45,7 +53,7 @@ public class SpawnCommand implements CommandHandler.Minecraft {
             player.teleportAsync(player.getWorld().getSpawnLocation()).thenAcceptAsync(success -> {
                 if (success) {
                     sender.sendMessage(Utils.getComponentByString("&aPomyślnie przeteleportowano gracza na spawn."));
-                    player.sendMessage(Utils.getComponentByString("&aZostałeś przeteleportowany na spawn!"));
+                    player.sendMessage(Utils.getComponentByString("&aZostałeś przeteleportowany na spawn przez administratora!"));
                 } else {
                     sender.sendMessage(Utils.getComponentByString("&aNapotkano niespodziewany błąd podczas teleportowania gracza na spawn."));
                 }
@@ -121,5 +129,53 @@ public class SpawnCommand implements CommandHandler.Minecraft {
         });
 
         return 30;
+    }
+
+    @Override
+    public @NotNull CommandData getDiscordCommand() {
+        return Commands.slash("spawn", "Przeteleportuj gracza na spawn")
+                .addOptions(
+                        new OptionData(OptionType.STRING, "gracz", "Gracz, którego koordynaty mają być pokazane", true)
+                                .setAutoComplete(true)
+                )
+                .setGuildOnly(true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
+    }
+
+    @Override
+    public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
+        String name = event.getOption("gracz", OptionMapping::getAsString);
+        if (name == null) return 0;
+
+        Player player = Bukkit.getPlayer(name);
+        if (player == null) {
+            event.reply("Ten gracz nie jest online!").setEphemeral(true).queue();
+            return 0;
+        }
+
+        event.deferReply(true).queue();
+        InteractionHook hook = event.getHook();
+
+        player.teleportAsync(player.getWorld().getSpawnLocation()).thenAcceptAsync(success -> {
+            if (success) {
+                hook.sendMessage("Pomyślnie przeteleportowano gracza na spawn.").queue();
+                player.sendMessage(Utils.getComponentByString("&aZostałeś przeteleportowany na spawn przez administratora!"));
+            } else {
+                hook.sendMessage("Napotkano niespodziewany błąd podczas teleportowania gracza na spawn.").queue();
+            }
+        });
+
+        return 0;
+    }
+
+    @Override
+    public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteraction event) {
+        if (!event.getName().equals(getDiscordCommand().getName())) return;
+        event.replyChoices(Bukkit.getOnlinePlayers().stream()
+                .map(Player::getName)
+                .filter(name -> name.toLowerCase().startsWith(event.getFocusedOption().getValue().toLowerCase()))
+                .map(name -> new Command.Choice(name, name))
+                .collect(Collectors.toList())
+        ).queue();
     }
 }

@@ -29,5 +29,4 @@ public class Base64Utils {
         } catch (Exception ignored) {}
         return null;
     }
-
 }

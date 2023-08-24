@@ -64,9 +64,9 @@ public class SayCommand implements CommandHandler.Minecraft, CommandHandler.Disc
         return 0;
     }
 
-    @SuppressWarnings("SpellCheckingInspection")
     @Override
     public @NotNull CommandData getDiscordCommand() {
+        //noinspection SpellCheckingInspection
         return Commands.slash("say", "wyślij wiadomość na serwer minecraft")
                 .setGuildOnly(true)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
