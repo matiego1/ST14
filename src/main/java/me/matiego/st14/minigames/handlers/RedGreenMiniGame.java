@@ -1,11 +1,11 @@
 package me.matiego.st14.minigames.handlers;
 
-import me.matiego.st14.objects.BossBarTimer;
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGameException;
 import me.matiego.st14.minigames.MiniGamesUtils;
-import me.matiego.st14.Logs;
+import me.matiego.st14.objects.BossBarTimer;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.GameMode;
@@ -17,7 +17,6 @@ import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -73,6 +72,8 @@ public class RedGreenMiniGame extends MiniGame {
         World world = MiniGamesUtils.getMiniGamesWorld();
         if (world == null) throw new MiniGameException("cannot load world");
 
+        worldBorder = world.getWorldBorder();
+
         setRandomMapConfigPath(configPath + "maps");
         loadDataFromConfig(world);
         registerEvents();
@@ -102,9 +103,6 @@ public class RedGreenMiniGame extends MiniGame {
     }
 
     private void loadDataFromConfig(@NotNull World world) throws MiniGameException {
-//        baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
-//        if (baseLocation == null) throw new MiniGameException("cannot load base location");
-
         spawn = MiniGamesUtils.getLocationFromConfig(world, mapConfigPath + "spawn");
         if (spawn == null) throw new MiniGameException("cannot load spawn location");
         spectatorSpawn = MiniGamesUtils.getLocationFromConfig(world, mapConfigPath + "spectator-spawn");
@@ -194,11 +192,10 @@ public class RedGreenMiniGame extends MiniGame {
             return;
         }
 
-        if (lastCanMoveChange - miniGameTime < 1) return;
+        if (miniGameTime - lastCanMoveChange < 1) return;
         if (canMove) return;
         if (isInArea(player, "lobby-area")) return;
 
-        player.setLastDamageCause(new EntityDamageEvent(player, EntityDamageEvent.DamageCause.PROJECTILE, player.getHealth()));
         player.setHealth(0);
     }
 

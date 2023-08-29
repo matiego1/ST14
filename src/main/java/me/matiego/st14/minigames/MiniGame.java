@@ -73,7 +73,7 @@ public abstract class MiniGame implements Listener {
 
         Collections.shuffle(maps);
 
-        mapConfigPath += "." + maps.get(0);
+        mapConfigPath = mapsListConfigPath + "." + maps.get(0) + ".";
     }
 
     public abstract @NotNull String getMiniGameName();
@@ -182,7 +182,7 @@ public abstract class MiniGame implements Listener {
     }
 
     protected void pasteMap(@NotNull World world, @NotNull File file) throws Exception {
-        if (file.exists()) throw new NullPointerException("map file does not exist");
+        if (!file.exists()) throw new NullPointerException("map file does not exist");
 
         MiniGamesUtils.pasteSchematic(
                 world,
@@ -339,10 +339,10 @@ public abstract class MiniGame implements Listener {
     protected synchronized void endGameWithWinner(@NotNull Player winner) {
         scheduleStopMiniGameAndSendReason("Koniec minigry! Wygrywa gracz &d" + winner.getName(), "&dKoniec minigry", "");
         if (plugin.getIncognitoManager().isIncognito(winner.getUniqueId())) {
-            Logs.discord("Gracz **" + winner + "** wygrywa minigrę **" + getMiniGameName() + "**!");
+            Logs.discord("Gracz **" + winner.getName() + "** wygrywa minigrę **" + getMiniGameName() + "**!");
             return;
         }
-        plugin.getChatMinecraftManager().sendMessage("Gracz **" + winner + "** wygrywa minigrę **" + getMiniGameName() + "**!", Prefix.MINI_GAMES.getDiscord());
+        plugin.getChatMinecraftManager().sendMessage("Gracz **" + winner.getName() + "** wygrywa minigrę **" + getMiniGameName() + "**!", Prefix.MINI_GAMES.getDiscord());
         plugin.getMiniGamesManager().giveRewardToWinner(winner, Utils.round(plugin.getConfig().getDouble(configPath + "winner-reward", 20), 2));
     }
 

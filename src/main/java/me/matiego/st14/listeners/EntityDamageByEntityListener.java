@@ -1,7 +1,6 @@
 package me.matiego.st14.listeners;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.Logs;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
@@ -40,7 +39,6 @@ public class EntityDamageByEntityListener implements Listener {
         try {
             Double amount = damager.getPersistentDataContainer().get(key, PersistentDataType.DOUBLE);
             if (amount != null) {
-                Logs.info("[DEBUG] (<@704610686784897116>) PersistentDataContainer przechodzi z ItemStack na Entity, jej!");
                 damage = amount;
             }
         } catch (Exception ignored) {}

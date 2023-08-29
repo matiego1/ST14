@@ -18,7 +18,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -29,6 +31,7 @@ public class PremiumManager {
     }
 
     private final String ERROR_MSG = "An error occurred while modifying values in \"st14_premium\" table in the database.";
+    private final Set<UUID> playersToKick = new HashSet<>();
 
     public boolean isSuperPremium(@NotNull UUID uuid) {
         return plugin.getConfig().getStringList("premium.super-premium-players").contains(uuid.toString());
@@ -111,6 +114,7 @@ public class PremiumManager {
     public boolean makeSpaceForPlayer(@NotNull UUID uuid) {
         int priority = getPriority(uuid);
         List<Player> players = Bukkit.getOnlinePlayers().stream()
+                .filter(p -> !playersToKick.contains(p.getUniqueId()))
                 .filter(p -> !p.getUniqueId().equals(uuid))
                 .filter(p -> getPriority(p.getUniqueId()) < priority)
                 .collect(Collectors.toList());
@@ -132,12 +136,20 @@ public class PremiumManager {
     }
 
     private void kickPlayer(@NotNull Player player) {
+        playersToKick.add(player.getUniqueId());
+
         player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Za 10 sekund zostaniesz wyrzucony z serwera, żeby zrobić miejsce innemu graczowi."));
         player.showTitle(Title.title(Utils.getComponentByString("&6UWAGA!"), Utils.getComponentByString("&ePRZECZYTAJ CZAT")));
         player.playSound(player, Sound.ENTITY_CREEPER_PRIMED, SoundCategory.NEUTRAL, 5, 1);
+
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (!player.isOnline()) return;
+            if (!player.isOnline()) {
+                playersToKick.remove(player.getUniqueId());
+                return;
+            }
+
             player.kick(Utils.getComponentByString(Prefix.PREMIUM + "Zostałeś wyrzucony z serwera, żeby zrobić miejsce graczowi z wyższym priorytetem. Wybór padł na ciebie, ponieważ grałeś dzisiaj najdłużej."));
+            playersToKick.remove(player.getUniqueId());
 
             Utils.broadcastMessage(
                     player,

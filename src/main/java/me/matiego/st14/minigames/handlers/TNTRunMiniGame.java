@@ -175,11 +175,12 @@ public class TNTRunMiniGame extends MiniGame {
     }
 
     private boolean breakBlocksIfNotAir(@NotNull World world, int x, int y, int z) {
-        Block block = world.getBlockAt(x, y, z);
+        Block block = world.getBlockAt(x, y - 1, z);
         if (block.getType().isAir()) return false;
         runTaskLater(() -> {
             block.setType(Material.AIR);
             block.getRelative(BlockFace.DOWN).setType(Material.AIR);
+            block.getRelative(BlockFace.DOWN, 2).setType(Material.AIR);
         }, 5);
         return true;
     }

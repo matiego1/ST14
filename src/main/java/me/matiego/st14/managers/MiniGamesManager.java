@@ -185,7 +185,7 @@ public class MiniGamesManager {
 
         data.setLast(now);
         data.setLimit(limit);
-        if (!plugin.getRewardsManager().getRewardForCounting().set(player.getUniqueId(), data)) return;
+        if (!plugin.getRewardsManager().getRewardForMiniGame().set(player.getUniqueId(), data)) return;
 
         if (plugin.getEconomyManager().depositPlayer(player, reward).transactionSuccess()) {
             player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Dostałeś " + plugin.getEconomyManager().format(reward) + " za wygraną minigrę!"));
