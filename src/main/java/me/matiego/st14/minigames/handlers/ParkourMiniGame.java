@@ -1,16 +1,17 @@
 package me.matiego.st14.minigames.handlers;
 
-import me.matiego.st14.objects.BossBarTimer;
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGameException;
 import me.matiego.st14.minigames.MiniGamesUtils;
-import me.matiego.st14.Logs;
+import me.matiego.st14.objects.BossBarTimer;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.GameMode;
 import org.bukkit.GameRule;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -192,6 +193,8 @@ public class ParkourMiniGame extends MiniGame {
     @EventHandler
     public void onPlayerInteract(@NotNull PlayerInteractEvent event) {
         if (!isInMiniGame(event.getPlayer())) return;
+        Block block = event.getClickedBlock();
+        if (block != null && block.getType().toString().contains("TRAPDOOR")) return;
         event.setCancelled(true);
         event.setUseInteractedBlock(Event.Result.DENY);
         event.setUseItemInHand(Event.Result.DENY);

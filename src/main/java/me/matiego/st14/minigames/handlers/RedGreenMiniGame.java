@@ -188,6 +188,7 @@ public class RedGreenMiniGame extends MiniGame {
         if (lobby) return;
 
         if (isInArea(player, "winner-area")) {
+            worldBorder.setWarningDistance(0);
             endGameWithWinner(player);
             return;
         }
