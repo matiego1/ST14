@@ -415,7 +415,7 @@ public final class Main extends JavaPlugin implements Listener {
         jda = null;
     }
 
-    public @NotNull Connection getConnection() throws SQLException {
+    public @NotNull Connection getMySQLConnection() throws SQLException {
         return mySQL.getConnection();
     }
 

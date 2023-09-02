@@ -1,7 +1,8 @@
 package me.matiego.st14.managers;
 
-import me.matiego.st14.Main;
 import me.matiego.st14.Logs;
+import me.matiego.st14.Main;
+import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.utils.NonPremiumUtils;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;
@@ -21,9 +22,11 @@ public class TabListManager {
 
     private void refreshTabList() {
         String tps = formatTps(Utils.getTps());
+        MiniGame miniGame = plugin.getMiniGamesManager().getActiveMiniGame();
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.sendPlayerListHeaderAndFooter(Utils.getComponentByString("&a&lSerwer ST14"), Utils.getComponentByString("&aTPS: " + tps + "&a; PING: " + (player.getPing() == 0 ? "&cWczytywanie..." : player.getPing() + " ms")));
             player.playerListName(Utils.getComponentByString(
+                    (miniGame != null && miniGame.getPlayersInMiniGame().contains(player) ? "&a✔" : "") +
                     "&2[" + Utils.getWorldPrefix(player.getWorld()) + "]&f " +
                     (plugin.getAfkManager().isAfk(player) ? "&8[AFK]&f " : "") +
                     (plugin.getIncognitoManager().isIncognito(player.getUniqueId()) ? "&7[INC]&f " : "") +

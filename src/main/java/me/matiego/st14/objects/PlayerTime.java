@@ -89,7 +89,7 @@ public class PlayerTime {
     }
 
     public static @Nullable PlayerTime load(@NotNull UUID uuid) {
-        try (Connection conn = Main.getInstance().getConnection();
+        try (Connection conn = Main.getInstance().getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT t_normal, t_afk, t_incognito, normal, afk, incognito, last_online, fake_last_online, last_save FROM st14_time WHERE uuid = ?")) {
             stmt.setString(1, uuid.toString());
             ResultSet result = stmt.executeQuery();
@@ -141,7 +141,7 @@ public class PlayerTime {
         session = GameTime.empty();
         current = GameTime.empty();
 
-        try (Connection conn = Main.getInstance().getConnection();
+        try (Connection conn = Main.getInstance().getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_time(uuid, t_normal, t_afk, t_incognito, normal, afk, incognito, last_online, fake_last_online, last_save) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE t_normal = ?, t_afk = ?, t_incognito = ?, normal = ?, afk = ?, incognito = ?, last_online = ?, fake_last_online = ?, last_save = ?")) {
             stmt.setString(1, uuid.toString());
 

@@ -29,7 +29,7 @@ public class BansManager {
     }
 
     public @Nullable Ban getBan(@NotNull UUID uuid) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT reason, expiration FROM st14_bans WHERE uuid = ?")) {
             stmt.setString(1, uuid.toString());
             ResultSet result = stmt.executeQuery();
@@ -48,7 +48,7 @@ public class BansManager {
                 player.kick(Utils.getComponentByString(getKickMessage(ban)));
             }
         }
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_bans(uuid, reason, expiration) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE reason = ?, expiration = ?")) {
             stmt.setString(1, ban.getUuid().toString());
             stmt.setString(2, ban.getReason());
@@ -78,7 +78,7 @@ public class BansManager {
     }
 
     public static boolean createTable() {
-        try (Connection conn = Main.getInstance().getConnection();
+        try (Connection conn = Main.getInstance().getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_bans(uuid VARCHAR(36) NOT NULL, reason TEXT NOT NULL, expiration BIGINT NOT NULL, PRIMARY KEY (uuid))")) {
             stmt.execute();
             return true;

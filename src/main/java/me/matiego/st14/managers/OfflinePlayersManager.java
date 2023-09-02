@@ -30,7 +30,7 @@ public class OfflinePlayersManager {
         if (player != null) {
             return player.getUniqueId();
         }
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT uuid FROM st14_offline_players WHERE name = ?")) {
             stmt.setString(1, name);
             ResultSet result = stmt.executeQuery();
@@ -43,7 +43,7 @@ public class OfflinePlayersManager {
     }
 
     public @Nullable String getNameById(@NotNull UUID uuid) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT name FROM st14_offline_players WHERE uuid = ?")) {
             stmt.setString(1, uuid.toString());
             ResultSet result = stmt.executeQuery();
@@ -66,7 +66,7 @@ public class OfflinePlayersManager {
     }
 
     public static boolean createTable() {
-        try (Connection conn = Main.getInstance().getConnection();
+        try (Connection conn = Main.getInstance().getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS test(uuid VARCHAR(36) NOT NULL, name VARCHAR(36) NOT NULL, PRIMARY KEY (uuid), UNIQUE KEY (name))")) {
             stmt.execute();
             return true;
@@ -77,7 +77,7 @@ public class OfflinePlayersManager {
     }
 
     public void refresh(@NotNull UUID uuid, @NotNull String name) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_offline_players(uuid, name) VALUES (?, ?) ON DUPLICATE KEY UPDATE uuid = ?, name = ?")) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, name);
@@ -90,7 +90,7 @@ public class OfflinePlayersManager {
         refreshCache();
     }
     private synchronized void refreshCache() {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT name FROM st14_offline_players")) {
             ResultSet result = stmt.executeQuery();
             List<String> cache = new ArrayList<>();

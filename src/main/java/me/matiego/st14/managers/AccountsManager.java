@@ -63,7 +63,7 @@ public class AccountsManager {
         if (NonPremiumUtils.isNonPremiumUuid(uuid)) {
             return UserSnowflake.fromId(NonPremiumUtils.getIdByNonPremiumUuid(uuid));
         }
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT id FROM st14_accounts WHERE uuid = ?")) {
             stmt.setString(1, uuid.toString());
             ResultSet result = stmt.executeQuery();
@@ -75,7 +75,7 @@ public class AccountsManager {
     }
 
     public @Nullable UUID getPlayerByUser(@NotNull UserSnowflake id) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT uuid FROM st14_accounts WHERE id = ?")) {
             stmt.setString(1, id.getId());
             ResultSet result = stmt.executeQuery();
@@ -101,7 +101,7 @@ public class AccountsManager {
         }
         if (!checkRoles(id)) return false;
         if (!modifyRole(id, true)) return false;
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_accounts(uuid, id) VALUES (?, ?) ON DUPLICATE KEY UPDATE uuid = ?, id = ?")) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, id.getId());
@@ -138,7 +138,7 @@ public class AccountsManager {
             modifyRole(id, false);
             modifyNickname(id, null);
         }
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("DELETE FROM st14_accounts WHERE uuid = ?")) {
             stmt.setString(1, uuid.toString());
             if (stmt.executeUpdate() > 0) {
@@ -154,7 +154,7 @@ public class AccountsManager {
     }
 
     public static boolean createTable() {
-        try (Connection conn = Main.getInstance().getConnection();
+        try (Connection conn = Main.getInstance().getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_accounts(uuid VARCHAR(36) NOT NULL, id BIGINT NOT NULL, PRIMARY KEY (uuid), UNIQUE KEY (id))")) {
             stmt.execute();
             return true;

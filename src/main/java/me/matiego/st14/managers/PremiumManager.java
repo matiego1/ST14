@@ -44,7 +44,7 @@ public class PremiumManager {
         return Math.max(0, getEnd(uuid) - Utils.now());
     }
     public long getEnd(@NotNull UUID uuid) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT time FROM st14_premium WHERE uuid = ?")) {
             stmt.setString(1, uuid.toString());
             ResultSet result = stmt.executeQuery();
@@ -60,7 +60,7 @@ public class PremiumManager {
 
     public boolean extend(@NotNull UUID uuid, @Range(from = 1, to = Long.MAX_VALUE) long time) {
         if (isSuperPremium(uuid)) return false;
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_premium(uuid, time) VALUES (?, ?) ON DUPLICATE KEY UPDATE uuid = uuid, time = time + ?")) {
             stmt.setString(1, uuid.toString());
             stmt.setLong(2, Utils.now() + time);
@@ -74,7 +74,7 @@ public class PremiumManager {
 
     public boolean reduce(@NotNull UUID uuid, @Range(from = 1, to = Long.MAX_VALUE) long time) {
         if (isSuperPremium(uuid)) return false;
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("UPDATE st14_premium SET time = time - ? WHERE uuid = ?")) {
             stmt.setLong(1, time);
             stmt.setString(2, uuid.toString());
@@ -88,7 +88,7 @@ public class PremiumManager {
     public boolean set(@NotNull UUID uuid, @Range(from = 1, to = Long.MAX_VALUE) long time) {
         time += Utils.now();
         if (isSuperPremium(uuid)) return false;
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_premium(uuid, time) VALUES (?, ?) ON DUPLICATE KEY UPDATE uuid = uuid, time = ?")) {
             stmt.setString(1, uuid.toString());
             stmt.setLong(2, time);
@@ -101,7 +101,7 @@ public class PremiumManager {
     }
 
     public boolean remove(@NotNull UUID uuid) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("DELETE FROM st14_premium WHERE uuid = ?")) {
             stmt.setString(1, uuid.toString());
             return stmt.executeUpdate() > 0;
@@ -168,7 +168,7 @@ public class PremiumManager {
     }
 
     public static boolean createTable() {
-        try (Connection conn = Main.getInstance().getConnection();
+        try (Connection conn = Main.getInstance().getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_premium(uuid VARCHAR(36) NOT NULL, time BIGINT NOT NULL, PRIMARY KEY (uuid))")) {
             stmt.execute();
             return true;

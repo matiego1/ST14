@@ -23,7 +23,7 @@ public class HomeManager {
     private final String ERROR_MSG = "An error occurred while modifying values in \"st14_homes\" table in the database.";
 
     public @Nullable Location getHomeLocation(@NotNull UUID uuid) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT world, x, y, z, yaw, pitch FROM st14_homes WHERE uuid = ?")) {
             stmt.setString(1, uuid.toString());
             ResultSet result = stmt.executeQuery();
@@ -47,7 +47,7 @@ public class HomeManager {
     }
 
     public boolean setHomeLocation(@NotNull UUID uuid, @NotNull Location loc) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_homes(uuid, world, x, y, z, yaw, pitch) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE world = ?, x = ?, y = ?, z = ?, yaw = ?, pitch = ?")) {
             stmt.setString(1, uuid.toString());
 
@@ -73,7 +73,7 @@ public class HomeManager {
     }
 
     public boolean removeHome(@NotNull UUID uuid) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("DELETE FROM st14_homes WHERE uuid = ?")) {
             stmt.setString(1, uuid.toString());
             return stmt.executeUpdate() > 0;
@@ -88,7 +88,7 @@ public class HomeManager {
     }
 
     public static boolean createTable() {
-        try (Connection conn = Main.getInstance().getConnection();
+        try (Connection conn = Main.getInstance().getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_homes(uuid VARCHAR(36) NOT NULL, world VARCHAR(36) NOT NULL, x DECIMAL(15, 5) NOT NULL, y DECIMAL(15, 5) NOT NULL, z DECIMAL(15, 5) NOT NULL, yaw DECIMAL(15, 5) NOT NULL, pitch DECIMAL(15, 5) NOT NULL, PRIMARY KEY (uuid))")) {
             stmt.execute();
             return true;

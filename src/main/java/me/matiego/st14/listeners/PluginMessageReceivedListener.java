@@ -24,17 +24,10 @@ public class PluginMessageReceivedListener implements PluginMessageListener {
                 .map(String::toLowerCase)
                 .anyMatch(b -> b.equals(brand))) return;
 
-        if (plugin.getConfig().getStringList("brands.disallowed").stream()
-                .map(String::toLowerCase)
-                .anyMatch(b -> (b.equals(brand)) || b.equals("all"))) {
-            player.kick(Utils.getComponentByString(
-                    "&cUżywasz niedozwolonego klienta minecraft!\n" +
-                            "&c(" + brand + ")\n\n" +
-                            "&7Przepraszamy"
-            ));
-            Logs.warning(player.getName() + " próbował grać na niedozwolonym kliencie minecraft. (" + brand + ")");
-        }
-
-        Logs.warning(player.getName() + " gra na zmodyfikowanym kliencie minecraft: " + brand);
+        player.kick(Utils.getComponentByString(
+                "&cAby grać na tym serwerze musisz używać optifine!\n" +
+                "&cMożesz go pobrać tutaj: optifine.net"
+        ));
+        Logs.warning(player.getName() + " próbował grać na niedozwolonym kliencie minecraft. (" + brand + ")");
     }
 }

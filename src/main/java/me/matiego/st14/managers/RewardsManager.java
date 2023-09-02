@@ -25,7 +25,7 @@ public class RewardsManager {
     @Getter private final RewardForMiniGame rewardForMiniGame;
 
     public static boolean createTable() {
-        try (Connection conn = Main.getInstance().getConnection()) {
+        try (Connection conn = Main.getInstance().getMySQLConnection()) {
             try (PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_rewards_rfp(uuid VARCHAR(36) NOT NULL, amount INT NOT NULL, last BIGINT NOT NULL, PRIMARY KEY (uuid))")) {
                 stmt.execute();
             }

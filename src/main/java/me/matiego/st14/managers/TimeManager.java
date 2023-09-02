@@ -48,7 +48,7 @@ public class TimeManager {
     }
 
     public static boolean createTable() {
-        try (Connection conn = Main.getInstance().getConnection();
+        try (Connection conn = Main.getInstance().getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_time(uuid VARCHAR(36) NOT NULL, t_normal BIGINT NOT NULL, t_afk BIGINT NOT NULL, t_incognito BIGINT NOT NULL, normal BIGINT NOT NULL, afk BIGINT NOT NULL, incognito BIGINT NOT NULL, last_online BIGINT NOT NULL, fake_last_online BIGINT NOT NULL, last_save BIGINT NOT NULL, PRIMARY KEY (uuid))")) {
             stmt.execute();
             return true;

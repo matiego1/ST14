@@ -162,7 +162,7 @@ public class EconomyManager implements net.milkbowl.vault.economy.Economy {
      */
     @Override
     public double getBalance(@NotNull OfflinePlayer player) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT money FROM st14_economy WHERE uuid = ?")) {
             stmt.setString(1, player.getUniqueId().toString());
             ResultSet resultSet = stmt.executeQuery();
@@ -199,7 +199,7 @@ public class EconomyManager implements net.milkbowl.vault.economy.Economy {
     }
 
     public @NotNull EconomyResponse setBalance(@NotNull OfflinePlayer player, double amount) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_economy(uuid, money) VALUES(?, ?) ON DUPLICATE KEY UPDATE money = ?")) {
             stmt.setString(1, player.getUniqueId().toString());
             stmt.setDouble(2, amount);
@@ -287,7 +287,7 @@ public class EconomyManager implements net.milkbowl.vault.economy.Economy {
      */
     @Override
     public @NotNull EconomyResponse withdrawPlayer(@NotNull OfflinePlayer player, double amount) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("UPDATE st14_economy SET money = money - ? WHERE uuid = ? AND money >= ?")) {
             stmt.setDouble(1, amount);
             stmt.setString(2, player.getUniqueId().toString());
@@ -350,7 +350,7 @@ public class EconomyManager implements net.milkbowl.vault.economy.Economy {
      */
     @Override
     public @NotNull EconomyResponse depositPlayer(@NotNull OfflinePlayer player, double amount) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_economy(uuid, money) VALUES(?, ?) ON DUPLICATE KEY UPDATE money = money + ?;")) {
             stmt.setString(1, player.getUniqueId().toString());
             stmt.setDouble(2, amount);
@@ -572,7 +572,7 @@ public class EconomyManager implements net.milkbowl.vault.economy.Economy {
     }
 
     public static boolean createTable() {
-        try (Connection conn = Main.getInstance().getConnection();
+        try (Connection conn = Main.getInstance().getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_economy(uuid VARCHAR(36) NOT NULL, money DECIMAL(12, 2) NOT NULL, PRIMARY KEY (uuid))")) {
             stmt.execute();
             return true;

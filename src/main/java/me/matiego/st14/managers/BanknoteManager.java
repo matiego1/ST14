@@ -70,7 +70,7 @@ public class BanknoteManager {
     }
 
     private @Nullable UUID createBanknoteId(double amount) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_banknote(id, amount, date) VALUES (?, ?, ?)")) {
             UUID id = UUID.randomUUID();
             stmt.setString(1, id.toString());
@@ -84,7 +84,7 @@ public class BanknoteManager {
     }
 
     private boolean checkBanknoteId(@NotNull UUID id, double amount) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT amount FROM st14_banknote WHERE id = ?")) {
             stmt.setString(1, id.toString());
             ResultSet result = stmt.executeQuery();
@@ -106,7 +106,7 @@ public class BanknoteManager {
             return;
         }
 
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("DELETE FROM st14_banknote WHERE id = ?")) {
             stmt.setString(1, id);
             if (stmt.executeUpdate() == 0) {
@@ -120,7 +120,7 @@ public class BanknoteManager {
     }
 
     public static boolean createTable() {
-        try (Connection conn = Main.getInstance().getConnection();
+        try (Connection conn = Main.getInstance().getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_banknote(id VARCHAR(36) NOT NULL, amount DECIMAL(12, 2) NOT NULL, date VARCHAR(19), PRIMARY KEY (id))")) {
             stmt.execute();
             return true;

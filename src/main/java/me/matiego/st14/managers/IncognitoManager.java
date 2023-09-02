@@ -67,7 +67,7 @@ public class IncognitoManager {
     }
 
     public @NotNull List<UUID> getTrustedPlayers(@NotNull UUID uuid) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT trusted FROM st14_inc_trusted WHERE uuid = ?")) {
             stmt.setString(1, uuid.toString());
             List<UUID> uuids = new ArrayList<>();
@@ -86,7 +86,7 @@ public class IncognitoManager {
 
     @SuppressWarnings("UnusedReturnValue")
     public boolean addTrustedPlayer(@NotNull UUID uuid, @NotNull UUID trustedPlayer) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_inc_trusted(uuid, trusted) VALUES (?, ?) ON DUPLICATE KEY UPDATE uuid = uuid, trusted = trusted")) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, trustedPlayer.toString());
@@ -99,7 +99,7 @@ public class IncognitoManager {
     }
 
     public boolean removeTrustedPlayer(@NotNull UUID uuid, @NotNull UUID trustedPlayer) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("DELETE FROM st14_inc_trusted WHERE uuid = ? AND trusted = ?")) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, trustedPlayer.toString());
@@ -112,7 +112,7 @@ public class IncognitoManager {
     }
 
     public boolean isKickingEnabled(@NotNull UUID uuid) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT kicking FROM st14_inc_kicking WHERE uuid = ?")) {
             stmt.setString(1, uuid.toString());
             ResultSet result = stmt.executeQuery();
@@ -124,7 +124,7 @@ public class IncognitoManager {
     }
 
     public boolean setKickingEnabled(@NotNull UUID uuid, boolean value) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_inc_kicking(uuid, kicking) VALUES (?, ?) ON DUPLICATE KEY UPDATE uuid = uuid, kicking = ?")) {
             stmt.setString(1, uuid.toString());
             stmt.setBoolean(2, value);
@@ -138,7 +138,7 @@ public class IncognitoManager {
     }
 
     public static boolean createTable() {
-        try (Connection conn = Main.getInstance().getConnection()) {
+        try (Connection conn = Main.getInstance().getMySQLConnection()) {
             //trusted players
             PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_inc_trusted (uuid VARCHAR(36) NOT NULL, trusted VARCHAR(36) NOT NULL, CONSTRAINT st14_inc_trusted_const UNIQUE (uuid, trusted))");
             stmt.execute();

@@ -24,7 +24,7 @@ public class WorldsLastLocationManager {
         if (plugin.getConfig().getBoolean("worlds-command." + world.getName() + ".teleport-to-spawn")) {
             return world.getSpawnLocation();
         }
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT x, y, z, yaw, pitch FROM st14_worlds_cmd WHERE uuid = ? AND world = ?")) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, world.getUID().toString());
@@ -46,7 +46,7 @@ public class WorldsLastLocationManager {
     }
 
     public void setLastLocation(@NotNull UUID uuid, @NotNull Location loc) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_worlds_cmd(uuid, world, x, y, z, yaw, pitch) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE x = ?, y = ?, z = ?, yaw = ?, pitch = ?")) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, loc.getWorld().getUID().toString());
@@ -70,7 +70,7 @@ public class WorldsLastLocationManager {
     }
 
     public static boolean createTable() {
-        try (Connection conn = Main.getInstance().getConnection();
+        try (Connection conn = Main.getInstance().getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_worlds_cmd(uuid VARCHAR(36) NOT NULL, world VARCHAR(36) NOT NULL, x DECIMAL(15, 5) NOT NULL, y DECIMAL(15, 5) NOT NULL, z DECIMAL(15, 5) NOT NULL, yaw DECIMAL(15, 5) NOT NULL, pitch DECIMAL(15, 5) NOT NULL, CONSTRAINT st14_worlds_cmd_const UNIQUE (uuid, world))")) {
             stmt.execute();
             return true;

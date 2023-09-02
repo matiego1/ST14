@@ -31,7 +31,7 @@ public class BackpackManager {
             return GUI.stringToItems(cached);
         }
 
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT inv FROM st14_backpack WHERE uuid = ?")) {
             stmt.setString(1, uuid.toString());
             ResultSet result = stmt.executeQuery();
@@ -46,7 +46,7 @@ public class BackpackManager {
 
     public boolean saveBackpack(@NotNull UUID uuid, @NotNull List<ItemStack> itemStacks) {
         String string = GUI.itemsToString(itemStacks);
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_backpack(uuid, inv) VALUES (?, ?) ON DUPLICATE KEY UPDATE inv = ?")) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, string);
@@ -63,7 +63,7 @@ public class BackpackManager {
     }
 
     public static boolean createTable() {
-        try (Connection conn = Main.getInstance().getConnection();
+        try (Connection conn = Main.getInstance().getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_backpack(uuid VARCHAR(36) NOT NULL, inv TEXT NOT NULL, PRIMARY KEY (uuid))")) {
             stmt.execute();
             return true;

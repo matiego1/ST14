@@ -24,7 +24,7 @@ public abstract class Reward {
     protected abstract @NotNull String getTableSuffix();
 
     public @Nullable RewardsManager.Data get(@NotNull UUID uuid) {
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT amount, last FROM st14_rewards_" + getTableSuffix() + " WHERE uuid = ?")) {
             stmt.setString(1, uuid.toString());
             ResultSet result = stmt.executeQuery();
@@ -39,7 +39,7 @@ public abstract class Reward {
 
     public boolean set(@NotNull UUID uuid, @NotNull RewardsManager.Data data) {
         long now = Utils.now();
-        try (Connection conn = plugin.getConnection();
+        try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_rewards_" + getTableSuffix() + "(uuid, amount, last) VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE amount = ?, last = ?")) {
             stmt.setString(1, uuid.toString());
             stmt.setDouble(2, data.getLimit());
