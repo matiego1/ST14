@@ -62,8 +62,7 @@ public class CoordinatesCommand implements CommandHandler.Minecraft, CommandHand
     public @NotNull CommandData getDiscordCommand() {
         return Commands.slash("coordinates", "Pokazuje koordynaty gracza")
                 .addOptions(
-                        new OptionData(OptionType.STRING, "gracz", "Gracz, którego koordynaty mają być pokazane", true)
-                                .setAutoComplete(true),
+                        new OptionData(OptionType.STRING, "gracz", "Gracz, którego koordynaty mają być pokazane", true, true),
                         new OptionData(OptionType.STRING, "incognito", "czy wiadomość ma być widoczna tylko dla ciebie", false)
                                 .addChoice("Tak", "True")
                                 .addChoice("Nie", "False")

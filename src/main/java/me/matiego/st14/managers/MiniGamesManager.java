@@ -1,12 +1,13 @@
 package me.matiego.st14.managers;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.Synchronized;
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
+import me.matiego.st14.Prefix;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGamesUtils;
-import me.matiego.st14.Logs;
-import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.Utils;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.data.NodeMap;
@@ -18,6 +19,9 @@ import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -28,11 +32,14 @@ public class MiniGamesManager {
     }
 
     private final Main plugin;
+    private final String ERROR_MSG = "An error occurred while modifying values in \"st14_minigames\" table in the database.";
     @Nullable
     @Getter (onMethod_ = {@Synchronized})
     private MiniGame activeMiniGame = null;
     private BukkitTask task = null;
     private final Set<UUID> editors = new HashSet<>();
+    @Setter
+    private boolean serverStopping = false;
 
     public synchronized boolean startMiniGame(@NotNull MiniGame miniGame, @NotNull Set<Player> players, @NotNull Player sender) {
         players.removeIf(this::isInEditorMode);
@@ -166,6 +173,10 @@ public class MiniGamesManager {
     }
 
     public void giveRewardToWinner(@NotNull Player player, double reward) {
+        if (serverStopping) return;
+
+        Utils.async(() -> increaseWinsAmount(player.getUniqueId()));
+
         long now = Utils.now();
 
         RewardsManager.Data data = plugin.getRewardsManager().getRewardForMiniGame().get(player.getUniqueId());
@@ -188,7 +199,34 @@ public class MiniGamesManager {
         if (!plugin.getRewardsManager().getRewardForMiniGame().set(player.getUniqueId(), data)) return;
 
         if (plugin.getEconomyManager().depositPlayer(player, reward).transactionSuccess()) {
-            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Dostałeś " + plugin.getEconomyManager().format(reward) + " za wygraną minigrę!"));
+            Utils.broadcastMessage(
+                    player,
+                    Prefix.MINI_GAMES,
+                    "Dostałeś " + plugin.getEconomyManager().format(reward) + " za wygraną minigrę!",
+                    "Gracz " + player.getName() + " dostał " + plugin.getEconomyManager().format(reward) + " za wygraną minigrę!",
+                    "Gracz **" + player.getName() + "** dostał **" + plugin.getEconomyManager().format(reward) + "** za wygraną minigrę!"
+            );
         }
+    }
+
+    private void increaseWinsAmount(@NotNull UUID uuid) {
+        try (Connection conn = plugin.getMySQLConnection();
+             PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_minigames(uuid, wins) VALUES(?, 1) ON DUPLICATE KEY UPDATE wins = wins + 1")) {
+            stmt.setString(1, uuid.toString());
+            stmt.execute();
+        } catch (SQLException e) {
+            Logs.error(ERROR_MSG, e);
+        }
+    }
+
+    public static boolean createTable() {
+        try (Connection conn = Main.getInstance().getMySQLConnection();
+             PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_minigames(uuid VARCHAR(36) NOT NULL, wins INT, PRIMARY KEY (uuid))")) {
+            stmt.execute();
+            return true;
+        } catch (SQLException e) {
+            Logs.error("An error occurred while creating the database table \"st14_minigames\"", e);
+        }
+        return false;
     }
 }

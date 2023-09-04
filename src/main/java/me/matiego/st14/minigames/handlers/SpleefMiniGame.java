@@ -1,13 +1,15 @@
 package me.matiego.st14.minigames.handlers;
 
-import me.matiego.st14.objects.BossBarTimer;
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGameException;
 import me.matiego.st14.minigames.MiniGamesUtils;
-import me.matiego.st14.Logs;
+import me.matiego.st14.objects.BossBarTimer;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,12 +20,12 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 
 import java.io.File;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class SpleefMiniGame extends MiniGame {
     public SpleefMiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime) {
@@ -198,6 +200,47 @@ public class SpleefMiniGame extends MiniGame {
             player.setLevel(playersInMiniGame.size());
             player.setFireTicks(0);
         });
+
+        playersInMiniGame.sort(Comparator.comparingInt(a -> a.getLocation().getBlockY()));
+        if (playersInMiniGame.size() < 2) return;
+        Player max1 = playersInMiniGame.get(playersInMiniGame.size() - 1);
+        Player max2 = playersInMiniGame.get(playersInMiniGame.size() - 2);
+
+        if (max1.getLocation().getBlockY() - max2.getLocation().getBlockY() > Math.max(0, plugin.getConfig().getInt(mapConfigPath + "vertical-max-distance", 10)) && miniGameTime % 3 == 0) {
+            breakBlocksUnderPlayer(max1);
+        }
+    }
+
+    private void breakBlocksUnderPlayer(@NotNull Player player) {
+        if (!MiniGamesUtils.isInAnyMiniGameWorld(player)) return;
+
+        BoundingBox box = player.getBoundingBox().clone();
+        World world = player.getWorld();
+
+        int y = (int) Math.floor(box.getMinY());
+        int centerX = (int) Math.floor(box.getCenterX());
+        int centerZ = (int) Math.floor(box.getCenterZ());
+
+        int oppositeX = (int) Math.floor(box.getMinX());
+        if (oppositeX == centerX) oppositeX = (int) Math.floor(box.getMaxX());
+
+        int oppositeZ = (int) Math.floor(box.getMinZ());
+        if (oppositeZ == centerZ) oppositeZ = (int) Math.floor(box.getMaxZ());
+
+        if (breakBlocksIfNotAir(world, centerX, y, centerZ)) return;
+        if (breakBlocksIfNotAir(world, centerX, y, oppositeZ)) return;
+        if (breakBlocksIfNotAir(world, oppositeX, y, centerZ)) return;
+        breakBlocksIfNotAir(world, oppositeX, y, oppositeZ);
+    }
+
+    private boolean breakBlocksIfNotAir(@NotNull World world, int x, int y, int z) {
+        Block block = world.getBlockAt(x, y - 1, z);
+        if (block.getType().isAir()) return false;
+        runTaskLater(() -> {
+            block.setType(Material.AIR);
+            block.getRelative(BlockFace.DOWN).setType(Material.AIR);
+        }, 5);
+        return true;
     }
 
     @EventHandler(ignoreCancelled = true)

@@ -8,10 +8,7 @@ import me.matiego.st14.minigames.MiniGamesUtils;
 import me.matiego.st14.objects.BossBarTimer;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.bossbar.BossBar;
-import org.bukkit.GameMode;
-import org.bukkit.GameRule;
-import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -188,7 +185,7 @@ public class RedGreenMiniGame extends MiniGame {
         if (lobby) return;
 
         if (isInArea(player, "winner-area")) {
-            worldBorder.setWarningDistance(0);
+            Bukkit.getScheduler().runTaskLater(plugin, () -> worldBorder.setWarningDistance(0), 20);
             endGameWithWinner(player);
             return;
         }

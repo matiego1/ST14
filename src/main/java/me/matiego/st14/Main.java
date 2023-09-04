@@ -39,41 +39,44 @@ import java.util.stream.Collectors;
 public final class Main extends JavaPlugin implements Listener {
     @Getter private static Main instance;
     private MySQL mySQL;
-    @Getter private OfflinePlayersManager offlinePlayersManager;
-    @Getter private EconomyManager economyManager;
-    @Getter private IncognitoManager incognitoManager;
+
     @Getter private AccountsManager accountsManager;
-    @Getter private ChatMinecraftManager chatMinecraftManager;
     @Getter private AfkManager afkManager;
-    @Getter private TimeManager timeManager;
-    @Getter private PremiumManager premiumManager;
-    @Getter private TeleportsManager teleportsManager;
-    @Getter private CommandManager commandManager;
-    @Getter private BackpackManager backpackManager;
-    @Getter private RewardsManager rewardsManager;
     @Getter private AntyLogoutManager antyLogoutManager;
-    @Getter private MiniGamesManager miniGamesManager;
+    @Getter private BackpackManager backpackManager;
     @Getter private BanknoteManager banknoteManager;
-    @Getter private WorldsLastLocationManager worldsLastLocationManager;
-    @Getter private DynmapManager dynmapManager;
-    @Getter private ListenersManager listenersManager;
     @Getter private BansManager bansManager;
-    @Getter private HomeManager homeManager;
-    @Getter private NonPremiumManager nonPremiumManager;
-    private TabListManager tabListManager;
+    @Getter private ChatMinecraftManager chatMinecraftManager;
     private ChatReportsManager chatReportsManager;
+    @Getter private CommandManager commandManager;
     private DidYouKnowManager didYouKnowManager;
+    @Getter private DynmapManager dynmapManager;
+    @Getter private EconomyManager economyManager;
+    @Getter private HomeManager homeManager;
+    @Getter private IncognitoManager incognitoManager;
+    @Getter private ListenersManager listenersManager;
+    @Getter private MiniGamesManager miniGamesManager;
+    @Getter private NonPremiumManager nonPremiumManager;
+    @Getter private OfflinePlayersManager offlinePlayersManager;
+    @Getter private PremiumManager premiumManager;
+    @Getter private RankingsManager rankingsManager;
+    @Getter private RewardsManager rewardsManager;
+    private TabListManager tabListManager;
+    @Getter private TeleportsManager teleportsManager;
+    @Getter private TimeManager timeManager;
+    @Getter private WorldsLastLocationManager worldsLastLocationManager;
 
-    @Getter private TellCommand tellCommand;
-    @Getter private TpaCommand tpaCommand;
     @Getter private SuicideCommand suicideCommand;
+    @Getter private TpaCommand tpaCommand;
+    @Getter private EconomyCommand economyCommand;
     @Getter private IncognitoCommand incognitoCommand;
+    @Getter private TellCommand tellCommand;
 
-    @Getter private PlayerBedEnterListener playerBedEnterListener;
-    @Getter private PlayerQuitListener playerQuitListener;
-    @Getter private PlayerMoveListener playerMoveListener;
-    @Getter private GraveCreateListener graveCreateListener;
     @Getter private EntityDamageByEntityListener entityDamageByEntityListener;
+    @Getter private GraveCreateListener graveCreateListener;
+    @Getter private PlayerBedEnterListener playerBedEnterListener;
+    @Getter private PlayerMoveListener playerMoveListener;
+    @Getter private PlayerQuitListener playerQuitListener;
 
     private JDA jda;
     private boolean isJdaEnabled = false;
@@ -133,38 +136,39 @@ public final class Main extends JavaPlugin implements Listener {
         }
 
         //Register managers
-        incognitoManager = new IncognitoManager(this);
-        offlinePlayersManager = new OfflinePlayersManager(this);
         accountsManager = new AccountsManager(this);
-        chatMinecraftManager = new ChatMinecraftManager(this);
         afkManager = new AfkManager(this);
-        timeManager = new TimeManager(this);
+        antyLogoutManager = new AntyLogoutManager(this);
+        backpackManager = new BackpackManager(this);
+        banknoteManager = new BanknoteManager(this);
+        bansManager = new BansManager(this);
+        chatMinecraftManager = new ChatMinecraftManager(this);
+        chatReportsManager = new ChatReportsManager();
+        didYouKnowManager = new DidYouKnowManager(this);
+        dynmapManager = new DynmapManager(this);
         economyManager = new EconomyManager(this, true);
+        homeManager = new HomeManager(this);
+        incognitoManager = new IncognitoManager(this);
+        listenersManager = new ListenersManager(this);
+        miniGamesManager = new MiniGamesManager(this);
+        nonPremiumManager = new NonPremiumManager(this);
+        offlinePlayersManager = new OfflinePlayersManager(this);
         premiumManager = new PremiumManager(this);
+        rankingsManager = new RankingsManager();
+        rewardsManager = new RewardsManager(this);
         tabListManager = new TabListManager(this);
         teleportsManager = new TeleportsManager(this);
-        rewardsManager = new RewardsManager(this);
-        backpackManager = new BackpackManager(this);
-        chatReportsManager = new ChatReportsManager();
-        antyLogoutManager = new AntyLogoutManager(this);
-        miniGamesManager = new MiniGamesManager(this);
-        listenersManager = new ListenersManager(this);
-        didYouKnowManager = new DidYouKnowManager(this);
-        banknoteManager = new BanknoteManager(this);
+        timeManager = new TimeManager(this);
         worldsLastLocationManager = new WorldsLastLocationManager(this);
-        dynmapManager = new DynmapManager(this);
-        bansManager = new BansManager(this);
-        homeManager = new HomeManager(this);
-        nonPremiumManager = new NonPremiumManager(this);
 
         Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomyManager(), vault, ServicePriority.High);
 
         //Register listeners
-        playerBedEnterListener = new PlayerBedEnterListener();
-        playerQuitListener = new PlayerQuitListener(this);
-        playerMoveListener = new PlayerMoveListener(this);
-        graveCreateListener = new GraveCreateListener();
         entityDamageByEntityListener = new EntityDamageByEntityListener(this);
+        graveCreateListener = new GraveCreateListener();
+        playerBedEnterListener = new PlayerBedEnterListener();
+        playerMoveListener = new PlayerMoveListener(this);
+        playerQuitListener = new PlayerQuitListener(this);
         listenersManager.registerListeners(
                 new AsyncChatListener(this),
                 new AsyncPlayerPreLoginListener(this),
@@ -274,34 +278,37 @@ public final class Main extends JavaPlugin implements Listener {
         tpaCommand = new TpaCommand(this);
         suicideCommand = new SuicideCommand(this);
         incognitoCommand = new IncognitoCommand(this);
+        economyCommand = new EconomyCommand(this);
         commandManager = new CommandManager(Objects.requireNonNull(getJda()), Arrays.asList(
                 new AccountsCommand(this),
                 new BanCommand(this),
                 new CoordinatesCommand(this),
                 new DifficultyCommand(this),
-                new EconomyCommand(this),
+                economyCommand,
                 new GameModeCommand(this),
                 incognitoCommand,
+                new MiniGameCommand(this),
                 new NonPremiumCommand(this),
                 new PremiumCommand(this),
+                new RankingCommand(this),
                 new SayCommand(this),
                 new SpawnCommand(this),
                 new StopCommand(this),
+                tellCommand,
                 new TimeCommand(this),
                 new VersionCommand(this),
                 //Minecraft commands
                 new BackpackCommand(this),
                 new HomeCommand(this),
                 new McreloadCommand(this),
-                new MiniGameCommand(this),
                 new ReplyCommand(this),
                 new St14Command(this),
                 suicideCommand,
-                tellCommand,
                 tpaCommand,
                 new WorldsCommand(this),
                 //Discord commands
                 new AllPlayersCommand(this),
+                new EconomyAdmin(this),
                 new FeedbackCommand(),
                 new ListCommand(this),
                 new PingCommand(),

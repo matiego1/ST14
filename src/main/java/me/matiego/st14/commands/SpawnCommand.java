@@ -135,8 +135,7 @@ public class SpawnCommand implements CommandHandler.Minecraft, CommandHandler.Di
     public @NotNull CommandData getDiscordCommand() {
         return Commands.slash("spawn", "Przeteleportuj gracza na spawn")
                 .addOptions(
-                        new OptionData(OptionType.STRING, "gracz", "Gracz, którego koordynaty mają być pokazane", true)
-                                .setAutoComplete(true)
+                        new OptionData(OptionType.STRING, "gracz", "Gracz, którego koordynaty mają być pokazane", true, true)
                 )
                 .setGuildOnly(true)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));

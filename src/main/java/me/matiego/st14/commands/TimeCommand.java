@@ -104,8 +104,7 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
     public @NotNull CommandData getDiscordCommand() {
         return Commands.slash("time", "Wyświetla czasy gracza")
                 .addOptions(
-                        new OptionData(OptionType.STRING, "gracz", "Gracz, którego czasy mają być wyświetlone", true)
-                                .setAutoComplete(true),
+                        new OptionData(OptionType.STRING, "gracz", "Gracz, którego czasy mają być wyświetlone", true, true),
                         new OptionData(OptionType.STRING, "incognito", "czy wiadomość ma być widoczna tylko dla ciebie", false)
                                 .addChoice("Tak", "True")
                                 .addChoice("Nie", "False")

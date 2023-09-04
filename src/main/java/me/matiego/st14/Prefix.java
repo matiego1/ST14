@@ -19,7 +19,8 @@ public enum Prefix {
     SLEEPING_THROUGH_NIGHT("", "Przesypianie nocy"),
     MINI_GAMES("&d[&9MG&d]&e ", "Minigry"),
     AUTO_MOD("[AutoMod]", ""),
-    HOME("&6[&aDom&6]&a ", "");
+    HOME("&6[&aDom&6]&a ", ""),
+    RANKING("&6[&7Ranking&6]&7 ", "");
 
     @Getter private final String minecraft;
     @Getter private final String discord;

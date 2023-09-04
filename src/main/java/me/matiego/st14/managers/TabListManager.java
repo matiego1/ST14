@@ -26,7 +26,7 @@ public class TabListManager {
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.sendPlayerListHeaderAndFooter(Utils.getComponentByString("&a&lSerwer ST14"), Utils.getComponentByString("&aTPS: " + tps + "&a; PING: " + (player.getPing() == 0 ? "&cWczytywanie..." : player.getPing() + " ms")));
             player.playerListName(Utils.getComponentByString(
-                    (miniGame != null && miniGame.getPlayersInMiniGame().contains(player) ? "&a✔" : "") +
+                    (miniGame != null && miniGame.getPlayersInMiniGame().contains(player) ? "&a✔ " : "") +
                     "&2[" + Utils.getWorldPrefix(player.getWorld()) + "]&f " +
                     (plugin.getAfkManager().isAfk(player) ? "&8[AFK]&f " : "") +
                     (plugin.getIncognitoManager().isIncognito(player.getUniqueId()) ? "&7[INC]&f " : "") +
@@ -43,20 +43,23 @@ public class TabListManager {
         tps = Utils.round(tps, 2);
         if (tps >= 18d) {
             if (log15 || log10) {
-                Logs.info("TPS są powyżej 19.");
+                Logs.info("TPS są powyżej 18.");
+                log10 = log15 = false;
             }
-            log10 = log15 = false;
             return "&a" + tps;
         }
         if (tps >= 15d) {
             if (log15 || log10) {
                 Logs.info("TPS są powyżej 15.");
+                log10 = log15 = false;
             }
-            log10 = log15 = false;
             return "&e" + tps;
         }
         if (tps >= 10d) {
-            log10 = false;
+            if (log10) {
+                Logs.warning("TPS są powyżej 10, ale spadły poniżej 15!");
+                log10 = false;
+            }
             if (!log15) {
                 log15 = true;
                 Logs.warning("TPS spadły poniżej 15!");
@@ -65,7 +68,9 @@ public class TabListManager {
         }
         Utils.sync(() -> {
             for (Player player : Bukkit.getOnlinePlayers()) {
-                player.kick(Utils.getComponentByString("&cTPS spadły poniżej 10! Spróbuj dołączyć później."));
+                if (!player.isOp()) {
+                    player.kick(Utils.getComponentByString("&cTPS spadły poniżej 10! Spróbuj dołączyć później."));
+                }
             }
         });
         if (!log10) {
@@ -76,9 +81,7 @@ public class TabListManager {
     }
 
     public synchronized void start() {
-        if (task != null) {
-            task.cancel();
-        }
+        stop();
         task = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::refreshTabList, 20, 20);
     }
 

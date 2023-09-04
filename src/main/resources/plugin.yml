@@ -89,6 +89,9 @@ commands:
   nonpremium:
     permission: st14.nonpremium
     usage: 'Poprawne użycie: /nonpremium <hasło>'
+  ranking:
+    permission: st14.ranking
+    usage: 'Poprawne użycie: /ranking [economy|minigame|time] (gracz)'
 permissions:
   st14.st14:
     default: op
@@ -135,4 +138,6 @@ permissions:
   st14.home:
     default: true
   st14.premium:
+    default: true
+  st14.ranking:
     default: true

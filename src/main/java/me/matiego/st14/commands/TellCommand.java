@@ -1,9 +1,14 @@
-package me.matiego.st14.commands.minecraft;
+package me.matiego.st14.commands;
 
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.objects.CommandHandler;
-import me.matiego.st14.Logs;
 import me.matiego.st14.utils.Utils;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.interactions.commands.*;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
@@ -18,7 +23,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class TellCommand implements CommandHandler.Minecraft {
+public class TellCommand implements CommandHandler.Minecraft, CommandHandler.Discord {
     public TellCommand(@NotNull Main plugin) {
         command = plugin.getCommand("tell");
         if (command == null) {
@@ -123,5 +128,53 @@ public class TellCommand implements CommandHandler.Minecraft {
             return names;
         }
         return new ArrayList<>();
+    }
+
+    @Override
+    public @NotNull CommandData getDiscordCommand() {
+        return Commands.slash("tell", "wyślij prywatną wiadomość do gracza")
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+                .setGuildOnly(true)
+                .addOptions(
+                        new OptionData(OptionType.STRING, "gracz", "nick gracza", true, true),
+                        new OptionData(OptionType.STRING, "wiadomosc", "wiadomość, którą chcesz wysłać", true)
+                );
+    }
+
+    @Override
+    public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
+        String message = event.getOption("wiadomosc", OptionMapping::getAsString);
+        if (message == null) return 0;
+        message = message.replace("&", "");
+
+        String playerName = event.getOption("gracz", OptionMapping::getAsString);
+        if (playerName == null) {
+            event.reply("Zły nick.").setEphemeral(true).queue();
+            return 1;
+        }
+
+        Player player = Bukkit.getPlayer(playerName);
+        if (player == null) {
+            event.reply("Ten gracz nie jest online!").setEphemeral(true).queue();
+            return 0;
+        }
+
+        removeReply(player.getUniqueId());
+
+        log(message, null, player);
+        player.sendMessage(Utils.getComponentByString("&6[&4[admin] &6->&c Ja&6]:&r " + message));
+
+        return 0;
+    }
+
+    @Override
+    public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteraction event) {
+        if (!event.getName().equals(getDiscordCommand().getName())) return;
+        event.replyChoices(Bukkit.getOnlinePlayers().stream()
+                .map(Player::getName)
+                .filter(name -> name.toLowerCase().startsWith(event.getFocusedOption().getValue().toLowerCase()))
+                .map(name -> new Command.Choice(name, name))
+                .collect(Collectors.toList())
+        ).queue();
     }
 }

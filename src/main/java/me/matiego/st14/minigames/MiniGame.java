@@ -23,6 +23,7 @@ import org.jetbrains.annotations.Range;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class MiniGame implements Listener {
     public MiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime) {
@@ -113,7 +114,7 @@ public abstract class MiniGame implements Listener {
     }
 
     public synchronized @NotNull List<Player> getPlayersInMiniGame() {
-        return players.keySet().stream().filter(player -> getPlayerStatus(player) == PlayerStatus.IN_MINI_GAME).toList();
+        return players.keySet().stream().filter(player -> getPlayerStatus(player) == PlayerStatus.IN_MINI_GAME).collect(Collectors.toList());
     }
     //</editor-fold>
 
@@ -340,9 +341,10 @@ public abstract class MiniGame implements Listener {
         scheduleStopMiniGameAndSendReason("Koniec minigry! Wygrywa gracz &d" + winner.getName(), "&dKoniec minigry", "");
         if (plugin.getIncognitoManager().isIncognito(winner.getUniqueId())) {
             Logs.discord("Gracz **" + winner.getName() + "** wygrywa minigrę **" + getMiniGameName() + "**!");
-            return;
+        } else {
+            plugin.getChatMinecraftManager().sendMessage("Gracz **" + winner.getName() + "** wygrywa minigrę **" + getMiniGameName() + "**!", Prefix.MINI_GAMES.getDiscord());
         }
-        plugin.getChatMinecraftManager().sendMessage("Gracz **" + winner.getName() + "** wygrywa minigrę **" + getMiniGameName() + "**!", Prefix.MINI_GAMES.getDiscord());
+
         plugin.getMiniGamesManager().giveRewardToWinner(winner, Utils.round(plugin.getConfig().getDouble(configPath + "winner-reward", 20), 2));
     }
 

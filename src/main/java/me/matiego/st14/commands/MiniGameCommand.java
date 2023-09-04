@@ -1,15 +1,20 @@
-package me.matiego.st14.commands.minecraft;
+package me.matiego.st14.commands;
 
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
-import me.matiego.st14.objects.CommandHandler;
 import me.matiego.st14.managers.MiniGamesManager;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGameType;
 import me.matiego.st14.minigames.MiniGamesUtils;
+import me.matiego.st14.objects.CommandHandler;
 import me.matiego.st14.objects.GUI;
-import me.matiego.st14.utils.*;
+import me.matiego.st14.utils.Utils;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
+import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
@@ -26,7 +31,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class MiniGameCommand implements CommandHandler.Minecraft {
+public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler.Discord {
     public MiniGameCommand(@NotNull Main plugin) {
         this.plugin = plugin;
         command = plugin.getCommand("minigame");
@@ -186,5 +191,24 @@ public class MiniGameCommand implements CommandHandler.Minecraft {
         if (!manager.startMiniGame(miniGame, players, player)) {
             player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Napotkano niespodziewany błąd."));
         }
+    }
+
+    @Override
+    public @NotNull CommandData getDiscordCommand() {
+        return Commands.slash("stop-minigame", "zatrzymaj aktywną minigrę")
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+                .setGuildOnly(true);
+    }
+
+    @Override
+    public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
+        MiniGamesManager manager = plugin.getMiniGamesManager();
+        if (manager.getActiveMiniGame() == null) {
+            event.reply("Żadna minigra nie jest rozpoczęta.").queue();
+            return 0;
+        }
+        event.reply("Zatrzymywanie...").queue();
+        manager.stopMiniGame();
+        return 1;
     }
 }

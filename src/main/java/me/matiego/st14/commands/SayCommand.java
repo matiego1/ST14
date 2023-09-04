@@ -25,8 +25,6 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 
 public class SayCommand implements CommandHandler.Minecraft, CommandHandler.Discord {
-    private final PluginCommand command;
-    private final Main plugin;
     public SayCommand(@NotNull Main plugin) {
         this.plugin = plugin;
         command = plugin.getCommand("say");
@@ -34,6 +32,8 @@ public class SayCommand implements CommandHandler.Minecraft, CommandHandler.Disc
             Logs.warning("The command /say does not exist in the plugin.yml file and cannot be registered.");
         }
     }
+    private final PluginCommand command;
+    private final Main plugin;
 
     @Override
     public @Nullable PluginCommand getMinecraftCommand() {

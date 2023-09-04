@@ -68,6 +68,7 @@ public class StopCommand implements CommandHandler.Minecraft, CommandHandler.Dis
 
     private void shutdown() {
         isStoping = true;
+        plugin.getMiniGamesManager().setServerStopping(true);
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.kick(Utils.getComponentByString("&cWyłączenie serwera. Zapraszamy później!"));
         }

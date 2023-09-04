@@ -341,7 +341,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
         return 5;
     }
 
-    private void informPlayer(@NotNull UUID uuid, @NotNull String executor, double amount, @NotNull Type type) {
+    public void informPlayer(@NotNull UUID uuid, @NotNull String executor, double amount, @NotNull Type type) {
         Player player = Bukkit.getPlayer(uuid);
         if (player != null) {
             player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + switch (type) {
@@ -369,7 +369,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
         });
     }
 
-    private enum Type {
+    public enum Type {
         UNKNOWN,
         ADD,
         REMOVE,
