@@ -10,10 +10,7 @@ import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.interactions.InteractionHook;
-import net.dv8tion.jda.api.interactions.commands.Command;
-import net.dv8tion.jda.api.interactions.commands.OptionMapping;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
+import net.dv8tion.jda.api.interactions.commands.*;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -93,11 +90,11 @@ public class RankingCommand implements CommandHandler.Minecraft, CommandHandler.
 
                 RankingsManager.Data data = type.get(uuid);
                 if (data == null) {
-                    sender.sendMessage(Utils.getComponentByString(Prefix.RANKING + "&cNapotkano niespodziewany błąd. Spróbuj później."));
+                    sender.sendMessage(Utils.getComponentByString(Prefix.RANKING + "&cTen gracz nie jest w rankingu, albo napotkano niespodziewany błąd."));
                     return;
                 }
 
-                sender.sendMessage(Utils.getComponentByString(Prefix.RANKING + "Gracz " + args[1] + " zajmuję " + data.getRank() + " miejsce w rankingu " + args[0] + ", z wynikiem " + type.formatScore(data.getScore()) + "."));
+                sender.sendMessage(Utils.getComponentByString(Prefix.RANKING + "Gracz " + args[1] + " zajmuję " + data.getRank() + " miejsce w rankingu " + type.getRankingName() + ", z wynikiem " + type.formatScore(data.getScore()) + "."));
             });
         }
         return 5;
@@ -129,6 +126,7 @@ public class RankingCommand implements CommandHandler.Minecraft, CommandHandler.
                                                 .map(v -> new Command.Choice(v, v))
                                                 .collect(Collectors.toList())
                                 ),
+                        new OptionData(OptionType.STRING, "gracz", "gracz, którego pozycję chcesz wyświetlić", false, true),
                         new OptionData(OptionType.STRING, "incognito", "czy wiadomość ma być widoczna tylko dla ciebie", false)
                                 .addChoice("Tak", "True")
                                 .addChoice("Nie", "False")
@@ -148,6 +146,24 @@ public class RankingCommand implements CommandHandler.Minecraft, CommandHandler.
         }
 
         Utils.async(() -> {
+            String playerName = event.getOption("gracz", OptionMapping::getAsString);
+            if (playerName != null) {
+                UUID uuid = plugin.getOfflinePlayersManager().getIdByName(playerName);
+                if (uuid == null) {
+                    hook.sendMessage("Zły nick.").queue();
+                    return;
+                }
+
+                RankingsManager.Data data = type.get(uuid);
+                if (data == null) {
+                    hook.sendMessage("Ten gracz nie jest w rankingu, albo napotkano niespodziewany błąd.").queue();
+                    return;
+                }
+
+                hook.sendMessage("Gracz **" + playerName + "** zajmuję **" + data.getRank() + "** miejsce w rankingu **" + type.getRankingName() + "**, z wynikiem `" + type.formatScore(data.getScore()) + "`.").queue();
+                return;
+            }
+
             EmbedBuilder eb = new EmbedBuilder();
             eb.setTitle("**Ranking " + type.getRankingName() + "**");
             eb.setTimestamp(Instant.now());
@@ -173,9 +189,9 @@ public class RankingCommand implements CommandHandler.Minecraft, CommandHandler.
                         .append(place)
                         .append(" ")
                         .append(plugin.getOfflinePlayersManager().getEffectiveNameById(data.getUuid()))
-                        .append(" - ")
+                        .append(" - `")
                         .append(type.formatScore(data.getScore()))
-                        .append("\n");
+                        .append("`\n");
             }
 
             String description = DiscordUtils.checkLength(builder.toString(), MessageEmbed.DESCRIPTION_MAX_LENGTH);
@@ -187,5 +203,15 @@ public class RankingCommand implements CommandHandler.Minecraft, CommandHandler.
             hook.sendMessageEmbeds(eb.build()).queue();
         });
         return 5;
+    }
+
+    @Override
+    public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteraction event) {
+        if (!event.getName().equals(getDiscordCommand().getName())) return;
+        event.replyChoices(plugin.getOfflinePlayersManager().getNames().stream()
+                .filter(name -> name.toLowerCase().startsWith(event.getFocusedOption().getValue().toLowerCase()))
+                .map(name -> new Command.Choice(name, name))
+                .collect(Collectors.toList())
+        ).queue();
     }
 }

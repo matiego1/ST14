@@ -316,7 +316,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new WorldsCommand(this),
                 //Discord commands
                 new AllPlayersCommand(this),
-                new EconomyAdmin(this),
+                new EconomyAdminCommand(this),
                 new FeedbackCommand(),
                 new ListCommand(this),
                 new PingCommand(),

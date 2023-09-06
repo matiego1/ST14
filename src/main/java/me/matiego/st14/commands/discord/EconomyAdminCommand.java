@@ -8,10 +8,7 @@ import me.matiego.st14.objects.CommandHandler;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.interactions.InteractionHook;
-import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
-import net.dv8tion.jda.api.interactions.commands.OptionMapping;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
+import net.dv8tion.jda.api.interactions.commands.*;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -21,9 +18,10 @@ import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-public class EconomyAdmin implements CommandHandler.Discord {
-    public EconomyAdmin(@NotNull Main plugin) {
+public class EconomyAdminCommand implements CommandHandler.Discord {
+    public EconomyAdminCommand(@NotNull Main plugin) {
         this.plugin = plugin;
     }
 
@@ -120,5 +118,15 @@ public class EconomyAdmin implements CommandHandler.Discord {
             );
         });
         return 0;
+    }
+
+    @Override
+    public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteraction event) {
+        if (!event.getName().equals(getDiscordCommand().getName())) return;
+        event.replyChoices(plugin.getOfflinePlayersManager().getNames().stream()
+                .filter(name -> name.toLowerCase().startsWith(event.getFocusedOption().getValue().toLowerCase()))
+                .map(name -> new Command.Choice(name, name))
+                .collect(Collectors.toList())
+        ).queue();
     }
 }
