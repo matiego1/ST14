@@ -121,9 +121,10 @@ public class RankingCommand implements CommandHandler.Minecraft, CommandHandler.
                 .addOptions(
                         new OptionData(OptionType.STRING, "typ", "typ rankingu", true)
                                 .addChoices(
-                                        (Command.Choice) Arrays.stream(RankingsManager.Type.values())
+                                        Arrays.stream(RankingsManager.Type.values())
                                                 .map(Enum::toString)
                                                 .map(String::toLowerCase)
+                                                .map(v -> new Command.Choice(v, v))
                                                 .collect(Collectors.toList())
                                 ),
                         new OptionData(OptionType.STRING, "incognito", "czy wiadomość ma być widoczna tylko dla ciebie", false)
