@@ -41,19 +41,19 @@ public class EconomyAdmin implements CommandHandler.Discord {
                                 .addOptions(
                                         new OptionData(OptionType.STRING, "gracz", "nick gracza", true, true),
                                         new OptionData(OptionType.NUMBER, "wartosc", "nowy bilans konta", true)
-                                                .setRequiredRange(0, Double.MAX_VALUE)
+                                                .setRequiredRange(0, 1000d * 1000d * 1000d)
                                 ),
                         new SubcommandData("add", "daj pieniądze graczowi")
                                 .addOptions(
                                         new OptionData(OptionType.STRING, "gracz", "nick gracza", true, true),
                                         new OptionData(OptionType.NUMBER, "wartosc", "ilość pieniędzy", true)
-                                                .setRequiredRange(0, Double.MAX_VALUE)
+                                                .setRequiredRange(0, 1000d * 1000d * 1000d)
                                 ),
                         new SubcommandData("remove", "zabierz pieniądze graczowi")
                                 .addOptions(
                                         new OptionData(OptionType.STRING, "gracz", "nick gracza", true, true),
                                         new OptionData(OptionType.NUMBER, "wartosc", "ilość pieniędzy", true)
-                                                .setRequiredRange(0, Double.MAX_VALUE)
+                                                .setRequiredRange(0, 1000d * 1000d * 1000d)
                                 )
                 );
     }
