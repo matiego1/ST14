@@ -65,7 +65,7 @@ public class RankingCommand implements CommandHandler.Minecraft, CommandHandler.
                     return;
                 }
 
-                StringBuilder builder = new StringBuilder(Prefix.RANKING + "&6===== Ranking " + args[0] + " =====\n");
+                StringBuilder builder = new StringBuilder(Prefix.RANKING + "&6===== Ranking " + type.getRankingName() + " =====\n");
                 for (int i = 0; i < top.size(); i++) {
                     RankingsManager.Data data = top.get(i);
                     builder
@@ -78,7 +78,9 @@ public class RankingCommand implements CommandHandler.Minecraft, CommandHandler.
                             .append(type.formatScore(data.getScore()))
                             .append("\n");
                 }
-                builder.append("&6====================");
+                builder
+                        .append(Prefix.RANKING)
+                        .append("&6====================");
 
                 sender.sendMessage(Utils.getComponentByString(builder.toString()));
             });
@@ -95,7 +97,7 @@ public class RankingCommand implements CommandHandler.Minecraft, CommandHandler.
                     return;
                 }
 
-                sender.sendMessage(Utils.getComponentByString(Prefix.RANKING + "Gracz zajmuję " + data.getRank() + " miejsce w rankingu " + args[0] + ", z wynikiem " + type.formatScore(data.getScore()) + "."));
+                sender.sendMessage(Utils.getComponentByString(Prefix.RANKING + "Gracz " + args[1] + " zajmuję " + data.getRank() + " miejsce w rankingu " + args[0] + ", z wynikiem " + type.formatScore(data.getScore()) + "."));
             });
         }
         return 5;
@@ -169,6 +171,7 @@ public class RankingCommand implements CommandHandler.Minecraft, CommandHandler.
 
                 builder
                         .append(place)
+                        .append(" ")
                         .append(plugin.getOfflinePlayersManager().getEffectiveNameById(data.getUuid()))
                         .append(" - ")
                         .append(type.formatScore(data.getScore()))

@@ -164,6 +164,8 @@ public class TellCommand implements CommandHandler.Minecraft, CommandHandler.Dis
         log(message, null, player);
         player.sendMessage(Utils.getComponentByString("&6[&4[admin] &6->&c Ja&6]:&r " + message));
 
+        event.reply("Pomyślnie wysłano prywatną wiadomość.").queue();
+
         return 0;
     }
 
