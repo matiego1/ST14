@@ -32,7 +32,7 @@ public class PlayerQuitListener implements Listener {
         plugin.getBackpackManager().clearCache(player.getUniqueId());
         plugin.getMiniGamesManager().onPlayerQuit(player);
         plugin.getTeleportsManager().onPlayerQuit(player);
-        plugin.getDynmapManager().refreshPlayerClaims(player);
+        plugin.getDynmapManager().getClaimsMarker().refreshPlayerClaims(player);
         plugin.getNonPremiumManager().clearDataAfterSession(player.getUniqueId());
 
         event.quitMessage(Utils.getComponentByString("&eGracz " + player.getName() + " opuścił grę"));

@@ -65,8 +65,7 @@ public class CountingMessageSendListener implements Listener {
     }
 
     private double getMax() {
-        double max = Utils.round(plugin.getConfig().getDouble("counting-rewards.max"), 2);
-        return max <= 0 ? 30 : max;
+        return Math.max(0, Utils.round(plugin.getConfig().getDouble("counting-rewards.max"), 2));
     }
 
     private boolean isOldMessage(@Nullable Long id) {

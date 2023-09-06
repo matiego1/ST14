@@ -22,9 +22,16 @@ public class BlockBreakListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreak(@NotNull BlockBreakEvent event) {
+        Player player = event.getPlayer();
+
+        if (!plugin.getNonPremiumManager().isLoggedIn(player)) {
+            event.setCancelled(true);
+            player.sendActionBar(Utils.getComponentByString("&cMusisz się zalogować, aby to zrobić!"));
+            return;
+        }
+
         Block block = event.getBlock();
         String material = block.getType().name();
-        Player player = event.getPlayer();
         try {
             if (material.matches(plugin.getConfig().getString("block-break-warn-regex", "[^\\s\\S]*"))) {
                 Logs.info("Gracz " + player.getName() + " wykopał " + material + " w " + Utils.getWorldName(player.getWorld()));
@@ -34,12 +41,12 @@ public class BlockBreakListener implements Listener {
         }
 
         if (material.contains("SIGN")) {
-            plugin.getDynmapManager().deleteSignMarker(block.getLocation());
+            plugin.getDynmapManager().getSignsMarker().deleteMarker(block.getLocation());
         }
 
         Block up = event.getBlock().getRelative(BlockFace.UP);
         if (up.getType().name().contains("SIGN")) {
-            plugin.getDynmapManager().deleteSignMarker(up.getLocation());
+            plugin.getDynmapManager().getSignsMarker().deleteMarker(up.getLocation());
         }
     }
 

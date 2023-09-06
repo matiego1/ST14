@@ -17,8 +17,15 @@ public class PlayerPortalListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerPortal(@NotNull PlayerPortalEvent event) {
-        String world = event.getFrom().getWorld().getName();
         Player player = event.getPlayer();
+
+        if (!plugin.getNonPremiumManager().isLoggedIn(player)) {
+            event.setCancelled(true);
+            player.sendActionBar(Utils.getComponentByString("&cMusisz się zalogować, aby to zrobić!"));
+            return;
+        }
+
+        String world = event.getFrom().getWorld().getName();
         if (event.getCause() == PlayerTeleportEvent.TeleportCause.END_PORTAL && plugin.getConfig().getStringList("allow-end-portals").contains(world)) {
             return;
         }

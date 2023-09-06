@@ -175,18 +175,21 @@ public final class Main extends JavaPlugin implements Listener {
                 new BlockBreakListener(this),
                 new BlockFormListener(),
                 new BlockPistonExtendListener(),
-                new BlockPlaceListener(),
+                new BlockPlaceListener(this),
                 new CraftItemListener(this),
                 new EntityChangeBlockListener(),
                 entityDamageByEntityListener,
                 new EntityDeathListener(this),
                 new EntityExplodeListener(this),
+                new EntityPickupItemListener(this),
                 new EntityPortalListener(this),
                 new EntityToggleGlideListener(this),
                 new FoodLevelChangeListener(this),
                 graveCreateListener,
                 new GS4QueryListener(this),
+                new InventoryClickListener(this),
                 new InventoryCloseListener(this),
+                new InventoryOpenListener(this),
                 new PlayerAdvancementCriterionGrantListener(),
                 new PlayerAdvancementDoneListener(),
                 playerBedEnterListener,
@@ -196,16 +199,21 @@ public final class Main extends JavaPlugin implements Listener {
                 new PlayerCommandPreprocessListener(this),
                 new PlayerCommandSendListener(this),
                 new PlayerDeathListener(this),
+                new PlayerDropItemListener(this),
                 new PlayerInteractListener(this),
                 new PlayerItemFrameChangeListener(this),
+                new PlayerItemHeldListener(this),
+                new PlayerItemMendListener(this),
                 new PlayerJoinListener(this),
                 new PlayerLaunchProjectileListener(this),
                 new PlayerLoginEventListener(this),
                 playerMoveListener,
+                new PlayerPickupExperienceListener(this),
                 new PlayerPortalListener(this),
                 playerQuitListener,
                 new PlayerResourcePackStatusListener(),
                 new PlayerRespawnListener(this),
+                new PlayerSwapHandItemsListener(this),
                 new PlayerTeleportListener(),
                 new ServerCommandListener(),
                 new ServerListPingListener(this),
@@ -214,7 +222,7 @@ public final class Main extends JavaPlugin implements Listener {
 
         );
         listenersManager.registerListener("minecraft:brand", new PluginMessageReceivedListener(this));
-        getDynmapManager().registerListeners();
+        getDynmapManager().getClaimsMarker().registerListeners();
 
         //Counting plugin
         if (Bukkit.getPluginManager().getPlugin("Counting") != null) {

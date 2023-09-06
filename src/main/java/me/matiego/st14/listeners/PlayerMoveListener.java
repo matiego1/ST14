@@ -24,6 +24,13 @@ public class PlayerMoveListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerMove(@NotNull PlayerMoveEvent event) {
         Player player = event.getPlayer();
+
+        if (!plugin.getNonPremiumManager().isLoggedIn(player)) {
+            event.setCancelled(true);
+            player.sendActionBar(Utils.getComponentByString("&cMusisz się zalogować, aby to zrobić!"));
+            return;
+        }
+
         plugin.getAfkManager().move(player);
         plugin.getTeleportsManager().onMove(player);
         if (event.hasChangedBlock()) {

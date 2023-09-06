@@ -22,6 +22,12 @@ public class AsyncChatListener implements Listener {
     public void onAsyncChat(@NotNull AsyncChatEvent event) {
         Player player = event.getPlayer();
 
+        if (!plugin.getNonPremiumManager().isLoggedIn(player)) {
+            event.setCancelled(true);
+            player.sendActionBar(Utils.getComponentByString("&cMusisz się zalogować, aby to zrobić!"));
+            return;
+        }
+
         plugin.getAfkManager().move(player);
 
         Block block = player.getLocation().getBlock();

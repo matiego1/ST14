@@ -14,6 +14,6 @@ public class ClaimCreateListener implements Listener {
 
     @EventHandler
     public void onClaimCreate(@NotNull ClaimCreateEvent event) {
-        plugin.getDynmapManager().refreshClaim(event.getClaim());
+        plugin.getDynmapManager().getClaimsMarker().refreshClaim(event.getClaim());
     }
 }

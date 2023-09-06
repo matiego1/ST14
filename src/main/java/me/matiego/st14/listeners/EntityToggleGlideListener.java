@@ -19,6 +19,13 @@ public class EntityToggleGlideListener implements Listener {
     public void onEntityToggleGlide(@NotNull EntityToggleGlideEvent event) {
         if (!event.isGliding()) return;
         if (!(event.getEntity() instanceof Player player)) return;
+
+        if (!plugin.getNonPremiumManager().isLoggedIn(player)) {
+            event.setCancelled(true);
+            player.sendActionBar(Utils.getComponentByString("&cMusisz się zalogować, aby to zrobić!"));
+            return;
+        }
+
         if (!plugin.getConfig().getStringList("block-elytra.worlds").contains(player.getWorld().getName())) return;
         if (Utils.getTps() > plugin.getConfig().getDouble("block-elytra.below-tps")) return;
         player.sendActionBar(Utils.getComponentByString("&cNie możesz teraz latać!"));

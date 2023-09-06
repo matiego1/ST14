@@ -27,7 +27,7 @@ public class SignChangeListener implements Listener {
         if (sign == null) return;
 
         if (!updateMarker(sign, event.lines().stream().map(c -> PlainTextComponentSerializer.plainText().serialize(c)).toList(), event.getPlayer())) {
-            plugin.getDynmapManager().deleteSignMarker(sign.getLocation());
+            plugin.getDynmapManager().getSignsMarker().deleteMarker(sign.getLocation());
         }
     }
 
@@ -55,7 +55,7 @@ public class SignChangeListener implements Listener {
         String text = textBuilder.toString();
         if (text.isBlank()) return false;
 
-        if (plugin.getDynmapManager().addSignMarker(sign.getLocation(), text)) {
+        if (plugin.getDynmapManager().getSignsMarker().addMarker(sign.getLocation(), text)) {
             player.sendMessage(Utils.getComponentByString("&aPomyślnie dodano tabliczkę do mapy."));
         }
         return true;

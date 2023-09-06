@@ -1,6 +1,7 @@
 package me.matiego.st14.listeners;
 
 import me.matiego.st14.Main;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandSendEvent;
@@ -17,10 +18,12 @@ public class PlayerCommandSendListener implements Listener {
 
     @EventHandler
     public void onPlayerCommandSent(@NotNull PlayerCommandSendEvent event) {
-        if (event.getPlayer().isOp()) return;
+        Player player = event.getPlayer();
+
+        if (player.isOp()) return;
         List<String> allowedCommands = plugin.getConfig().getStringList("allowed-commands");
         if (allowedCommands.isEmpty()) return;
-        if (plugin.getConfig().getStringList("allowed-commands-bypass").contains(event.getPlayer().getUniqueId().toString())) return;
+        if (plugin.getConfig().getStringList("allowed-commands-bypass").contains(player.getUniqueId().toString())) return;
 
         Iterator<String> iterator = event.getCommands().iterator();
         while (iterator.hasNext()) {

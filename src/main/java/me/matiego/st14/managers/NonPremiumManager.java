@@ -1,12 +1,15 @@
 package me.matiego.st14.managers;
 
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.objects.Pair;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.NonPremiumUtils;
 import me.matiego.st14.utils.Utils;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -65,6 +68,10 @@ public class NonPremiumManager {
         return Utils.now() - pair.getSecond() <= 5 * 60 * 1000;
     }
 
+    public boolean isLoggedIn(@NotNull Player player) {
+        return isLoggedIn(player.getUniqueId());
+    }
+
     public synchronized boolean isLoggedIn(@NotNull UUID uuid) {
         if (!NonPremiumUtils.isNonPremiumUuid(uuid)) return true; //other players are logged in by default
         return loggedIn.contains(uuid);
@@ -74,6 +81,7 @@ public class NonPremiumManager {
         if (!NonPremiumUtils.isNonPremiumUuid(player.getUniqueId())) return;
         loggedIn.add(player.getUniqueId());
         verificationCode.entrySet().removeIf(pair -> pair.getValue().getFirst().equals(player.getUniqueId()));
+        Logs.info("Gracz non-premium " + player.getName() + " pomyślnie się zalogował.");
     }
 
     public synchronized void endSession(@NotNull UUID uuid, @NotNull String reason) {
@@ -82,6 +90,8 @@ public class NonPremiumManager {
         Player player = Bukkit.getPlayer(uuid);
         if (player != null) {
             player.kick(Utils.getComponentByString("&cTwoja sesja została zakończona!\nPowód: " + reason));
+            sendMessageToUser(uuid, "Twoja sesja została zakończona! Powód: `" + reason + "`");
+            Logs.info("Sesja gracza non-premium "+ plugin.getOfflinePlayersManager().getEffectiveNameById(uuid) + " została zakończona.");
         }
     }
 
@@ -89,5 +99,22 @@ public class NonPremiumManager {
         loggedIn.remove(uuid);
         playerName.entrySet().removeIf(e -> e.getValue().getFirst().equals(uuid));
         verificationCode.entrySet().removeIf(pair -> pair.getValue().getFirst().equals(uuid));
+    }
+
+    public void sendMessageToUser(@NotNull UUID uuid, @NotNull String message) {
+        JDA jda = plugin.getJda();
+        if (jda == null) return;
+
+        jda.retrieveUserById(NonPremiumUtils.getIdByNonPremiumUuid(uuid)).queue(
+                user -> user.openPrivateChannel().queue(
+                        privateChannel -> privateChannel.sendMessage(message)
+                                .addActionRow(Button.danger("end-session", "Zakończ sesję non-premium"))
+                                .queue(success -> {}, failure -> {})
+                )
+        );
+    }
+
+    public @Nullable Pair<UUID, String> getIdAndNewName(@NotNull String name) {
+        return playerName.get(name);
     }
 }

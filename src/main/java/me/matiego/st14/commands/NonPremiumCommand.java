@@ -7,7 +7,6 @@ import me.matiego.st14.objects.CommandHandler;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.NonPremiumUtils;
 import me.matiego.st14.utils.Utils;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -17,7 +16,6 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
@@ -68,26 +66,15 @@ public class NonPremiumCommand implements CommandHandler.Minecraft, CommandHandl
         if (manager.checkVerificationCode(player, args[0])) {
             manager.logIn(player);
             player.sendMessage(Utils.getComponentByString("&aPomyślnie zalogowano! Miłej gry :)"));
-            sendMessageToUser(uuid, "Gracz non-premium powiązany z twoim kontem Discord pomyślnie zalogował się do gry.");
+            plugin.getNonPremiumManager().sendMessageToUser(uuid, "Gracz non-premium powiązany z twoim kontem Discord pomyślnie zalogował się do gry.");
         } else {
-            player.sendMessage(Utils.getComponentByString("&cZły kod! Pamiętaj, że kod jest ważny tylko 5 minut od wygenerowania."));
-            sendMessageToUser(uuid, "Zarejestrowano nieudaną próbę zalogowania się gracza non-premium powiązanego z twoim kontem Discord.");
+            player.kick(Utils.getComponentByString("&cZły kod! Pamiętaj, że kod jest ważny tylko 5 minut od wygenerowania."));
+            plugin.getNonPremiumManager().sendMessageToUser(uuid, "Zarejestrowano nieudaną próbę zalogowania się gracza non-premium powiązanego z twoim kontem Discord.");
         }
         return 1;
     }
 
-    private void sendMessageToUser(@NotNull UUID uuid, @NotNull String message) {
-        JDA jda = plugin.getJda();
-        if (jda == null) return;
 
-        jda.retrieveUserById(NonPremiumUtils.getIdByNonPremiumUuid(uuid)).queue(
-                user -> user.openPrivateChannel().queue(
-                        privateChannel -> privateChannel.sendMessage(message)
-                                .addActionRow(Button.danger("end-session", "Zakończ sesję non-premium"))
-                                .queue(success -> {}, failure -> {})
-                )
-        );
-    }
 
     @Override
     public @NotNull CommandData getDiscordCommand() {
@@ -147,12 +134,14 @@ public class NonPremiumCommand implements CommandHandler.Minecraft, CommandHandl
 
                 hook.sendMessage(
                         "**Dołącz do gry używając nicku `" + name + "`.**\n" +
-                                "**Następnie zaloguj się używając komendy `/nonpremium " + code + "`.**\n" +
-                                "(Na dołączenie do gry masz 5 minut)\n" +
-                                "\n" +
-                                "W każdej chwili możesz anulować sesję używając komendy `/nonpremium cancel` na Discord.\n" +
-                                "\n" +
-                                "Twój nick w grze zostanie zmieniony na `+" + member.getUser().getName() + "`. Wszystkie informacje o graczu zostaną przypisane do twojego konta Discord."
+                        "**Następnie zaloguj się używając komendy `/nonpremium " + code + "`.**\n" +
+                        "\n" +
+                        "- Na dołączenie do gry masz 5 minut\n" +
+                        "- Na wykonanie komendy w grze masz **10 sekund!**\n" +
+                        "\n" +
+                        "W każdej chwili możesz anulować sesję używając komendy `/nonpremium cancel` na Discord.\n" +
+                        "\n" +
+                        "Twój nick w grze zostanie zmieniony na `+" + member.getUser().getName() + "`. Wszystkie informacje o graczu zostaną przypisane do twojego konta Discord."
                 ).queue();
                 return 3;
             }
