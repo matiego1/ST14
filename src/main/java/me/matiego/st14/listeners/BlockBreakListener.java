@@ -32,13 +32,15 @@ public class BlockBreakListener implements Listener {
 
         Block block = event.getBlock();
         String material = block.getType().name();
-        try {
-            if (material.matches(plugin.getConfig().getString("block-break-warn-regex", "[^\\s\\S]*"))) {
-                Logs.info("Gracz " + player.getName() + " wykopał " + material + " w " + Utils.getWorldName(player.getWorld()));
+        Utils.async(() -> {
+            try {
+                if (material.matches(plugin.getConfig().getString("block-break-warn-regex", "[^\\s\\S]*"))) {
+                    Logs.info("Gracz " + player.getName() + " wykopał " + material + " w " + Utils.getWorldName(player.getWorld()));
+                }
+            } catch (PatternSyntaxException e) {
+                Logs.warning("block-break-warn regex's syntax is invalid", e);
             }
-        } catch (PatternSyntaxException e) {
-            Logs.warning("block-break-warn regex's syntax is invalid", e);
-        }
+        });
 
         if (material.contains("SIGN")) {
             plugin.getDynmapManager().getSignsMarker().deleteMarker(block.getLocation());

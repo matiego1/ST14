@@ -35,9 +35,11 @@ public class InventoryCloseListener implements Listener {
         Inventory inv = event.getInventory();
         List<ItemStack> items = Arrays.asList(inv.getContents());
 
-        if (plugin.getBackpackManager().saveBackpack(player.getUniqueId(), items)) return;
+        Utils.async(() -> {
+            if (plugin.getBackpackManager().saveBackpack(player.getUniqueId(), items)) return;
 
-        player.sendMessage(Utils.getComponentByString("&cNapotkano niespodziewany błąd przy zapisywaniu twojego plecaka! Zgłoś się do administratora, aby odzyskać swoje przedmioty!"));
-        Logs.warning("Gracz " + player.getName() + " (" + player.getUniqueId() + ") stracił przedmioty z plecaka! Muszą być przywrócone ręcznie. Base64: `" + GUI.itemsToString(items) + "`");
+            Logs.warning("Gracz " + player.getName() + " (" + player.getUniqueId() + ") stracił przedmioty z plecaka! Muszą być przywrócone ręcznie. Base64: `" + GUI.itemsToString(items) + "`");
+            player.sendMessage(Utils.getComponentByString("&cNapotkano niespodziewany błąd przy zapisywaniu twojego plecaka! Zgłoś się do administratora, aby odzyskać swoje przedmioty!"));
+        });
     }
 }

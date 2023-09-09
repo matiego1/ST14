@@ -201,7 +201,7 @@ public class TpaCommand implements CommandHandler.Minecraft {
                     case SUCCESS -> {
                         player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + requester.getName() + " przeteleportował się do ciebie."));
                         requester.sendMessage(Utils.getComponentByString(Prefix.TPA + "Przeteleportowałeś się do gracza " + player.getName() + " za " + economy.format(cost)));
-                        Logs.info("Gracz " + player.getName() + " przeteleportował do gracza " + requester.getName() + ".");
+                        Logs.info("Gracz " + requester.getName() + " przeteleportował do gracza " + player.getName() + ".");
                     }
                     case PLAYER_MOVED -> {
                         player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + requester.getName() + " nie może się do ciebie przeteleportować."));

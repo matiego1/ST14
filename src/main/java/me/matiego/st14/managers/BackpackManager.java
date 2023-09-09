@@ -1,9 +1,9 @@
 package me.matiego.st14.managers;
 
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.objects.FixedSizeMap;
 import me.matiego.st14.objects.GUI;
-import me.matiego.st14.Logs;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

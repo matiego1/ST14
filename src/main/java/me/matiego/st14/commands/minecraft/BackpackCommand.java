@@ -1,9 +1,9 @@
 package me.matiego.st14.commands.minecraft;
 
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.objects.CommandHandler;
 import me.matiego.st14.objects.GUI;
-import me.matiego.st14.Logs;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
@@ -44,22 +44,24 @@ public class BackpackCommand implements CommandHandler.Minecraft, Listener {
             return 3;
         }
 
-        List<ItemStack> items = plugin.getBackpackManager().loadBackpack(player.getUniqueId());
-        if (items == null) {
-            player.sendMessage(Utils.getComponentByString("&cNapotkano niespodziewany błąd. Spróbuj później."));
-            return 3;
-        }
+        Utils.async(() -> {
+            List<ItemStack> items = plugin.getBackpackManager().loadBackpack(player.getUniqueId());
+            if (items == null) {
+                player.sendMessage(Utils.getComponentByString("&cNapotkano niespodziewany błąd. Spróbuj później."));
+                return;
+            }
 
-        Inventory inv = GUI.createInventory(9, "&3Twój plecak");
-        int slot = 0;
-        for (ItemStack item : items) {
-            inv.setItem(slot, item);
+            Inventory inv = GUI.createInventory(9, "&3Twój plecak");
+            int slot = 0;
+            for (ItemStack item : items) {
+                inv.setItem(slot, item);
 
-            slot++;
-            if (slot >= 9) break;
-        }
+                slot++;
+                if (slot >= 9) break;
+            }
 
-        player.openInventory(inv);
+            Utils.sync(() -> player.openInventory(inv));
+        });
         return 8;
     }
 }
