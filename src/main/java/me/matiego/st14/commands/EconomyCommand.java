@@ -182,7 +182,6 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                     .text("Wpisz tutaj...")
                     .itemLeft(GUI.createGuiItem(Material.PAPER, "&9Wprowadź wartość...", "&bKliknij &9ESC&b, aby wyjść", "&bKliknij przedmiot po prawej, aby zaakceptować"))
                     .plugin(plugin)
-                    .interactableSlots(AnvilGUI.Slot.OUTPUT)
                     .onClick((anvilSlot, state) -> {
                         if (anvilSlot != AnvilGUI.Slot.OUTPUT) return Collections.emptyList();
 
@@ -212,7 +211,6 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                     .text("Wpisz tutaj...")
                     .itemLeft(GUI.createGuiItem(Material.PAPER, "&9Wprowadź wartość...", "&bKliknij &9ESC&b, aby wyjść", "&bKliknij przedmiot po prawej, aby zaakceptować"))
                     .plugin(plugin)
-                    .interactableSlots(AnvilGUI.Slot.OUTPUT)
                     .onClick((anvilSlot, state) -> {
                         if (anvilSlot != AnvilGUI.Slot.OUTPUT) return Collections.emptyList();
 

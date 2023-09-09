@@ -142,7 +142,6 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
                     .text("Podaj nick...")
                     .itemLeft(GUI.createGuiItem(Material.PAPER, "&8Wprowadź nick gracza...", "&7Kliknij &8ESC&7, aby wyjść", "&7Kliknij przedmiot po prawej, aby zaakceptować"))
                     .plugin(plugin)
-                    .interactableSlots(AnvilGUI.Slot.OUTPUT)
                     .onClick((anvilSlot, state) -> {
                         if (anvilSlot != AnvilGUI.Slot.OUTPUT) return Collections.emptyList();
 
