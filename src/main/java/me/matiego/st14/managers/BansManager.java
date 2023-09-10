@@ -45,7 +45,7 @@ public class BansManager {
         if (ban.isActive()) {
             Player player = Bukkit.getPlayer(ban.getUuid());
             if (player != null) {
-                player.kick(Utils.getComponentByString(getKickMessage(ban)));
+                Utils.sync(() -> player.kick(Utils.getComponentByString(getKickMessage(ban))));
             }
         }
         try (Connection conn = plugin.getMySQLConnection();

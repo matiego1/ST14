@@ -6,6 +6,7 @@ author: Matiego
 description: A plugin for ST14 server
 depend: [Vault, Graves]
 softdepend: [Counting, dynmap, CrashClaim]
+loadbefore: [Multiverse-Core]
 load: STARTUP
 commands:
   st14:
