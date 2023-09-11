@@ -217,7 +217,7 @@ public class RankingsManager {
 
     public static boolean createTable() {
         try (Connection conn = Main.getInstance().getMySQLConnection();
-             PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_ranking_messages(msg BIGINT NOT NULL, chn BIGINT NOT NULL, type VARCHAR(30) NOT NULL, CONSTRAINT st14_ranking_messages_const UNIQUE (msg, chn)))")) {
+             PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_ranking_messages(msg BIGINT NOT NULL, chn BIGINT NOT NULL, type VARCHAR(30) NOT NULL, CONSTRAINT st14_ranking_messages_const UNIQUE (msg, chn))")) {
             stmt.execute();
             return true;
         } catch (SQLException e) {
