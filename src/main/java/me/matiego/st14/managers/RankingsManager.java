@@ -90,10 +90,7 @@ public class RankingsManager {
 
             for (Type type : Type.values()) {
                 EmbedBuilder eb = getEmbed(type, 50);
-                if (eb == null) {
-                    Logs.warning("Napotkano niespodziewany błąd przy aktualizowaniu wiadomości z rankingami " + type.getRankingName());
-                    continue;
-                }
+                if (eb == null) continue;
                 MessageEmbed embed = eb.build();
 
                 for (Pair<Long, Long> data : getRankingMessagesByType(type)) {
