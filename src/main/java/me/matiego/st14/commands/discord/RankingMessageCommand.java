@@ -3,6 +3,7 @@ package me.matiego.st14.commands.discord;
 import me.matiego.st14.Main;
 import me.matiego.st14.managers.RankingsManager;
 import me.matiego.st14.objects.CommandHandler;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
@@ -56,9 +57,13 @@ public class RankingMessageCommand implements CommandHandler.Discord {
             return 0;
         }
 
-        channel.sendMessage("Wczytywanie rankingu " + type.getRankingName() + "...").queue(
+        EmbedBuilder eb = plugin.getRankingsManager().getEmbed(type, 50);
+        if (eb == null) {
+            eb = new EmbedBuilder();
+            eb.setDescription("Wczytywanie rankingu...");
+        }
+        channel.sendMessageEmbeds(eb.build()).queue(
                 message -> {
-                    //dodaj do bazy danych
                     if (plugin.getRankingsManager().addRankingMessage(type, message.getIdLong(), channel.getIdLong())) {
                         hook.sendMessage("Pomyślnie wysłano wiadomość z rankingiem.").queue();
                         return;
