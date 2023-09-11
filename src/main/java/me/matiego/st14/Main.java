@@ -154,7 +154,7 @@ public final class Main extends JavaPlugin implements Listener {
         nonPremiumManager = new NonPremiumManager(this);
         offlinePlayersManager = new OfflinePlayersManager(this);
         premiumManager = new PremiumManager(this);
-        rankingsManager = new RankingsManager();
+        rankingsManager = new RankingsManager(this);
         rewardsManager = new RewardsManager(this);
         tabListManager = new TabListManager(this);
         teleportsManager = new TeleportsManager(this);
@@ -166,7 +166,7 @@ public final class Main extends JavaPlugin implements Listener {
         //Register listeners
         entityDamageByEntityListener = new EntityDamageByEntityListener(this);
         graveCreateListener = new GraveCreateListener();
-        playerBedEnterListener = new PlayerBedEnterListener();
+        playerBedEnterListener = new PlayerBedEnterListener(this);
         playerMoveListener = new PlayerMoveListener(this);
         playerQuitListener = new PlayerQuitListener(this);
         listenersManager.registerListeners(
@@ -320,6 +320,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new FeedbackCommand(),
                 new ListCommand(this),
                 new PingCommand(),
+                new RankingMessageCommand(this),
                 new VerifyCommand(this)
         ));
         listenersManager.registerListener(commandManager);
@@ -334,6 +335,7 @@ public final class Main extends JavaPlugin implements Listener {
         getAntyLogoutManager().start();
         getChatMinecraftManager().unblock();
         didYouKnowManager.start();
+        getRankingsManager().start();
         Utils.registerRecipes();
         Utils.kickPlayersAtMidnightTask();
 
@@ -380,6 +382,7 @@ public final class Main extends JavaPlugin implements Listener {
         if (economyManager != null) economyManager.setEnabled(false);
         if (chatReportsManager != null) chatReportsManager.stop();
         if (didYouKnowManager != null) didYouKnowManager.stop();
+        if (rankingsManager != null) rankingsManager.stop();
         if (rewardsManager != null) {
             RewardForPlaying rewardForPlaying = rewardsManager.getRewardForPlaying();
             if (rewardForPlaying != null) rewardForPlaying.stop();

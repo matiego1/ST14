@@ -68,7 +68,7 @@ public class BackpackManager {
             stmt.execute();
             return true;
         } catch (SQLException e) {
-            Logs.error("An error occurred while creating the database table \"st14_offline_players\"", e);
+            Logs.error("An error occurred while creating the database table \"st14_backpack\"", e);
         }
         return false;
     }

@@ -15,6 +15,7 @@ public enum MiniGameType {
     SPLEEF(SpleefMiniGame.class, "Spleef", Material.STONE_SHOVEL, 15 * 60),
     RED_GREEN(RedGreenMiniGame.class, "Czerwone-Zielone", Material.BOW, 15 * 60),
     MAZE(MazeMiniGame.class, "Labirynt", Material.BRICKS, 15 * 60),
+    PVP(null, "PvP", Material.STICK, 15 * 60),
     SKYWARS(SkywarsMiniGame.class, "Skywars", Material.ENDER_EYE, 20 * 60),
     PARKOUR(ParkourMiniGame.class, "Parkour", Material.POTION, 25 * 60),
     BLOCKED_IN_COMBAT(null, "Blocked in combat", Material.STONE, 30 * 60),

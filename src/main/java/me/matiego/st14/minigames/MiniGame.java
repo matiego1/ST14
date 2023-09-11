@@ -4,11 +4,12 @@ import com.sk89q.worldedit.math.BlockVector3;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.Synchronized;
-import me.matiego.st14.objects.BossBarTimer;
-import me.matiego.st14.Main;
 import me.matiego.st14.Logs;
+import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
+import me.matiego.st14.objects.BossBarTimer;
 import me.matiego.st14.utils.Utils;
+import me.matiego.st14.utils.WorldEditUtils;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title;
 import org.bukkit.*;
@@ -185,7 +186,7 @@ public abstract class MiniGame implements Listener {
     protected void pasteMap(@NotNull World world, @NotNull File file) throws Exception {
         if (!file.exists()) throw new NullPointerException("map file does not exist");
 
-        MiniGamesUtils.pasteSchematic(
+        WorldEditUtils.pasteSchematic(
                 world,
                 BlockVector3.at(baseLocation.getBlockX(), baseLocation.getBlockY(), baseLocation.getBlockZ()),
                 file

@@ -8,7 +8,6 @@ import me.matiego.st14.objects.CommandHandler;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.*;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -19,8 +18,6 @@ import org.bukkit.command.PluginCommand;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.awt.*;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -164,42 +161,13 @@ public class RankingCommand implements CommandHandler.Minecraft, CommandHandler.
                 return;
             }
 
-            EmbedBuilder eb = new EmbedBuilder();
-            eb.setTitle("**Ranking " + type.getRankingName() + "**");
-            eb.setTimestamp(Instant.now());
-            eb.setFooter(DiscordUtils.getName(event.getUser(), event.getMember()), DiscordUtils.getAvatar(event.getUser(), event.getMember()));
-            eb.setColor(Color.YELLOW);
-
-            List<RankingsManager.Data> top = type.getTop(10);
-            if (top.isEmpty()) {
+            EmbedBuilder eb = plugin.getRankingsManager().getEmbed(type, 10);
+            if (eb == null) {
                 hook.sendMessage("Ranking jest pusty!").queue();
                 return;
             }
 
-            StringBuilder builder = new StringBuilder();
-            for (RankingsManager.Data data : top) {
-                String place = switch (data.getRank()) {
-                    case 1 -> ":first_place:";
-                    case 2 -> ":second_place:";
-                    case 3 -> ":third_place:";
-                    default -> "**" + data.getRank() + ".**";
-                };
-
-                builder
-                        .append(place)
-                        .append(" ")
-                        .append(plugin.getOfflinePlayersManager().getEffectiveNameById(data.getUuid()))
-                        .append(" - `")
-                        .append(type.formatScore(data.getScore()))
-                        .append("`\n");
-            }
-
-            String description = DiscordUtils.checkLength(builder.toString(), MessageEmbed.DESCRIPTION_MAX_LENGTH);
-            if (description.endsWith("...")) {
-                description = description.substring(0, description.lastIndexOf("\n") + 1) + "...";
-            }
-            eb.setDescription(description);
-
+            eb.setFooter(DiscordUtils.getName(event.getUser(), event.getMember()), DiscordUtils.getAvatar(event.getUser(), event.getMember()));
             hook.sendMessageEmbeds(eb.build()).queue();
         });
         return 5;

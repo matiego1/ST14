@@ -1,17 +1,18 @@
 package me.matiego.st14.minigames.handlers;
 
 import com.sk89q.worldedit.math.BlockVector3;
-import me.matiego.st14.objects.BossBarTimer;
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGameException;
 import me.matiego.st14.minigames.MiniGamesUtils;
-import me.matiego.st14.Logs;
-import me.matiego.st14.objects.Pair;
+import me.matiego.st14.objects.BossBarTimer;
 import me.matiego.st14.utils.Utils;
+import me.matiego.st14.utils.WorldEditUtils;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +32,6 @@ public class SkywarsMiniGame extends MiniGame {
     private final String CONFIG_PATH = "minigames.skywars.";
 
     private List<Location> spawns = null;
-    private List<Pair<Location, ChestType>> chests = null;
     private String mapConfigPath = "minigames.skywars.maps";
     private int mapRadius = 100;
     private int prepareTime = 60;
@@ -73,7 +73,6 @@ public class SkywarsMiniGame extends MiniGame {
         Utils.async(() -> {
             try {
                 pasteMap(world);
-                generateChests();
             } catch (Exception e) {
                 Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy generowaniu areny. Minigra anulowana.", "&dStart anulowany", ""));
                 Logs.error("An error occurred while pasting a map for the minigame", e);
@@ -120,9 +119,6 @@ public class SkywarsMiniGame extends MiniGame {
         shrinkBorderBeforeEnd = Math.max(0, plugin.getConfig().getInt("shrink-border-before-end", 180));
         if (totalMiniGameTime < prepareTime + shrinkBorderBeforeEnd) throw new MiniGameException("incorrect game times");
 
-        loadChests();
-        if (chests == null) throw new MiniGameException("cannot load chests");
-
         loadSpawns();
         if (spawns == null || spawns.isEmpty()) throw new MiniGameException("cannot load spawns");
     }
@@ -131,15 +127,6 @@ public class SkywarsMiniGame extends MiniGame {
         spawns = plugin.getConfig().getStringList(mapConfigPath + "spawns").stream()
                 .map(s -> MiniGamesUtils.getRelativeLocationFromString(baseLocation, s))
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-    }
-
-    private void loadChests() {
-        chests = plugin.getConfig().getStringList(mapConfigPath + "chests").stream()
-                .map(ChestType::parseConfigValue)
-                .filter(Objects::nonNull)
-                .map(p -> new Pair<>(MiniGamesUtils.getRelativeLocationFromString(baseLocation, p.getFirst()), p.getSecond()))
-                .filter(p -> p.getFirst() != null)
                 .collect(Collectors.toList());
     }
 
@@ -168,10 +155,14 @@ public class SkywarsMiniGame extends MiniGame {
         File file = getRandomMapFile();
         if (file == null) throw new NullPointerException("map file is null");
 
-        MiniGamesUtils.pasteSchematic(
+        WorldEditUtils.pasteSchematicAndGenerateChests(
                 world,
                 BlockVector3.at(baseLocation.getBlockX(), baseLocation.getBlockY(), baseLocation.getBlockZ()),
-                file
+                file,
+                chestType -> {
+                    ChestType type = ChestType.getTypeByName(chestType);
+                    return type == null ? null : type.getRandomItems();
+                }
         );
     }
 
@@ -192,10 +183,6 @@ public class SkywarsMiniGame extends MiniGame {
             }
         }
         return null;
-    }
-
-    private void generateChests() {
-        //TODO: generate chests
     }
 
     @Override
@@ -314,13 +301,18 @@ public class SkywarsMiniGame extends MiniGame {
         RARE,
         EPIC;
 
-        public static @Nullable Pair<String, ChestType> parseConfigValue(@NotNull String value) {
+        public static @Nullable ChestType getTypeByName(@NotNull String name) {
             for (ChestType type : values()) {
-                if (value.toUpperCase().endsWith(";" + type)) {
-                    return new Pair<>(value.substring(0, value.length() - type.toString().length() - 1), type);
+                if (type.toString().equalsIgnoreCase(name)) {
+                    return type;
                 }
             }
             return null;
+        }
+
+        public @NotNull List<ItemStack> getRandomItems() {
+            //TODO: getRandomItems
+            return new ArrayList<>();
         }
     }
 }
