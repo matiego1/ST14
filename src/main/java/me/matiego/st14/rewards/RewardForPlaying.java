@@ -1,12 +1,13 @@
 package me.matiego.st14.rewards;
 
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.managers.EconomyManager;
 import me.matiego.st14.managers.RankingsManager;
 import me.matiego.st14.managers.RewardsManager;
-import me.matiego.st14.objects.Reward;
 import me.matiego.st14.objects.GameTime;
 import me.matiego.st14.objects.PlayerTime;
+import me.matiego.st14.objects.Reward;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -66,7 +67,7 @@ public class RewardForPlaying extends Reward {
                         cache.put(uuid, data);
                         return;
                     }
-                    System.out.println("[DEBUG] Gracz " + player.getName() + " dostanie pieniądze za granie, jest " + (rankingData == null ? "null" : rankingData.getRank()) + " w rankingu czasu");
+                    Logs.info("[DEBUG] Gracz " + player.getName() + " dostanie pieniądze za granie, jest " + (rankingData == null ? "null" : rankingData.getRank()) + " w rankingu ekonomii");
 
                     limit += amount;
                     if (limit >= max) {
