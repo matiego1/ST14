@@ -54,18 +54,19 @@ public class RewardForPlaying extends Reward {
                     double amount = plugin.getConfig().getDouble("reward-for-playing.amount", 5) * difference;
 
                     double limit = data.getLimit();
-                    final double max = getMax();
+                    final double max = Math.max(0, Utils.round(plugin.getConfig().getDouble("reward-for-playing.max", 100), 2));
                     if (limit >= max) {
                         sendActionBar(player, "&cUzbierałeś dzienny limit pieniędzy za granie");
                         cache.put(uuid, data);
                         return;
                     }
 
-                    RankingsManager.Data rankingData = RankingsManager.Type.TIME.get(uuid);
+                    RankingsManager.Data rankingData = RankingsManager.Type.ECONOMY.get(uuid);
                     if (rankingData != null && rankingData.getRank() == 1) {
                         cache.put(uuid, data);
                         return;
                     }
+                    System.out.println("[DEBUG] Gracz " + player.getName() + " dostanie pieniądze za granie, jest " + (rankingData == null ? "null" : rankingData.getRank()) + " w rankingu czasu");
 
                     limit += amount;
                     if (limit >= max) {
@@ -81,11 +82,6 @@ public class RewardForPlaying extends Reward {
                 });
             }
         }, 20, 100);
-    }
-
-    private double getMax() {
-        double max = Utils.round(plugin.getConfig().getDouble("reward-for-playing.max"), 2);
-        return max <= 0 ? 100 : max;
     }
 
     private void sendActionBar(@NotNull Player player, @NotNull String msg) {
