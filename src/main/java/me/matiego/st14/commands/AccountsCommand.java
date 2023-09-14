@@ -1,13 +1,14 @@
 package me.matiego.st14.commands;
 
 import me.matiego.st14.Logs;
+import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.AccountsManager;
-import me.matiego.st14.Main;
 import me.matiego.st14.objects.CommandHandler;
 import me.matiego.st14.objects.GUI;
 import me.matiego.st14.objects.Pair;
-import me.matiego.st14.utils.*;
+import me.matiego.st14.utils.DiscordUtils;
+import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -24,6 +25,7 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
@@ -104,7 +106,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                             .queue(
                                     success -> {},
                                     failure -> {
-                                        if (failure instanceof ErrorResponseException e && e.getErrorCode() == 50007) {
+                                        if (failure instanceof ErrorResponseException e && e.getErrorResponse() == ErrorResponse.CANNOT_SEND_TO_USER) {
                                             Logs.warning("User " + DiscordUtils.getAsTag(user) + " doesn't allow private messages.");
                                         } else {
                                             Logs.error("An error occurred while sending a private message.", failure);

@@ -60,7 +60,7 @@ public class RankingMessageCommand implements CommandHandler.Discord {
         EmbedBuilder eb = plugin.getRankingsManager().getEmbed(type, 50);
         if (eb == null) {
             eb = new EmbedBuilder();
-            eb.setDescription("Wczytywanie rankingu...");
+            eb.setDescription("Wczytywanie rankingu " + type.getRankingName() + "...");
         }
         channel.sendMessageEmbeds(eb.build()).queue(
                 message -> {

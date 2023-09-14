@@ -13,6 +13,8 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
@@ -103,11 +105,18 @@ public class RankingsManager {
                         chn.retrieveMessageById(data.getFirst()).queue(
                                 message -> {
                                     List<MessageEmbed> embeds = message.getEmbeds();
-                                    if (embeds.isEmpty() || !String.valueOf(embeds.get(0).getDescription()).equalsIgnoreCase(embed.getDescription())) {
+                                    String description = String.valueOf(embed.getDescription());
+                                    if (embeds.isEmpty() || !String.valueOf(embeds.get(0).getDescription()).equalsIgnoreCase(description.substring(0, description.length() - 1))) {
                                         message.editMessageEmbeds(eb.build()).queue();
                                     }
                                 },
-                                failure -> {}
+                                failure -> {
+                                    if (failure instanceof ErrorResponseException e && e.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
+                                        removeRankingMessage(type, data.getFirst(), data.getSecond());
+                                    } else {
+                                        Logs.error("An error occurred while sending a private message.", failure);
+                                    }
+                                }
                         );
                     } catch (Exception ignored) {}
                 }
