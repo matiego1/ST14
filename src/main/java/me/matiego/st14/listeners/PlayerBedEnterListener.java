@@ -28,18 +28,21 @@ public class PlayerBedEnterListener implements Listener {
         if (event.getBedEnterResult() != PlayerBedEnterEvent.BedEnterResult.OK) return;
 
         Player player = event.getPlayer();
-        UUID world = event.getBed().getWorld().getUID();
+        World world = event.getBed().getWorld();
 
-        sleepingPlayers.put(player.getUniqueId(), world);
-
-        double amount = Math.max(0, plugin.getConfig().getDouble("bed-enter-cost", 5));
-        if (amount == 0) return;
+        double amount = Math.max(0, plugin.getConfig().getDouble("bed-enter.cost", 5));
+        if (amount == 0 || !plugin.getConfig().getStringList("bed-enter.worlds").contains(world.getName())) {
+            sleepingPlayers.put(player.getUniqueId(), world.getUID());
+            return;
+        }
 
         EconomyManager economy = plugin.getEconomyManager();
         EconomyResponse response = economy.withdrawPlayer(player, amount);
         if (response.transactionSuccess()) {
             player.sendMessage(Utils.getComponentByString("&aPobrano " + economy.format(amount) + " za położenie się spać."));
+            sleepingPlayers.put(player.getUniqueId(), world.getUID());
         } else {
+            event.setCancelled(true);
             player.sendMessage(Utils.getComponentByString("&cAby położyć się spać potrzebujesz " + economy.format(amount) + ", a masz tylko " + economy.format(response.balance) + "."));
         }
     }
