@@ -53,6 +53,7 @@ public class WorldEditUtils {
                             if (blockNbtData == null) continue;
 
                             if (!blockNbtData.getString("Text1").contains("[chest]")) continue;
+                            //The chest type must start and end with a colon
                             chests.put(vector.add(x, y, z), blockNbtData.getString("Text2").split(":")[1]);
                         }
                     }

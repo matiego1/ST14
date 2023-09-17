@@ -153,7 +153,13 @@ public class HomeCommand implements CommandHandler.Minecraft {
             return;
         }
 
-        double distance = player.getLocation().distance(location);
+        double distance;
+        try {
+            distance = player.getLocation().distance(location);
+        } catch (IllegalArgumentException e) {
+            player.sendMessage(Utils.getComponentByString("&cTwój dom jest w innym świecie!"));
+            return;
+        }
 
         if (distance <= plugin.getConfig().getInt("home.min", 0)) {
             player.sendMessage(Utils.getComponentByString("&cJesteś za blisko twojego domu!"));

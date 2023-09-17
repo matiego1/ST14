@@ -22,7 +22,9 @@ public class PluginMessageReceivedListener implements PluginMessageListener {
 
         if (plugin.getConfig().getStringList("brands.allowed").stream()
                 .map(String::toLowerCase)
-                .anyMatch(b -> b.equals(brand))) return;
+                .anyMatch(b -> b.equals(brand.toLowerCase()))) return;
+
+        if (plugin.getConfig().getStringList("brands.bypass").contains(player.getUniqueId().toString())) return;
 
         player.kick(Utils.getComponentByString(
                 "&cAby grać na tym serwerze musisz używać optifine!\n" +

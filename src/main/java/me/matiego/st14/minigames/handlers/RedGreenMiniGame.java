@@ -194,7 +194,7 @@ public class RedGreenMiniGame extends MiniGame {
         if (canMove) return;
         if (isInArea(player, "lobby-area")) return;
 
-        player.setHealth(0);
+        player.damage(plugin.getConfig().getInt(configPath + "damage", 5));
     }
 
     private boolean isInArea(@NotNull Player player, @NotNull String area) {
