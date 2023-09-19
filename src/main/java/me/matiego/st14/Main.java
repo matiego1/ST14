@@ -74,7 +74,7 @@ public final class Main extends JavaPlugin implements Listener {
 
     @Getter private EntityDamageByEntityListener entityDamageByEntityListener;
     @Getter private GraveCreateListener graveCreateListener;
-    @Getter private PlayerBedEnterListener playerBedEnterListener;
+    @Getter private PlayerDeepSleepListener playerDeepSleepListener;
     @Getter private PlayerMoveListener playerMoveListener;
     @Getter private PlayerQuitListener playerQuitListener;
 
@@ -166,7 +166,7 @@ public final class Main extends JavaPlugin implements Listener {
         //Register listeners
         entityDamageByEntityListener = new EntityDamageByEntityListener(this);
         graveCreateListener = new GraveCreateListener();
-        playerBedEnterListener = new PlayerBedEnterListener(this);
+        playerDeepSleepListener = new PlayerDeepSleepListener(this);
         playerMoveListener = new PlayerMoveListener(this);
         playerQuitListener = new PlayerQuitListener(this);
         listenersManager.registerListeners(
@@ -192,7 +192,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new InventoryOpenListener(this),
                 new PlayerAdvancementCriterionGrantListener(),
                 new PlayerAdvancementDoneListener(),
-                playerBedEnterListener,
+                playerDeepSleepListener,
                 new PlayerBedLeaveListener(this),
                 new PlayerBucketEmptyListener(),
                 new PlayerChangedWorldListener(this),

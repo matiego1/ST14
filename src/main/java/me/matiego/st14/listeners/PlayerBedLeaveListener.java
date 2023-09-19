@@ -17,6 +17,6 @@ public class PlayerBedLeaveListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerBedLeave(@NotNull PlayerBedLeaveEvent event) {
         World world = event.getBed().getWorld();
-        plugin.getPlayerBedEnterListener().clearPlayerDataAndBroadcastMessage(event.getPlayer(), world, world.getTime() < 3);
+        plugin.getPlayerDeepSleepListener().clearPlayerDataAndBroadcastMessage(event.getPlayer(), world, world.getTime() < 3);
     }
 }
