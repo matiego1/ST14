@@ -52,7 +52,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
 
     @Override
     public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
-        if (!(sender instanceof Player player) || (player.isOp() && args.length > 0)) {
+        if (!(sender instanceof Player player) || (args.length > 0 && (player.isOp() || player.hasPermission("st14.economy.admin")))) {
             if (args.length < 2) {
                 sender.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Poprawne użycie: /economy [add|remove|set|get] <gracz> <ilość*>"));
                 return 0;
