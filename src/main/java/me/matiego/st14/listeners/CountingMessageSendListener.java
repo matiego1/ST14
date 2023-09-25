@@ -42,7 +42,7 @@ public class CountingMessageSendListener implements Listener {
 
         double amount = Utils.round(plugin.getConfig().getDouble("counting-rewards.types." + channel.getType().name().toLowerCase()), 2);
         if (isOldMessage(event.getPreviousMessageId())) {
-            amount = Utils.round(amount + plugin.getConfig().getDouble("counting-rewards.old-message-bonus"), 2);
+            amount = Utils.round(amount + plugin.getConfig().getDouble("counting-rewards.old-message.bonus"), 2);
         }
         if (amount <= 0) return;
 
@@ -71,6 +71,6 @@ public class CountingMessageSendListener implements Listener {
     private boolean isOldMessage(@Nullable Long id) {
         if (id == null) return false;
         long different = Calendar.getInstance(TimeZone.getTimeZone("GMT")).getTimeInMillis() - ((id >>> 22) + 1420070400000L);
-        return different >= 24L * 3600L * 1000L;
+        return different >= Math.max(0, plugin.getConfig().getInt("counting-rewards.old-message.days",1)) * 3600L * 1000L;
     }
 }

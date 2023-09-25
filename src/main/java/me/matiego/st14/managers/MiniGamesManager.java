@@ -147,10 +147,22 @@ public class MiniGamesManager {
         if (mode) {
             onPlayerQuit0(player);
             editors.add(player.getUniqueId());
-            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Jesteś w trybie edytora."));
+            Utils.broadcastMessage(
+                    player,
+                    Prefix.MINI_GAMES,
+                    "Jesteś w trybie edytora.",
+                    "Gracz " + player.getName() + " wszedł w tryb edytora w świecie z minigrami.",
+                    "Gracz **" + player.getName() + "** wszedł w tryb edytora w świecie z minigrami."
+            );
         } else {
             editors.remove(player.getUniqueId());
-            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Już nie jesteś w trybie edytora."));
+            Utils.broadcastMessage(
+                    player,
+                    Prefix.MINI_GAMES,
+                    "Już nie jesteś w trybie edytora.",
+                    "Gracz " + player.getName() + " wyszedł z trybu edytora w świecie z minigrami.",
+                    "Gracz **" + player.getName() + "** wyszedł z trybu edytora w świecie z minigrami."
+            );
             onPlayerJoin0(player);
         }
         changePermissions(player);
