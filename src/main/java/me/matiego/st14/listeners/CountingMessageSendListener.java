@@ -71,6 +71,6 @@ public class CountingMessageSendListener implements Listener {
     private boolean isOldMessage(@Nullable Long id) {
         if (id == null) return false;
         long different = Calendar.getInstance(TimeZone.getTimeZone("GMT")).getTimeInMillis() - ((id >>> 22) + 1420070400000L);
-        return different >= Math.max(0, plugin.getConfig().getInt("counting-rewards.old-message.days",1)) * 3600L * 1000L;
+        return different >= Math.max(0, plugin.getConfig().getInt("counting-rewards.old-message.days",1)) * 24L * 3600L * 1000L;
     }
 }
