@@ -23,7 +23,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Range;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -47,16 +46,6 @@ public class SkywarsMiniGame extends MiniGame {
     @Override
     public @NotNull String getMiniGameName() {
         return "Skywars";
-    }
-
-    @Override
-    public @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount() {
-        return 2;
-    }
-
-    @Override
-    public @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount() {
-        return 15;
     }
 
     @Override
@@ -131,7 +120,7 @@ public class SkywarsMiniGame extends MiniGame {
     }
 
     private void setUpGameRules(@NotNull World world) {
-        world.setPVP(true);
+        world.setPVP(false);
         world.setGameRule(GameRule.KEEP_INVENTORY, false);
         world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
         world.setGameRule(GameRule.DO_ENTITY_DROPS, true);

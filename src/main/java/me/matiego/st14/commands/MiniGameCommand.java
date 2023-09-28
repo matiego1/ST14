@@ -195,7 +195,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
 
     @Override
     public @NotNull CommandData getDiscordCommand() {
-        return Commands.slash("stop-minigame", "zatrzymaj aktywną minigrę")
+        return Commands.slash("minigame-stop", "zatrzymaj aktywną minigrę")
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
                 .setGuildOnly(true);
     }

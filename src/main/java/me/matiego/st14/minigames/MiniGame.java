@@ -79,11 +79,14 @@ public abstract class MiniGame implements Listener {
         mapConfigPath = mapsListConfigPath + "." + maps.get(0) + ".";
     }
 
+    public @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount() {
+        return 2;
+    }
+    public @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount() {
+        return 15;
+    }
+
     public abstract @NotNull String getMiniGameName();
-    @SuppressWarnings("SameReturnValue")
-    public abstract @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount();
-    @SuppressWarnings("SameReturnValue")
-    public abstract @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount();
     public abstract @NotNull GameMode getSpectatorGameMode();
 
     //</editor-fold>
