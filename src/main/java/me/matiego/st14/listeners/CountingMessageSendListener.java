@@ -4,7 +4,9 @@ import me.matiego.counting.ChannelData;
 import me.matiego.counting.utils.CountingMessageSendEvent;
 import me.matiego.st14.Main;
 import me.matiego.st14.managers.RewardsManager;
+import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Utils;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.UserSnowflake;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
@@ -59,9 +61,15 @@ public class CountingMessageSendListener implements Listener {
         data.setLimit(limit);
         if (!plugin.getRewardsManager().getRewardForCounting().set(uuid, data)) return;
 
-        if (plugin.getEconomyManager().depositPlayer(Bukkit.getOfflinePlayer(uuid), amount).transactionSuccess()) {
-            event.setDisplayName("[" + plugin.getEconomyManager().format(amount) + "] " + event.getDisplayName());
-        }
+        event.setDisplayName("[" + plugin.getEconomyManager().format(amount) + "] " + event.getDisplayName());
+        final double finalAmount = amount;
+        event.setOnSuccess(() -> Utils.async(() -> {
+            if (!plugin.getEconomyManager().depositPlayer(Bukkit.getOfflinePlayer(uuid), finalAmount).transactionSuccess()) {
+                JDA jda = plugin.getJda();
+                if (jda == null) return;
+                jda.retrieveUserById(user).queue(u -> DiscordUtils.sendPrivateMessage(u, "Nie dostałeś pieniędzy za liczenie z powodu niespodziewanego błędu. Przepraszamy."), failure -> {});
+            }
+        }));
     }
 
     private double getMax() {

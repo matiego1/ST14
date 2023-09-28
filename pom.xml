@@ -11,7 +11,7 @@
 
     <name>ST14</name>
 
-    <description>A plugin for ST14 server</description>
+    <description>A plugin for the ST14 server</description>
     <properties>
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -266,7 +266,7 @@
         <dependency>
             <groupId>com.github.matiego1</groupId>
             <artifactId>CountingBot</artifactId>
-            <version>7c801dc</version>
+            <version>e12c2d8</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.bukkit</groupId>
