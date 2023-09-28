@@ -1,6 +1,7 @@
 package me.matiego.st14.utils;
 
 import com.sk89q.jnbt.CompoundTag;
+import com.sk89q.jnbt.ListTag;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
@@ -12,53 +13,22 @@ import com.sk89q.worldedit.function.operation.Operation;
 import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.session.ClipboardHolder;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import com.sk89q.worldedit.world.block.BaseBlock;
 import org.bukkit.World;
-import org.bukkit.block.Container;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 public class WorldEditUtils {
-    public static void pasteSchematic(@NotNull World world, @NotNull BlockVector3 vector, @NotNull File file) throws Exception {
-        pasteSchematicAndGenerateChests(world, vector, file, null);
-    }
 
-    public static void pasteSchematicAndGenerateChests(@NotNull World world, @NotNull BlockVector3 vector, @NotNull File file, @Nullable Function<String, List<ItemStack>> itemsByChestType) throws Exception {
+    public static @NotNull Clipboard pasteSchematic(@NotNull World world, @NotNull BlockVector3 vector, @NotNull File file) throws Exception {
         ClipboardFormat format = ClipboardFormats.findByFile(file);
         if (format == null) throw new IllegalStateException("cannot find clipboard format by file");
 
         try (ClipboardReader reader = format.getReader(new FileInputStream(file))) {
             Clipboard clipboard = reader.read();
-
-            HashMap<BlockVector3, String> chests = new HashMap<>();
-            if (itemsByChestType != null) {
-                for (int x = 0; x <= clipboard.getDimensions().getX(); x++) {
-                    for (int y = 0; y <= clipboard.getDimensions().getY(); y++) {
-                        for (int z = 0; z <= clipboard.getDimensions().getZ(); z++) {
-
-                            BlockVector3 blockLocation = BlockVector3.at(x, y, z).add(clipboard.getMinimumPoint());
-                            Material blockMaterial = BukkitAdapter.adapt(clipboard.getBlock(blockLocation).getBlockType());
-                            if (blockMaterial == null || !blockMaterial.toString().contains("SIGN")) continue;
-
-                            CompoundTag blockNbtData = clipboard.getFullBlock(blockLocation).getNbtData();
-                            if (blockNbtData == null) continue;
-
-                            if (!blockNbtData.getString("Text1").contains("[chest]")) continue;
-                            //The chest type must start and end with a colon
-                            chests.put(vector.add(x, y, z), blockNbtData.getString("Text2").split(":")[1]);
-                        }
-                    }
-                }
-            }
 
             //noinspection deprecation
             try (EditSession editSession = WorldEdit.getInstance().getEditSessionFactory().getEditSession(BukkitAdapter.adapt(world), -1)) {
@@ -70,19 +40,34 @@ public class WorldEditUtils {
                 Operations.complete(operation);
             }
 
-            if (itemsByChestType != null) {
-                for (Map.Entry<BlockVector3, String> entry : chests.entrySet()) {
-                    Location chestLocation = BukkitAdapter.adapt(world, entry.getKey());
-                    chestLocation.getBlock().setType(Material.CHEST);
-                    if (!(chestLocation.getBlock().getState() instanceof Container container)) continue;
-
-                    int i = 0;
-                    for (ItemStack item : itemsByChestType.apply(entry.getValue())) {
-                        container.getInventory().setItem(i, item);
-                        i++; //support air
-                    }
-                }
-            }
+            return clipboard;
         }
+    }
+
+    //https://github.com/MagmaGuy/BetterStructures/blob/ee4a998588e2925faa33b5e72b97b1bf4f4d141b/src/main/java/com/magmaguy/betterstructures/schematics/SchematicContainer.java#L153
+    public static @NotNull String getSignLine(BaseBlock baseBlock, int line) {
+        CompoundTag nbt = baseBlock.getNbtData();
+        if (nbt == null) return "";
+
+        String string = "";
+        try {
+            string = getCleanSignLine(nbt.getString("Text" + line));
+        } catch (Exception ignored) {}
+        if (!string.isEmpty()) return string;
+
+        try {
+            string = getCleanSignLine(((ListTag) ((Map<?, ?>) baseBlock.getNbtData().getValue().get("front_text").getValue()).get("messages")).getString(line - 1));
+        } catch (Exception ignored) {}
+        if (!string.isEmpty()) return string;
+
+        try {
+            string = getCleanSignLine(((ListTag) ((Map<?, ?>) baseBlock.getNbtData().getValue().get("back_text").getValue()).get("messages")).getString(line));
+        } catch (Exception ignored) {}
+
+        return string;
+    }
+    private static @NotNull String getCleanSignLine(String jsonLine) {
+        if (jsonLine.split(":").length < 2) return "";
+        return jsonLine.split(":")[1].replace("\"", "").replace("}", "");
     }
 }

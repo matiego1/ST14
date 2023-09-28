@@ -1,6 +1,9 @@
 package me.matiego.st14.minigames.handlers;
 
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.world.block.BaseBlock;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGame;
@@ -10,29 +13,30 @@ import me.matiego.st14.objects.BossBarTimer;
 import me.matiego.st14.utils.Utils;
 import me.matiego.st14.utils.WorldEditUtils;
 import org.bukkit.*;
-import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.block.Container;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class SkywarsMiniGame extends MiniGame {
     public SkywarsMiniGame(@NotNull Main plugin, int totalGameTimeInSeconds) {
         super(plugin, totalGameTimeInSeconds);
     }
 
-    private final String CONFIG_PATH = "minigames.skywars.";
+    private final List<Location> spawns = new ArrayList<>();
 
-    private List<Location> spawns = null;
-    private String mapConfigPath = "minigames.skywars.maps";
     private int mapRadius = 100;
     private int prepareTime = 60;
     private int shrinkBorderBeforeEnd = 180;
@@ -46,22 +50,22 @@ public class SkywarsMiniGame extends MiniGame {
     public void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException {
         //noinspection ConstantValue
         if (true) throw new MiniGameException("not fixed yet");
-
         if (isMiniGameStarted()) throw new MiniGameException("minigame is already started");
 
         clearExistingData();
         isMiniGameStarted = true;
         lobby = true;
 
+        configPath = "minigames.skywars.";
+
         World world = MiniGamesUtils.getMiniGamesWorld();
         if (world == null) throw new MiniGameException("cannot load world");
 
-        setRandomMapConfigPath();
+        setRandomMapConfigPath(configPath + "maps");
         loadDataFromConfig(world);
         setUpGameRules(world);
         setUpWorldBorder();
         registerEvents();
-
         broadcastMiniGameStartMessage(sender);
 
         for (Player player : players) {
@@ -72,7 +76,11 @@ public class SkywarsMiniGame extends MiniGame {
         sendActionBar("&eGenerowanie areny...");
         Utils.async(() -> {
             try {
-                pasteMap(world);
+                File file = getRandomMapFile();
+                if (file == null) throw new NullPointerException("map file is null");
+                Clipboard clipboard = pasteMap(world, file);
+                loadSpawnsAndGenerateChests(world, clipboard);
+                if (spawns.isEmpty()) throw new MiniGameException("no spawns found");
             } catch (Exception e) {
                 Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy generowaniu areny. Minigra anulowana.", "&dStart anulowany", ""));
                 Logs.error("An error occurred while pasting a map for the minigame", e);
@@ -94,40 +102,16 @@ public class SkywarsMiniGame extends MiniGame {
         });
     }
 
-    private void setRandomMapConfigPath() throws MiniGameException {
-        ConfigurationSection section = plugin.getConfig().getConfigurationSection(mapConfigPath);
-        if (section == null) throw new MiniGameException("cannot find any map");
-
-        List<String> maps = new ArrayList<>(section.getKeys(false));
-        if (maps.isEmpty()) throw new MiniGameException("cannot find any map");
-
-        Collections.shuffle(maps);
-
-        mapConfigPath += "." + maps.get(0);
-    }
-
     private void loadDataFromConfig(@NotNull World world) throws MiniGameException {
-        baseLocation = MiniGamesUtils.getLocationFromConfig(world, CONFIG_PATH + "base-location");
+        baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
         if (baseLocation == null) throw new MiniGameException("cannot load base location");
-
-        spectatorSpawn = MiniGamesUtils.getRelativeLocationFromConfig(baseLocation, mapConfigPath + "spectator-spawn");
-        if (spectatorSpawn == null) throw new MiniGameException("cannot load spectator spawn location");
 
         mapRadius = Math.max(5, plugin.getConfig().getInt(mapConfigPath + "radius", 100));
 
-        prepareTime = Math.max(0, plugin.getConfig().getInt("prepare-time", 30));
-        shrinkBorderBeforeEnd = Math.max(0, plugin.getConfig().getInt("shrink-border-before-end", 180));
+        prepareTime = Math.max(0, plugin.getConfig().getInt(configPath + "prepare-time", 30));
+        shrinkBorderBeforeEnd = Math.max(0, plugin.getConfig().getInt(configPath + "shrink-border-before-end", 180));
         if (totalMiniGameTime < prepareTime + shrinkBorderBeforeEnd) throw new MiniGameException("incorrect game times");
 
-        loadSpawns();
-        if (spawns == null || spawns.isEmpty()) throw new MiniGameException("cannot load spawns");
-    }
-
-    private void loadSpawns() {
-        spawns = plugin.getConfig().getStringList(mapConfigPath + "spawns").stream()
-                .map(s -> MiniGamesUtils.getRelativeLocationFromString(baseLocation, s))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
     }
 
     private void setUpGameRules(@NotNull World world) {
@@ -151,38 +135,112 @@ public class SkywarsMiniGame extends MiniGame {
         worldBorder.setWarningTime(10);
     }
 
-    private void pasteMap(@NotNull World world) throws Exception {
-        File file = getRandomMapFile();
-        if (file == null) throw new NullPointerException("map file is null");
+    private void loadSpawnsAndGenerateChests(@NotNull World world, @NotNull Clipboard clipboard) {
+        for (int x = 0; x <= clipboard.getDimensions().getX(); x++) {
+            for (int y = 0; y <= clipboard.getDimensions().getY(); y++) {
+                for (int z = 0; z <= clipboard.getDimensions().getZ(); z++) {
 
-        WorldEditUtils.pasteSchematicAndGenerateChests(
-                world,
-                BlockVector3.at(baseLocation.getBlockX(), baseLocation.getBlockY(), baseLocation.getBlockZ()),
-                file,
-                chestType -> {
-                    ChestType type = ChestType.getTypeByName(chestType);
-                    return type == null ? null : type.getRandomItems();
+                    BlockVector3 blockLocation = BlockVector3.at(x, y, z).add(clipboard.getMinimumPoint());
+                    Material blockMaterial = BukkitAdapter.adapt(clipboard.getBlock(blockLocation).getBlockType());
+                    if (blockMaterial == null || !blockMaterial.toString().contains("SIGN")) continue;
+
+                    BaseBlock baseBlock = clipboard.getFullBlock(blockLocation);
+                    if (baseBlock == null) continue;
+
+                    String line1 = WorldEditUtils.getSignLine(baseBlock, 1).toLowerCase();
+                    if (line1.contains("[spectator]")) {
+                        spectatorSpawn = new Location(world, baseLocation.getBlockX() + x + 0.5, baseLocation.getBlockY() + y + 0.5, baseLocation.getBlockZ() + z + 0.5);
+                    } else if (line1.contains("[spawn]")) {
+                        spawns.add(new Location(world, baseLocation.getBlockX() + x + 0.5, baseLocation.getBlockY() + y + 0.5, baseLocation.getBlockZ() + z + 0.5));
+                    } else if (line1.contains("[chest]")) {
+                        generateChest(new Location(world, baseLocation.getBlockX() + x, baseLocation.getBlockY() + y, baseLocation.getBlockZ() + z), WorldEditUtils.getSignLine(baseBlock, 2).replace(":", ""));
+                    }
                 }
-        );
-    }
-
-    protected @Nullable File getRandomMapFile() {
-        File dir = new File(plugin.getDataFolder(), "mini-games");
-        if (!dir.exists()) {
-            //noinspection ResultOfMethodCallIgnored
-            dir.mkdirs();
-        }
-
-        List<String> mapFiles = plugin.getConfig().getStringList(mapConfigPath + "map-files");
-        Collections.shuffle(mapFiles);
-
-        for (String mapFile : mapFiles) {
-            File file = new File(dir, mapFile);
-            if (file.exists()) {
-                return file;
             }
         }
-        return null;
+    }
+
+    private void generateChest(@NotNull Location location, @NotNull String type) {
+        if (!(location.getBlock().getState() instanceof Container chest)) return;
+
+        List<ItemStack> items = getRandomItems(type);
+        for (int i = 0; i < Math.min(chest.getInventory().getSize(), items.size()); i++) {
+            chest.getInventory().setItem(i, items.get(i));
+        }
+    }
+
+    private @NotNull List<ItemStack> getRandomItems(@NotNull String type) {
+        int max = Math.min(27, plugin.getConfig().getInt(configPath + "chests." + type + ".max-items", 1));
+        int min = Math.max(1, plugin.getConfig().getInt(configPath + "chests." + type + ".min-items", 15));
+        if (min > max) {
+            int c = min;
+            min = max;
+            max = c;
+        }
+        List<String> items = plugin.getConfig().getStringList(configPath + "chests." + type + ".items");
+        Collections.shuffle(items);
+
+        int itemsAmount = (int) Math.min(Math.max(Math.ceil(ThreadLocalRandom.current().nextGaussian()), min), max);
+
+        List<ItemStack> result = new ArrayList<>();
+        for (int i = 0; i < Math.min(itemsAmount, items.size()); i++) {
+            String[] values = items.get(i).split(";");
+            if (values.length < 3) {
+                Logs.warning("incorrect skywars item! (#1) config value: `" + items.get(i) + "`");
+                continue;
+            }
+            Material material = null;
+            try {
+                material = Material.valueOf(values[0]);
+            } catch (Exception ignored) {}
+            if (material == null) {
+                Logs.warning("incorrect skywars item! (#2) config value: `" + items.get(i) + "`");
+                continue;
+            }
+
+            int amount = -1;
+            try {
+                amount = Utils.getRandomNumber(Integer.parseInt(values[1]), Integer.parseInt(values[2]));
+            } catch (Exception ignored) {}
+            if (amount <= 0) {
+                Logs.warning("incorrect skywars item! (#3) config value: `" + items.get(i) + "`");
+                continue;
+            }
+
+            ItemStack item = new ItemStack(material, amount);
+
+            for (int j = 3; j < values.length; j++) {
+                String[] enchantmentValues = values[j].split(",");
+                if (enchantmentValues.length != 2) {
+                    Logs.warning("incorrect skywars item! (#4) config value: `" + items.get(i) + "`");
+                    continue;
+                }
+                Enchantment enchantment = Enchantment.getByKey(NamespacedKey.minecraft(enchantmentValues[0]));
+                if (enchantment == null) {
+                    Logs.warning("incorrect skywars item! (#5) config value: `" + items.get(i) + "`");
+                    continue;
+                }
+                int level = -1;
+                try {
+                    level = Integer.parseInt(enchantmentValues[1]);
+                } catch (Exception ignored) {}
+                if (level <= 0) {
+                    Logs.warning("incorrect skywars item! (#6) config value: `" + items.get(i) + "`");
+                    continue;
+                }
+                item.addUnsafeEnchantment(enchantment, level);
+            }
+
+            result.add(item);
+        }
+
+        while (items.size() < 27) {
+            result.add(new ItemStack(Material.AIR));
+        }
+
+        Collections.shuffle(items);
+
+        return result;
     }
 
     @Override
@@ -206,6 +264,7 @@ public class SkywarsMiniGame extends MiniGame {
     }
 
     private void teleportPlayersToIslands(@NotNull List<Player> players) {
+        Collections.shuffle(spawns);
         int i = 0;
         for (Player player : players) {
             player.setBedSpawnLocation(spectatorSpawn, true);
@@ -222,7 +281,7 @@ public class SkywarsMiniGame extends MiniGame {
 
                 WorldBorder border = Bukkit.createWorldBorder();
                 border.setCenter(spawns.get(i));
-                border.setSize(plugin.getConfig().getDouble(mapConfigPath + "border-radius", 10));
+                border.setSize(mapRadius);
                 border.setDamageAmount(5);
                 border.setDamageBuffer(0);
                 border.setWarningDistance(0);
@@ -266,9 +325,8 @@ public class SkywarsMiniGame extends MiniGame {
     }
 
     private void teleportSpectatorsBackIfTooFarAway() {
-        int maxDistance = Math.max(0, plugin.getConfig().getInt(CONFIG_PATH + "map-radius", 100));
         getPlayers().stream()
-                .filter(player -> distance(player.getLocation(), spectatorSpawn) > maxDistance)
+                .filter(player -> distance(player.getLocation(), spectatorSpawn) > mapRadius)
                 .filter(player -> getPlayerStatus(player) == PlayerStatus.SPECTATOR)
                 .forEach(player -> {
                     player.teleportAsync(spectatorSpawn);
@@ -293,26 +351,5 @@ public class SkywarsMiniGame extends MiniGame {
     @Override
     public @NotNull GameMode getSpectatorGameMode() {
         return GameMode.ADVENTURE;
-    }
-
-    private enum ChestType {
-        COMMON,
-        UNCOMMON,
-        RARE,
-        EPIC;
-
-        public static @Nullable ChestType getTypeByName(@NotNull String name) {
-            for (ChestType type : values()) {
-                if (type.toString().equalsIgnoreCase(name)) {
-                    return type;
-                }
-            }
-            return null;
-        }
-
-        public @NotNull List<ItemStack> getRandomItems() {
-            //TODO: getRandomItems
-            return new ArrayList<>();
-        }
     }
 }

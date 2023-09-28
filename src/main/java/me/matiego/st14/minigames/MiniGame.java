@@ -1,5 +1,6 @@
 package me.matiego.st14.minigames;
 
+import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.math.BlockVector3;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -183,10 +184,10 @@ public abstract class MiniGame implements Listener {
         return null;
     }
 
-    protected void pasteMap(@NotNull World world, @NotNull File file) throws Exception {
+    protected @NotNull Clipboard pasteMap(@NotNull World world, @NotNull File file) throws Exception {
         if (!file.exists()) throw new NullPointerException("map file does not exist");
 
-        WorldEditUtils.pasteSchematic(
+        return WorldEditUtils.pasteSchematic(
                 world,
                 BlockVector3.at(baseLocation.getBlockX(), baseLocation.getBlockY(), baseLocation.getBlockZ()),
                 file
