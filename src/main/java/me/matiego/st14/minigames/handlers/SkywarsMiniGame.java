@@ -16,6 +16,9 @@ import org.bukkit.*;
 import org.bukkit.block.Container;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -47,9 +50,22 @@ public class SkywarsMiniGame extends MiniGame {
     }
 
     @Override
+    public @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount() {
+        return 2;
+    }
+
+    @Override
+    public @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount() {
+        return 15;
+    }
+
+    @Override
+    public @NotNull GameMode getSpectatorGameMode() {
+        return GameMode.ADVENTURE;
+    }
+
+    @Override
     public void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException {
-        //noinspection ConstantValue
-        if (true) throw new MiniGameException("not fixed yet");
         if (isMiniGameStarted()) throw new MiniGameException("minigame is already started");
 
         clearExistingData();
@@ -63,9 +79,9 @@ public class SkywarsMiniGame extends MiniGame {
 
         setRandomMapConfigPath(configPath + "maps");
         loadDataFromConfig(world);
+        registerEvents();
         setUpGameRules(world);
         setUpWorldBorder();
-        registerEvents();
         broadcastMiniGameStartMessage(sender);
 
         for (Player player : players) {
@@ -74,6 +90,7 @@ public class SkywarsMiniGame extends MiniGame {
         }
 
         sendActionBar("&eGenerowanie areny...");
+        long time = Utils.now();
         Utils.async(() -> {
             try {
                 File file = getRandomMapFile();
@@ -81,6 +98,7 @@ public class SkywarsMiniGame extends MiniGame {
                 Clipboard clipboard = pasteMap(world, file);
                 loadSpawnsAndGenerateChests(world, clipboard);
                 if (spawns.isEmpty()) throw new MiniGameException("no spawns found");
+                Utils.sync(() -> sendActionBar("&eWygenerowano arenę w " + Utils.parseMillisToString(Utils.now() - time, true)));
             } catch (Exception e) {
                 Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy generowaniu areny. Minigra anulowana.", "&dStart anulowany", ""));
                 Logs.error("An error occurred while pasting a map for the minigame", e);
@@ -107,15 +125,13 @@ public class SkywarsMiniGame extends MiniGame {
         if (baseLocation == null) throw new MiniGameException("cannot load base location");
 
         mapRadius = Math.max(5, plugin.getConfig().getInt(mapConfigPath + "radius", 100));
-
         prepareTime = Math.max(0, plugin.getConfig().getInt(configPath + "prepare-time", 30));
         shrinkBorderBeforeEnd = Math.max(0, plugin.getConfig().getInt(configPath + "shrink-border-before-end", 180));
         if (totalMiniGameTime < prepareTime + shrinkBorderBeforeEnd) throw new MiniGameException("incorrect game times");
-
     }
 
     private void setUpGameRules(@NotNull World world) {
-        world.setPVP(false);
+        world.setPVP(true);
         world.setGameRule(GameRule.KEEP_INVENTORY, false);
         world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
         world.setGameRule(GameRule.DO_ENTITY_DROPS, true);
@@ -149,11 +165,17 @@ public class SkywarsMiniGame extends MiniGame {
 
                     String line1 = WorldEditUtils.getSignLine(baseBlock, 1).toLowerCase();
                     if (line1.contains("[spectator]")) {
-                        spectatorSpawn = new Location(world, baseLocation.getBlockX() + x + 0.5, baseLocation.getBlockY() + y + 0.5, baseLocation.getBlockZ() + z + 0.5);
+                        Location loc = new Location(world, baseLocation.getBlockX() + x + 0.5, baseLocation.getBlockY() + y + 0.5, baseLocation.getBlockZ() + z + 0.5);
+                        loc.getBlock().setType(Material.AIR);
+                        spectatorSpawn = loc;
                     } else if (line1.contains("[spawn]")) {
-                        spawns.add(new Location(world, baseLocation.getBlockX() + x + 0.5, baseLocation.getBlockY() + y + 0.5, baseLocation.getBlockZ() + z + 0.5));
+                        Location loc = new Location(world, baseLocation.getBlockX() + x + 0.5, baseLocation.getBlockY() + y + 0.5, baseLocation.getBlockZ() + z + 0.5);
+                        loc.getBlock().setType(Material.AIR);
+                        spawns.add(loc);
                     } else if (line1.contains("[chest]")) {
-                        generateChest(new Location(world, baseLocation.getBlockX() + x, baseLocation.getBlockY() + y, baseLocation.getBlockZ() + z), WorldEditUtils.getSignLine(baseBlock, 2).replace(":", ""));
+                        Location loc = new Location(world, baseLocation.getBlockX() + x, baseLocation.getBlockY() + y, baseLocation.getBlockZ() + z);
+                        loc.getBlock().setType(Material.CHEST);
+                        generateChest(loc, WorldEditUtils.getSignLine(baseBlock, 2).replace(":", ""));
                     }
                 }
             }
@@ -173,9 +195,9 @@ public class SkywarsMiniGame extends MiniGame {
         int max = Math.min(27, plugin.getConfig().getInt(configPath + "chests." + type + ".max-items", 1));
         int min = Math.max(1, plugin.getConfig().getInt(configPath + "chests." + type + ".min-items", 15));
         if (min > max) {
-            int c = min;
+            int x = min;
             min = max;
-            max = c;
+            max = x;
         }
         List<String> items = plugin.getConfig().getStringList(configPath + "chests." + type + ".items");
         Collections.shuffle(items);
@@ -257,7 +279,7 @@ public class SkywarsMiniGame extends MiniGame {
         broadcastMessage("&dMinigra rozpoczęta. &ePowodzenia!");
         showTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
 
-        timer = new BossBarTimer(plugin, totalMiniGameTime, "&eKoniec minigry");
+        timer = new BossBarTimer(plugin, prepareTime, "&eOtwarcie wysp");
         timer.startTimer();
 
         teleportPlayersToIslands(playersToStartGameWith);
@@ -273,7 +295,7 @@ public class SkywarsMiniGame extends MiniGame {
                 changePlayerStatus(player, PlayerStatus.SPECTATOR);
                 player.teleportAsync(spectatorSpawn);
                 MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
-                broadcastMessage("Gracz " + player.getName() + " obserwuję minigrę.");
+                broadcastMessage("Gracz " + player.getName() + " obserwuję minigrę, ponieważ nie starczyło dla niego miejsca.");
             } else {
                 changePlayerStatus(player, PlayerStatus.IN_MINI_GAME);
                 player.teleportAsync(spawns.get(i));
@@ -281,7 +303,7 @@ public class SkywarsMiniGame extends MiniGame {
 
                 WorldBorder border = Bukkit.createWorldBorder();
                 border.setCenter(spawns.get(i));
-                border.setSize(mapRadius);
+                border.setSize(Math.max(5, plugin.getConfig().getInt(mapConfigPath + "island-radius")));
                 border.setDamageAmount(5);
                 border.setDamageBuffer(0);
                 border.setWarningDistance(0);
@@ -294,8 +316,8 @@ public class SkywarsMiniGame extends MiniGame {
 
     @Override
     protected void miniGameTick() {
-        tickPlayers();
         teleportSpectatorsBackIfTooFarAway();
+        tickPlayers();
 
         if (miniGameTime == prepareTime) {
             timer.stopTimerAndHideBossBar();
@@ -338,18 +360,17 @@ public class SkywarsMiniGame extends MiniGame {
         return Math.max(Math.abs(l1.getX() - l2.getX()), Math.abs(l1.getZ() - l2.getZ()));
     }
 
-    @Override
-    public @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount() {
-        return 2;
+    @EventHandler (ignoreCancelled = true)
+    public void onEntityDamageByEntity(@NotNull EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+        if (getPlayerStatus(player) != PlayerStatus.SPECTATOR) return;
+        event.setCancelled(true);
     }
 
-    @Override
-    public @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount() {
-        return 15;
-    }
-
-    @Override
-    public @NotNull GameMode getSpectatorGameMode() {
-        return GameMode.ADVENTURE;
+    @EventHandler(ignoreCancelled = true)
+    public void onFoodLevelChange(@NotNull FoodLevelChangeEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+        if (getPlayerStatus(player) != PlayerStatus.SPECTATOR) return;
+        event.setFoodLevel(20);
     }
 }
