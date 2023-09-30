@@ -66,7 +66,7 @@ public class VerifyCommand implements CommandHandler.Discord {
             return 0;
         }
 
-        member.getUser().openPrivateChannel().queue(chn -> chn.sendMessage("Kliknij poniższy przycisk, aby dokończyć proces weryfikacji.")
+        member.getUser().openPrivateChannel().queue(chn -> chn.sendMessage(member.getAsMention() + ", kliknij poniższy przycisk, aby dokończyć proces weryfikacji.")
                 .addActionRow(
                         Button.success("verify-account", "Akceptuję regulamin")
                 )
@@ -92,7 +92,7 @@ public class VerifyCommand implements CommandHandler.Discord {
     public int onButtonInteraction(@NotNull ButtonInteraction event) {
         if (!event.getComponentId().equals("verify-account")) return 0;
 
-        event.deferReply(true).queue();
+        event.deferReply(false).queue();
         InteractionHook hook = event.getHook();
 
         Guild guild = event.getJDA().getGuildById(plugin.getConfig().getLong("discord.guild-id"));
@@ -107,8 +107,7 @@ public class VerifyCommand implements CommandHandler.Discord {
 
             Member member = DiscordUtils.retrieveMember(guild, event.getUser());
             if (member == null) {
-                hook.sendMessage("Wygląda na to, że już wyszedłeś z serwera.").queue();
-                event.editButton(event.getButton().asDisabled()).queue();
+                hook.sendMessage("Wygląda na to, że wyszedłeś z serwera.").queue();
                 return;
             }
 
@@ -128,10 +127,10 @@ public class VerifyCommand implements CommandHandler.Discord {
                     success -> {
                         String welcomeMessage = String.join("\n", plugin.getConfig().getStringList("discord.welcome-message"))
                                 .replace("{mention}", member.getAsMention());
-                        event.getChannel().sendMessage(DiscordUtils.checkLength(welcomeMessage, Message.MAX_CONTENT_LENGTH)).queue();
-                        hook.sendMessage("Sukces!").queue();
+                        hook.sendMessage(DiscordUtils.checkLength(welcomeMessage, Message.MAX_CONTENT_LENGTH)).queue();
 
                         Logs.info(DiscordUtils.getAsTag(member) + " dokończył proces weryfikacji na serwerze Discord.");
+                        Logs.discord("Wysłana wiadomość powitalna do `" + DiscordUtils.getAsTag(member) + "`:\n" + welcomeMessage);
                     },
                     failure -> {
                         hook.sendMessage("Napotkano niespodziewany błąd. Poproś administratora o ponowną weryfikację.").queue();

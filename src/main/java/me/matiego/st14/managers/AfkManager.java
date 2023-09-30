@@ -20,7 +20,7 @@ public class AfkManager {
         this.plugin = plugin;
     }
 
-    private final int AFK_TIME_SECOND = 180;
+    private final int AFK_TIME_SECOND = 90;
 
     private BukkitTask task;
     private final HashMap<Player, Long> lastMove = new HashMap<>();
