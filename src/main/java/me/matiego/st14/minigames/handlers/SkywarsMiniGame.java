@@ -70,7 +70,6 @@ public class SkywarsMiniGame extends MiniGame {
         loadDataFromConfig(world);
         registerEvents();
         setUpGameRules(world);
-        setUpWorldBorder();
         broadcastMiniGameStartMessage(sender);
 
         for (Player player : players) {
@@ -79,14 +78,19 @@ public class SkywarsMiniGame extends MiniGame {
         }
 
         sendActionBar("&eGenerowanie areny...");
+        broadcastMessage("&eGenerowanie areny...");
         long time = Utils.now();
         Utils.async(() -> {
             try {
                 File file = getRandomMapFile();
                 if (file == null) throw new NullPointerException("map file is null");
                 Clipboard clipboard = pasteMap(world, file);
+
+                Utils.sync(() -> sendActionBar("&eGenerowanie skrzynek..."));
                 loadSpawnsAndGenerateChests(world, clipboard);
                 if (spawns.isEmpty()) throw new MiniGameException("no spawns found");
+                setUpWorldBorder();
+
                 Utils.sync(() -> sendActionBar("&eWygenerowano arenę w " + Utils.parseMillisToString(Utils.now() - time, true)));
             } catch (Exception e) {
                 Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy generowaniu areny. Minigra anulowana.", "&dStart anulowany", ""));
@@ -154,17 +158,19 @@ public class SkywarsMiniGame extends MiniGame {
 
                     String line1 = WorldEditUtils.getSignLine(baseBlock, 1).toLowerCase();
                     if (line1.contains("[spectator]")) {
-                        Location loc = new Location(world, baseLocation.getBlockX() + x + 0.5, baseLocation.getBlockY() + y + 0.5, baseLocation.getBlockZ() + z + 0.5);
-                        loc.getBlock().setType(Material.AIR);
+                        Location loc = new Location(world, baseLocation.getBlockX() + x + 0.5, baseLocation.getBlockY() + y - 1, baseLocation.getBlockZ() + z + 0.5);
+                        Utils.sync(() -> loc.getBlock().setType(Material.AIR));
                         spectatorSpawn = loc;
                     } else if (line1.contains("[spawn]")) {
-                        Location loc = new Location(world, baseLocation.getBlockX() + x + 0.5, baseLocation.getBlockY() + y + 0.5, baseLocation.getBlockZ() + z + 0.5);
-                        loc.getBlock().setType(Material.AIR);
+                        Location loc = new Location(world, baseLocation.getBlockX() + x + 0.5, baseLocation.getBlockY() + y - 1, baseLocation.getBlockZ() + z + 0.5);
+                        Utils.sync(() -> loc.getBlock().setType(Material.AIR));
                         spawns.add(loc);
                     } else if (line1.contains("[chest]")) {
-                        Location loc = new Location(world, baseLocation.getBlockX() + x, baseLocation.getBlockY() + y, baseLocation.getBlockZ() + z);
-                        loc.getBlock().setType(Material.CHEST);
-                        generateChest(loc, WorldEditUtils.getSignLine(baseBlock, 2).replace(":", ""));
+                        Location loc = new Location(world, baseLocation.getBlockX() + x, baseLocation.getBlockY() + y - 1, baseLocation.getBlockZ() + z);
+                        Utils.sync(() -> {
+                            loc.getBlock().setType(Material.CHEST);
+                            generateChest(loc, WorldEditUtils.getSignLine(baseBlock, 2).replace(":", ""));
+                        });
                     }
                 }
             }
@@ -174,10 +180,12 @@ public class SkywarsMiniGame extends MiniGame {
     private void generateChest(@NotNull Location location, @NotNull String type) {
         if (!(location.getBlock().getState() instanceof Container chest)) return;
 
-        List<ItemStack> items = getRandomItems(type);
-        for (int i = 0; i < Math.min(chest.getInventory().getSize(), items.size()); i++) {
-            chest.getInventory().setItem(i, items.get(i));
-        }
+        Utils.async(() -> {
+            List<ItemStack> items = getRandomItems(type);
+            for (int i = 0; i < Math.min(chest.getInventory().getSize(), items.size()); i++) {
+                chest.getInventory().setItem(i, items.get(i));
+            }
+        });
     }
 
     private @NotNull List<ItemStack> getRandomItems(@NotNull String type) {
@@ -191,7 +199,7 @@ public class SkywarsMiniGame extends MiniGame {
         List<String> items = plugin.getConfig().getStringList(configPath + "chests." + type + ".items");
         Collections.shuffle(items);
 
-        int itemsAmount = (int) Math.min(Math.max(Math.ceil(ThreadLocalRandom.current().nextGaussian()), min), max);
+        int itemsAmount = (int) Math.min(Math.max(Math.ceil(ThreadLocalRandom.current().nextGaussian()) + Math.floor((max + min) / 2d) - plugin.getConfig().getInt(configPath + "chests." + type + ".subtract-from-mean", 0), min), max);
 
         List<ItemStack> result = new ArrayList<>();
         for (int i = 0; i < Math.min(itemsAmount, items.size()); i++) {
@@ -245,11 +253,11 @@ public class SkywarsMiniGame extends MiniGame {
             result.add(item);
         }
 
-        while (items.size() < 27) {
+        while (result.size() < 27) {
             result.add(new ItemStack(Material.AIR));
         }
 
-        Collections.shuffle(items);
+        Collections.shuffle(result);
 
         return result;
     }

@@ -45,7 +45,7 @@ public class WorldEditUtils {
     }
 
     //https://github.com/MagmaGuy/BetterStructures/blob/ee4a998588e2925faa33b5e72b97b1bf4f4d141b/src/main/java/com/magmaguy/betterstructures/schematics/SchematicContainer.java#L153
-    public static @NotNull String getSignLine(BaseBlock baseBlock, int line) {
+    public static @NotNull String getSignLine(@NotNull BaseBlock baseBlock, int line) {
         CompoundTag nbt = baseBlock.getNbtData();
         if (nbt == null) return "";
 
@@ -66,8 +66,9 @@ public class WorldEditUtils {
 
         return string;
     }
-    private static @NotNull String getCleanSignLine(String jsonLine) {
+
+    private static @NotNull String getCleanSignLine(@NotNull String jsonLine) {
         if (jsonLine.split(":").length < 2) return "";
-        return jsonLine.split(":")[1].replace("\"", "").replace("}", "");
+        return jsonLine.split(":", 2)[1].replace("\"", "").replace("}", "");
     }
 }
