@@ -28,15 +28,18 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class MiniGame implements Listener {
-    public MiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime) {
+    public MiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime, @NotNull String configPath, @Nullable String mapName) {
         this.plugin = plugin;
         this.totalMiniGameTime = totalMiniGameTime;
+        this.configPath = configPath;
+        this.mapName = mapName;
     }
 
     //<editor-fold defaultstate="collapsed" desc="variables">
     protected final Main plugin;
+    protected final String configPath;
     protected final int totalMiniGameTime;
-    protected String configPath = null;
+    protected String mapName;
     protected String mapConfigPath = null;
     protected Location spectatorSpawn;
     protected Location baseLocation;
@@ -63,20 +66,26 @@ public abstract class MiniGame implements Listener {
         isMiniGameStarted = false;
         lobby = true;
         miniGameTime = 0;
-        configPath = null;
         mapConfigPath = null;
     }
 
-    protected void setRandomMapConfigPath(@NotNull String mapsListConfigPath) throws MiniGameException {
-        ConfigurationSection section = plugin.getConfig().getConfigurationSection(mapsListConfigPath);
-        if (section == null) throw new MiniGameException("cannot find any map");
+    protected void setMapConfigPath() throws MiniGameException {
+        if (mapName != null) {
+            mapConfigPath = configPath + "maps." + mapName + ".";
+            return;
+        }
 
-        List<String> maps = new ArrayList<>(section.getKeys(false));
+        List<String> maps = getMaps(plugin, configPath);
         if (maps.isEmpty()) throw new MiniGameException("cannot find any map");
-
         Collections.shuffle(maps);
+        mapConfigPath = configPath + "maps." + maps.get(0) + ".";
+        mapName = maps.get(0);
+    }
 
-        mapConfigPath = mapsListConfigPath + "." + maps.get(0) + ".";
+    public static @NotNull List<String> getMaps(@NotNull Main plugin, @NotNull String configPath) {
+        ConfigurationSection section = plugin.getConfig().getConfigurationSection(configPath + "maps");
+        if (section == null) return new ArrayList<>();
+        return new ArrayList<>(section.getKeys(false));
     }
 
     public @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount() {
@@ -86,8 +95,8 @@ public abstract class MiniGame implements Listener {
         return 15;
     }
 
-    public abstract @NotNull String getMiniGameName();
-    public abstract @NotNull GameMode getSpectatorGameMode();
+    protected abstract @NotNull String getMiniGameName();
+    protected abstract @NotNull GameMode getSpectatorGameMode();
 
     //</editor-fold>
 
@@ -141,7 +150,7 @@ public abstract class MiniGame implements Listener {
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="messaging utils">
-    protected synchronized void broadcastMessage(@NotNull String message) {
+    protected synchronized void sendMessage(@NotNull String message) {
         if (message.isBlank()) return;
 
         Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + message));
@@ -151,13 +160,12 @@ public abstract class MiniGame implements Listener {
         }
     }
 
-    protected synchronized void showTitle(@NotNull String title, @NotNull String subtitle) {
+    protected synchronized void sendTitle(@NotNull String title, @NotNull String subtitle) {
         for (Player player : getPlayers()) {
             player.showTitle(Title.title(Utils.getComponentByString(title), Utils.getComponentByString(subtitle)));
         }
     }
 
-    @SuppressWarnings("SameParameterValue")
     protected synchronized void sendActionBar(@NotNull String actionBar) {
         for (Player player : getPlayers()) {
             player.sendActionBar(Utils.getComponentByString(actionBar));
@@ -205,7 +213,7 @@ public abstract class MiniGame implements Listener {
 
     @SneakyThrows(MiniGameException.class)
     protected synchronized void startCountdown(int countdownTimeInSeconds) {
-        broadcastMessage("&dRozpoczynanie minigry za...");
+        sendMessage("&dRozpoczynanie minigry za...");
 
         if (countdownTimeInSeconds % 5 != 0) throw new MiniGameException("time must be multiple of 5");
         if (countdownTimeInSeconds < 5) throw new MiniGameException("time must be greater than or equal to 5");
@@ -213,13 +221,13 @@ public abstract class MiniGame implements Listener {
         int delay = 20;
         for (; countdownTimeInSeconds >= 5; countdownTimeInSeconds -= 5) {
             String message = String.valueOf(countdownTimeInSeconds);
-            runTaskLater(() -> broadcastMessage(message), delay);
+            runTaskLater(() -> sendMessage(message), delay);
             delay += 100;
         }
 
-        runTaskLater(() -> broadcastMessage("&d3"), delay - 60);
-        runTaskLater(() -> broadcastMessage("&d2"), delay - 40);
-        runTaskLater(() -> broadcastMessage("&d1"), delay - 20);
+        runTaskLater(() -> sendMessage("&d3"), delay - 60);
+        runTaskLater(() -> sendMessage("&d2"), delay - 40);
+        runTaskLater(() -> sendMessage("&d1"), delay - 20);
 
         runTaskLater(() -> {
             miniGameTime = 0;
@@ -241,9 +249,9 @@ public abstract class MiniGame implements Listener {
         Utils.broadcastMessage(
                 sender,
                 Prefix.MINI_GAMES,
-                "Rozpocząłeś minigrę &d" + getMiniGameName(),
-                "Gracz " + sender.getName() + " rozpoczął minigrę &d" + getMiniGameName(),
-                "Gracz **" + sender.getName() + "** rozpoczął minigrę **" + getMiniGameName() + "**"
+                "Rozpocząłeś minigrę &d" + getMiniGameName() + "&3 na mapie " + mapName,
+                "Gracz " + sender.getName() + " rozpoczął minigrę &d" + getMiniGameName()  + "&3 na mapie " + mapName,
+                "Gracz **" + sender.getName() + "** rozpoczął minigrę **" + getMiniGameName() + "** na mapie **" + mapName + "**"
         );
     }
 
@@ -264,9 +272,9 @@ public abstract class MiniGame implements Listener {
         changePlayerStatus(player, PlayerStatus.SPECTATOR);
 
         if (lobby) {
-            broadcastMessage("Gracz " + player.getName() + " dołącza do minigry!");
+            sendMessage("Gracz " + player.getName() + " dołącza do minigry!");
         } else {
-            broadcastMessage("Gracz " + player.getName() + " obserwuje minigrę");
+            sendMessage("Gracz " + player.getName() + " obserwuje minigrę");
 
         }
         runTaskLater(() -> {
@@ -292,15 +300,15 @@ public abstract class MiniGame implements Listener {
         player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Opuściłeś minigrę."));
 
         if (lobby) {
-            broadcastMessage("Gracz " + player.getName() + " opuścił minigrę.");
+            sendMessage("Gracz " + player.getName() + " opuścił minigrę.");
             return;
         }
 
         if (status == PlayerStatus.IN_MINI_GAME) {
-            broadcastMessage("Gracz " + player.getName() + " opuścił minigrę.");
+            sendMessage("Gracz " + player.getName() + " opuścił minigrę.");
             endGameIfLessThanTwoPlayersLeft();
         } else {
-            broadcastMessage("Gracz " + player.getName() + " przestał obserwować minigrę.");
+            sendMessage("Gracz " + player.getName() + " przestał obserwować minigrę.");
         }
     }
 
@@ -320,7 +328,7 @@ public abstract class MiniGame implements Listener {
 
         if (endGameIfLessThanTwoPlayersLeft()) return;
 
-        broadcastMessage("Gracz " + player.getName() + " obserwuje minigrę.");
+        sendMessage("Gracz " + player.getName() + " obserwuje minigrę.");
         runTaskLater(() -> {
             MiniGamesUtils.healPlayer(player, getSpectatorGameMode());
             player.teleportAsync(spectatorSpawn);
@@ -356,8 +364,8 @@ public abstract class MiniGame implements Listener {
     protected synchronized void scheduleStopMiniGameAndSendReason(@NotNull String message, @NotNull String title, @NotNull String subtitle) {
         lobby = true;
 
-        broadcastMessage(message);
-        showTitle(title, subtitle);
+        sendMessage(message);
+        sendTitle(title, subtitle);
 
         if (timer != null) timer.stopTimerAndHideBossBar();
 
@@ -368,8 +376,8 @@ public abstract class MiniGame implements Listener {
     public void stopMiniGame() {
         if (!isMiniGameStarted) return;
 
-        broadcastMessage("Minigra zakończona!");
-        showTitle("&dMinigra zakończona!", "");
+        sendMessage("Minigra zakończona!");
+        sendTitle("&dMinigra zakończona!", "");
 
         if (timer != null) timer.stopTimerAndHideBossBar();
         cancelAllTasks();

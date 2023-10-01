@@ -7,6 +7,9 @@ import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public enum MiniGameType {
     TAG(null, "Berek", Material.NAME_TAG, 10 * 60),
     HIDE_AND_SEEK(null, "Chowany", Material.TALL_GRASS, 15 * 60),
@@ -15,7 +18,7 @@ public enum MiniGameType {
     SPLEEF(SpleefMiniGame.class, "Spleef", Material.STONE_SHOVEL, 15 * 60),
     RED_GREEN(RedGreenMiniGame.class, "Czerwone-Zielone", Material.BOW, 15 * 60),
     MAZE(MazeMiniGame.class, "Labirynt", Material.BRICKS, 15 * 60),
-    PVP(null, "PvP", Material.WOODEN_SWORD, 15 * 60),
+    PVP(PvPMiniGame.class, "PvP", Material.WOODEN_SWORD, 15 * 60),
     SKYWARS(SkywarsMiniGame.class, "Skywars", Material.ENDER_EYE, 20 * 60),
     PARKOUR(ParkourMiniGame.class, "Parkour", Material.POTION, 25 * 60),
     BLOCKED_IN_COMBAT(null, "Blocked in combat", Material.STONE, 30 * 60),
@@ -45,7 +48,16 @@ public enum MiniGameType {
         return plugin.getConfig().getStringList("minigames.enabled").contains(name().toLowerCase());
     }
 
+    public @NotNull List<String> getMaps() {
+        Main plugin = Main.getInstance();
+        if (plugin == null) return new ArrayList<>();
+        return MiniGame.getMaps(plugin, getConfigPath());
+    }
+
     public @Nullable MiniGame getNewHandlerInstance() {
+        return getNewHandlerInstance(null);
+    }
+    public @Nullable MiniGame getNewHandlerInstance(@Nullable String mapName) {
         Main plugin = Main.getInstance();
         if (plugin == null) return null;
 
@@ -53,9 +65,13 @@ public enum MiniGameType {
 
         if (handler == null) return null;
         try {
-            return handler.getConstructor(Main.class, Integer.TYPE).newInstance(plugin, getGameTimeInSeconds());
+            return handler.getConstructor(Main.class, Integer.TYPE, String.class, String.class).newInstance(plugin, getGameTimeInSeconds(), getConfigPath(), mapName);
         } catch (Exception ignored) {}
         return null;
+    }
+
+    private @NotNull String getConfigPath() {
+        return "minigames." + name().toLowerCase() + ".";
     }
 
     public static @Nullable MiniGameType getMiniGameTypeByName(@NotNull String name) {

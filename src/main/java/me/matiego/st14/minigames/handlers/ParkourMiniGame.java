@@ -22,14 +22,15 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
 import java.util.List;
 import java.util.Set;
 
 public class ParkourMiniGame extends MiniGame {
-    public ParkourMiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime) {
-        super(plugin, totalMiniGameTime);
+    public ParkourMiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime, @NotNull String configPath, @Nullable String mapName) {
+        super(plugin, totalMiniGameTime, configPath, mapName);
     }
 
     private Location spawn = null;
@@ -52,12 +53,10 @@ public class ParkourMiniGame extends MiniGame {
         isMiniGameStarted = true;
         lobby = true;
 
-        configPath = "minigames.parkour.";
-
         World world = MiniGamesUtils.getMiniGamesWorld();
         if (world == null) throw new MiniGameException("cannot load world");
 
-        setRandomMapConfigPath(configPath + "maps");
+        setMapConfigPath();
         loadDataFromConfig(world);
         registerEvents();
         setUpGameRules(world);
@@ -115,8 +114,8 @@ public class ParkourMiniGame extends MiniGame {
 
         lobby = false;
 
-        broadcastMessage("&dMinigra rozpoczęta. &ePowodzenia!");
-        showTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
+        sendMessage("&dMinigra rozpoczęta. &ePowodzenia!");
+        sendTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
 
         timer = new BossBarTimer(plugin, totalMiniGameTime, "&eKoniec minigry");
         timer.startTimer();

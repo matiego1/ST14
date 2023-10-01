@@ -25,6 +25,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
 import java.util.Collections;
@@ -32,8 +33,8 @@ import java.util.List;
 import java.util.Set;
 
 public class TagMiniGame extends MiniGame {
-    public TagMiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime) {
-        super(plugin, totalMiniGameTime);
+    public TagMiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime, @NotNull String configPath, @Nullable String mapName) {
+        super(plugin, totalMiniGameTime, configPath, mapName);
     }
 
     private Location spawn = null;
@@ -60,12 +61,10 @@ public class TagMiniGame extends MiniGame {
         isMiniGameStarted = true;
         lobby = true;
 
-        configPath = "minigames.tag";
-
         World world = MiniGamesUtils.getMiniGamesWorld();
         if (world == null) throw new MiniGameException("cannot load world");
 
-        setRandomMapConfigPath(configPath + "maps");
+        setMapConfigPath();
         loadDataFromConfig(world);
         registerEvents();
         setUpGameRules(world);
@@ -125,8 +124,8 @@ public class TagMiniGame extends MiniGame {
 
         lobby = false;
 
-        broadcastMessage("&dMinigra rozpoczęta. &ePowodzenia!");
-        showTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
+        sendMessage("&dMinigra rozpoczęta. &ePowodzenia!");
+        sendTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
 
         timer = new BossBarTimer(plugin, prepareTime, "&eRozpoczęcie berka");
         timer.startTimer();

@@ -19,14 +19,15 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
 import java.util.List;
 import java.util.Set;
 
 public class RedGreenMiniGame extends MiniGame {
-    public RedGreenMiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime) {
-        super(plugin, totalMiniGameTime);
+    public RedGreenMiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime, @NotNull String configPath, @Nullable String mapName) {
+        super(plugin, totalMiniGameTime, configPath, mapName);
     }
 
     private Location spawn = null;
@@ -54,14 +55,12 @@ public class RedGreenMiniGame extends MiniGame {
         isMiniGameStarted = true;
         lobby = true;
 
-        configPath = "minigames.red-green.";
-
         World world = MiniGamesUtils.getMiniGamesWorld();
         if (world == null) throw new MiniGameException("cannot load world");
 
         worldBorder = world.getWorldBorder();
 
-        setRandomMapConfigPath(configPath + "maps");
+        setMapConfigPath();
         loadDataFromConfig(world);
         registerEvents();
         setUpGameRules(world);
@@ -120,8 +119,8 @@ public class RedGreenMiniGame extends MiniGame {
 
         lobby = false;
 
-        broadcastMessage("&dMinigra rozpoczęta. &ePowodzenia!");
-        showTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
+        sendMessage("&dMinigra rozpoczęta. &ePowodzenia!");
+        sendTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
 
         nextCanMoveChange = 3 + Utils.getRandomNumber(minDelay, maxDelay);
         lastCanMoveChange = miniGameTime;

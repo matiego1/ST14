@@ -173,6 +173,8 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
             return;
         }
 
+        //TODO: wybierz mapę
+
         Set<Player> players = Bukkit.getOnlinePlayers().stream()
                 .filter(MiniGamesUtils::isInAnyMiniGameWorld)
                 .filter(p -> !manager.isInEditorMode(p))

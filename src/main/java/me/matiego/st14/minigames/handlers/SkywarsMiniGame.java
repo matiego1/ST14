@@ -23,6 +23,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Range;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -33,8 +35,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public class SkywarsMiniGame extends MiniGame {
-    public SkywarsMiniGame(@NotNull Main plugin, int totalGameTimeInSeconds) {
-        super(plugin, totalGameTimeInSeconds);
+    public SkywarsMiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime, @NotNull String configPath, @Nullable String mapName) {
+        super(plugin, totalMiniGameTime, configPath, mapName);
     }
 
     private final List<Location> spawns = new ArrayList<>();
@@ -61,12 +63,10 @@ public class SkywarsMiniGame extends MiniGame {
         isMiniGameStarted = true;
         lobby = true;
 
-        configPath = "minigames.skywars.";
-
         World world = MiniGamesUtils.getMiniGamesWorld();
         if (world == null) throw new MiniGameException("cannot load world");
 
-        setRandomMapConfigPath(configPath + "maps");
+        setMapConfigPath();
         loadDataFromConfig(world);
         registerEvents();
         setUpGameRules(world);
@@ -78,7 +78,7 @@ public class SkywarsMiniGame extends MiniGame {
         }
 
         sendActionBar("&eGenerowanie areny...");
-        broadcastMessage("&eGenerowanie areny...");
+        sendMessage("&eGenerowanie areny...");
         long time = Utils.now();
         Utils.async(() -> {
             try {
@@ -273,8 +273,8 @@ public class SkywarsMiniGame extends MiniGame {
 
         lobby = false;
 
-        broadcastMessage("&dMinigra rozpoczęta. &ePowodzenia!");
-        showTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
+        sendMessage("&dMinigra rozpoczęta. &ePowodzenia!");
+        sendTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
 
         timer = new BossBarTimer(plugin, prepareTime, "&eOtwarcie wysp");
         timer.startTimer();
@@ -292,7 +292,7 @@ public class SkywarsMiniGame extends MiniGame {
                 changePlayerStatus(player, PlayerStatus.SPECTATOR);
                 player.teleportAsync(spectatorSpawn);
                 MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
-                broadcastMessage("Gracz " + player.getName() + " obserwuję minigrę, ponieważ nie starczyło dla niego miejsca.");
+                sendMessage("Gracz " + player.getName() + " obserwuję minigrę, ponieważ nie starczyło dla niego miejsca.");
             } else {
                 changePlayerStatus(player, PlayerStatus.IN_MINI_GAME);
                 player.teleportAsync(spawns.get(i));
