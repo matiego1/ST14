@@ -249,8 +249,8 @@ public abstract class MiniGame implements Listener {
         Utils.broadcastMessage(
                 sender,
                 Prefix.MINI_GAMES,
-                "Rozpocząłeś minigrę &d" + getMiniGameName() + "&3 na mapie " + mapName,
-                "Gracz " + sender.getName() + " rozpoczął minigrę &d" + getMiniGameName()  + "&3 na mapie " + mapName,
+                "Rozpocząłeś minigrę &d" + getMiniGameName() + "&3 na mapie \"" + mapName + "\"",
+                "Gracz " + sender.getName() + " rozpoczął minigrę &d" + getMiniGameName()  + "&3 na mapie \"" + mapName + "\"",
                 "Gracz **" + sender.getName() + "** rozpoczął minigrę **" + getMiniGameName() + "** na mapie **" + mapName + "**"
         );
     }

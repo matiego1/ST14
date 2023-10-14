@@ -1,6 +1,5 @@
 package me.matiego.st14.objects;
 
-import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.bossbar.BossBar;
@@ -72,8 +71,6 @@ public class BossBarTimer {
 
     private float getProgress() {
         long now = Utils.now();
-        float x = (end - now) / (float) (end - begin);
-        if (x < 0 || x > 1) Logs.warning("[DEGUB]" + x + " (end=" + end + ", begin=" + begin + ", now=" + now + ")");
-        return x;
+        return Math.min(1, Math.max(0, (end - now) / (float) (end - begin)));
     }
 }

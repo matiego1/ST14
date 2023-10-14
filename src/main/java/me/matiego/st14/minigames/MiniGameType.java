@@ -71,7 +71,7 @@ public enum MiniGameType {
     }
 
     private @NotNull String getConfigPath() {
-        return "minigames." + name().toLowerCase() + ".";
+        return "minigames." + name().toLowerCase().replace("_", "-") + ".";
     }
 
     public static @Nullable MiniGameType getMiniGameTypeByName(@NotNull String name) {

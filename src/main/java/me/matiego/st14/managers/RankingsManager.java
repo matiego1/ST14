@@ -114,7 +114,7 @@ public class RankingsManager {
                                     if (failure instanceof ErrorResponseException e && e.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
                                         removeRankingMessage(type, data.getFirst(), data.getSecond());
                                     } else {
-                                        Logs.error("An error occurred while sending a private message.", failure);
+                                        Logs.error("An error occurred while updating ranking message", failure);
                                     }
                                 }
                         );
