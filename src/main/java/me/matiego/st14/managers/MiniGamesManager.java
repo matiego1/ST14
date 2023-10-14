@@ -181,7 +181,9 @@ public class MiniGamesManager {
                     data.add(node);
                 }
             });
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Logs.warning("An error occurred while changing player's permission.", e);
+        }
     }
 
     public void giveRewardToWinner(@NotNull Player player, double reward) {

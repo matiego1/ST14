@@ -88,7 +88,7 @@ public class SkywarsMiniGame extends MiniGame {
 
                 Utils.sync(() -> sendActionBar("&eGenerowanie skrzynek..."));
                 loadSpawnsAndGenerateChests(world, clipboard);
-                if (spawns.isEmpty()) throw new MiniGameException("no spawns found");
+                if (spawns.size() < 2) throw new MiniGameException("not enough spawns found");
                 setUpWorldBorder();
 
                 Utils.sync(() -> sendActionBar("&eWygenerowano arenę w " + Utils.parseMillisToString(Utils.now() - time, true)));

@@ -31,6 +31,7 @@ public class PlayerQuitListener implements Listener {
         plugin.getAfkManager().move(player);
         plugin.getBackpackManager().clearCache(player.getUniqueId());
         plugin.getMiniGamesManager().onPlayerQuit(player);
+        plugin.getMiniGameCommand().clearChosenMiniGame(player);
         plugin.getTeleportsManager().onPlayerQuit(player);
         plugin.getDynmapManager().getClaimsMarker().refreshPlayerClaims(player);
         plugin.getNonPremiumManager().clearDataAfterSession(player.getUniqueId());

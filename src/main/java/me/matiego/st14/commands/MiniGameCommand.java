@@ -16,8 +16,10 @@ import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
@@ -27,8 +29,7 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler.Discord {
@@ -41,6 +42,8 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
     }
     private final Main plugin;
     private final PluginCommand command;
+    private final HashMap<UUID, MiniGameType> chosenMiniGame = new HashMap<>();
+
     @Override
     public @Nullable PluginCommand getMinecraftCommand() {
         return command;
@@ -139,9 +142,10 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
 
     @Override
     public void onInventoryClick(@NotNull InventoryClickEvent event) {
-        if (!GUI.checkInventory(event, Prefix.MINI_GAMES + "Wybierz minigrę")) return;
+        if (!(GUI.checkInventory(event, Prefix.MINI_GAMES + "Wybierz minigrę") || GUI.checkInventory(event, Prefix.MINI_GAMES + "Wybierz mapę"))) return;
         event.getInventory().close();
 
+        String title = LegacyComponentSerializer.legacyAmpersand().serialize(event.getView().title());
         Player player = (Player) event.getWhoClicked();
         ItemStack item = event.getCurrentItem();
         Objects.requireNonNull(item); //already checked in GUI#checkInventory()
@@ -162,22 +166,57 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
             return;
         }
 
-        Component displayName = item.getItemMeta().displayName();
-        if (displayName == null) return;
-        MiniGameType type = MiniGameType.getMiniGameTypeByName(PlainTextComponentSerializer.plainText().serialize(displayName));
-        if (type == null) return;
+        Component displayNameComponent = item.getItemMeta().displayName();
+        if (displayNameComponent == null) return;
+        String displayName = PlainTextComponentSerializer.plainText().serialize(displayNameComponent);
 
-        MiniGame miniGame = type.getNewHandlerInstance();
+        if (title.equals(Prefix.MINI_GAMES + "Wybierz minigrę")) {
+            MiniGameType type = MiniGameType.getMiniGameTypeByName(displayName);
+            if (type == null) {
+                player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Napotkano niespodziewany błąd. Spróbuj ponownie."));
+                return;
+            }
+            chosenMiniGame.put(player.getUniqueId(), type);
+
+            List<String> maps = type.getMaps();
+            if (maps.isEmpty()) {
+                startMiniGame(player, null);
+                return;
+            }
+            if (maps.size() == 1) {
+                startMiniGame(player, maps.get(0));
+                return;
+            }
+
+            Inventory inv = GUI.createInventory(Math.min(54, ((maps.size() / 9) + 1) * 9), Prefix.MINI_GAMES + "Wybierz mapę");
+            for (String map : maps.subList(0, Math.min(maps.size(), 53))) {
+                inv.addItem(GUI.createGuiItem(Material.PAPER, "&9" + map, "&eKliknij, aby rozpocząć minigrę na tej mapie!"));
+            }
+            inv.setItem(inv.getSize() - 1, GUI.createGuiItem(Material.ARROW, "&9Wybierz losową mapę!"));
+
+            player.openInventory(inv);
+            return;
+        }
+
+        if (item.getType() == Material.ARROW) displayName = null;
+        startMiniGame(player, displayName);
+    }
+
+    private void startMiniGame(@NotNull Player player, @Nullable String mapName) {
+        MiniGameType type = chosenMiniGame.remove(player.getUniqueId());
+        if (type == null) {
+            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Napotkano niespodziewany błąd. Spróbuj ponownie."));
+            return;
+        }
+        MiniGame miniGame = type.getNewHandlerInstance(mapName);
         if (miniGame == null) {
             player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Ta gra jest wyłączona."));
             return;
         }
 
-        //TODO: wybierz mapę
-
         Set<Player> players = Bukkit.getOnlinePlayers().stream()
                 .filter(MiniGamesUtils::isInAnyMiniGameWorld)
-                .filter(p -> !manager.isInEditorMode(p))
+                .filter(p -> !plugin.getMiniGamesManager().isInEditorMode(p))
                 .collect(Collectors.toSet());
 
         if (players.size() < miniGame.getMinimumPlayersAmount()) {
@@ -190,8 +229,8 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
             return;
         }
 
-        if (!manager.startMiniGame(miniGame, players, player)) {
-            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Napotkano niespodziewany błąd."));
+        if (!plugin.getMiniGamesManager().startMiniGame(miniGame, players, player)) {
+            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Napotkano niespodziewany błąd przy uruchamianiu minigry."));
         }
     }
 
@@ -212,5 +251,9 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
         event.reply("Zatrzymywanie...").queue();
         manager.stopMiniGame();
         return 1;
+    }
+
+    public void clearChosenMiniGame(@NotNull Player player) {
+        chosenMiniGame.remove(player.getUniqueId());
     }
 }

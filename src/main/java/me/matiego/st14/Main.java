@@ -66,11 +66,12 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private TimeManager timeManager;
     @Getter private WorldsLastLocationManager worldsLastLocationManager;
 
-    @Getter private SuicideCommand suicideCommand;
-    @Getter private TpaCommand tpaCommand;
     @Getter private EconomyCommand economyCommand;
     @Getter private IncognitoCommand incognitoCommand;
+    @Getter private MiniGameCommand miniGameCommand;
     @Getter private TellCommand tellCommand;
+    @Getter private SuicideCommand suicideCommand;
+    @Getter private TpaCommand tpaCommand;
 
     @Getter private EntityDamageByEntityListener entityDamageByEntityListener;
     @Getter private GraveCreateListener graveCreateListener;
@@ -282,11 +283,12 @@ public final class Main extends JavaPlugin implements Listener {
 
     private void onDiscordBotEnable() {
         //register commands
-        tellCommand = new TellCommand(this);
-        tpaCommand = new TpaCommand(this);
-        suicideCommand = new SuicideCommand(this);
-        incognitoCommand = new IncognitoCommand(this);
         economyCommand = new EconomyCommand(this);
+        incognitoCommand = new IncognitoCommand(this);
+        miniGameCommand = new MiniGameCommand(this);
+        tellCommand = new TellCommand(this);
+        suicideCommand = new SuicideCommand(this);
+        tpaCommand = new TpaCommand(this);
         commandManager = new CommandManager(Objects.requireNonNull(getJda()), Arrays.asList(
                 new AccountsCommand(this),
                 new BanCommand(this),
@@ -295,7 +297,7 @@ public final class Main extends JavaPlugin implements Listener {
                 economyCommand,
                 new GameModeCommand(this),
                 incognitoCommand,
-                new MiniGameCommand(this),
+                miniGameCommand,
                 new NonPremiumCommand(this),
                 new PremiumCommand(this),
                 new RankingCommand(this),
