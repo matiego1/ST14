@@ -129,7 +129,7 @@ public class VerifyCommand implements CommandHandler.Discord {
                                 .replace("{mention}", member.getAsMention());
                         hook.sendMessage(DiscordUtils.checkLength(welcomeMessage, Message.MAX_CONTENT_LENGTH)).queue();
 
-                        Logs.info(DiscordUtils.getAsTag(member) + " dokończył proces weryfikacji na serwerze Discord.");
+                        Logs.info(DiscordUtils.getAsTag(member) + " dokończył proces weryfikacji na serwerze Discord");
                         Logs.discord("Wysłana wiadomość powitalna do `" + DiscordUtils.getAsTag(member) + "`:\n" + welcomeMessage);
                     },
                     failure -> {

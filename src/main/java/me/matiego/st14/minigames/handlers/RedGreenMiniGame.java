@@ -1,6 +1,5 @@
 package me.matiego.st14.minigames.handlers;
 
-import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGameException;
@@ -23,7 +22,6 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
 import java.util.List;
-import java.util.Set;
 
 public class RedGreenMiniGame extends MiniGame {
     public RedGreenMiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime, @NotNull String configPath, @Nullable String mapName) {
@@ -47,48 +45,7 @@ public class RedGreenMiniGame extends MiniGame {
         return GameMode.ADVENTURE;
     }
 
-    @Override
-    public void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException {
-        if (isMiniGameStarted()) throw new MiniGameException("minigame is already started");
-
-        clearExistingData();
-        isMiniGameStarted = true;
-        lobby = true;
-
-        World world = MiniGamesUtils.getMiniGamesWorld();
-        if (world == null) throw new MiniGameException("cannot load world");
-
-        worldBorder = world.getWorldBorder();
-
-        setMapConfigPath();
-        loadDataFromConfig(world);
-        registerEvents();
-        setUpGameRules(world);
-        broadcastMiniGameStartMessage(sender);
-
-        for (Player player : players) {
-            changePlayerStatus(player, PlayerStatus.SPECTATOR);
-            MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
-        }
-
-        sendActionBar("&eTeleportowanie graczy...");
-        Utils.async(() -> {
-            try {
-                if (!MiniGamesUtils.teleportPlayers(players.stream().toList(), spectatorSpawn).get()) {
-                    Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", ""));
-                    return;
-                }
-            } catch (Exception e) {
-                Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", ""));
-                Logs.error("An error occurred while teleporting players", e);
-                return;
-            }
-
-            Utils.sync(() -> startCountdown(10));
-        });
-    }
-
-    private void loadDataFromConfig(@NotNull World world) throws MiniGameException {
+    protected void loadDataFromConfig(@NotNull World world) throws MiniGameException {
         spawn = MiniGamesUtils.getLocationFromConfig(world, mapConfigPath + "spawn");
         if (spawn == null) throw new MiniGameException("cannot load spawn location");
         spectatorSpawn = MiniGamesUtils.getLocationFromConfig(world, mapConfigPath + "spectator-spawn");
@@ -99,40 +56,42 @@ public class RedGreenMiniGame extends MiniGame {
         if (minDelay > maxDelay) throw new MiniGameException("minDelay is greater than maxDelay");
     }
 
-    private void setUpGameRules(@NotNull World world) {
-        world.setPVP(false);
+    protected void setUpGameRules(@NotNull World world) {
         world.setGameRule(GameRule.KEEP_INVENTORY, true);
         world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
         world.setGameRule(GameRule.DO_ENTITY_DROPS, false);
         world.setGameRule(GameRule.FALL_DAMAGE, false);
         world.setGameRule(GameRule.FIRE_DAMAGE, false);
+        world.setGameRule(GameRule.NATURAL_REGENERATION, false);
     }
 
     @Override
-    protected void onCountdownEnd() {
-        List<Player> playersToStartGameWith = getPlayers();
+    protected void setUpWorldBorder(@NotNull World world) {
+        worldBorder = Bukkit.createWorldBorder();
+        worldBorder.setCenter(world.getWorldBorder().getCenter());
+        worldBorder.setSize(world.getWorldBorder().getSize());
+        worldBorder.setDamageAmount(world.getWorldBorder().getDamageAmount());
+        worldBorder.setDamageBuffer(world.getWorldBorder().getDamageBuffer());
+        worldBorder.setWarningDistance(world.getWorldBorder().getWarningDistance());
+        worldBorder.setWarningTime(world.getWorldBorder().getWarningTime());
+    }
 
-        if (playersToStartGameWith.size() < getMinimumPlayersAmount()) {
-            scheduleStopMiniGameAndSendReason("Za mało graczy! Anulowanie startu minigry...", "&dStart anulowany", "&eZa mało graczy");
-            return;
-        }
+    @Override
+    protected @NotNull BossBarTimer getBossBarTimer() {
+        BossBarTimer timer = new BossBarTimer(plugin, totalMiniGameTime, "&eKoniec minigry");
+        timer.setColor(BossBar.Color.GREEN);
+        return timer;
+    }
 
-        lobby = false;
-
-        sendMessage("&dMinigra rozpoczęta. &ePowodzenia!");
-        sendTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
-
+    @Override
+    protected void manipulatePlayersToStartGameWith(@NotNull List<Player> players) {
         nextCanMoveChange = 3 + Utils.getRandomNumber(minDelay, maxDelay);
         lastCanMoveChange = miniGameTime;
         canMove = true;
 
-        timer = new BossBarTimer(plugin, totalMiniGameTime, "&eKoniec minigry");
-        timer.setColor(BossBar.Color.GREEN);
-        timer.startTimer();
-
         sendActionBar("&aBiegnij!");
 
-        playersToStartGameWith.forEach(player -> {
+        players.forEach(player -> {
             player.teleportAsync(spawn);
             changePlayerStatus(player, PlayerStatus.IN_MINI_GAME);
             MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);

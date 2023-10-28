@@ -5,6 +5,7 @@ import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.AccountsManager;
 import me.matiego.st14.managers.EconomyManager;
+import me.matiego.st14.managers.PremiumManager;
 import me.matiego.st14.objects.CommandHandler;
 import me.matiego.st14.objects.GUI;
 import me.matiego.st14.utils.DiscordUtils;
@@ -150,7 +151,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
             inv.setItem(0, GUI.createGuiItem(Material.DISPENSER, "&9Przelew", "&bPrzelej pieniądze innemu graczowi"));
             inv.setItem(1, GUI.createGuiItem(Material.PAPER, "&9Wypłata", "&bWypłać pieniądze w postaci banknotu"));
             Utils.async(() -> inv.setItem(4, GUI.createGuiItem(Material.DIAMOND, "&9Saldo konta", "&b" + plugin.getEconomyManager().format(plugin.getEconomyManager().getBalance(player)))));
-            inv.setItem(7, GUI.createGuiItem(Material.VILLAGER_SPAWN_EGG, "&9Sklep", "&cMoże wkrótce!"));
+            inv.setItem(7, GUI.createGuiItem(Material.VILLAGER_SPAWN_EGG, "&9Kup status premium", "&cJuż wkrótce!"));
             inv.setItem(8, GUI.createGuiItem(Material.CREEPER_HEAD, "&9Kup główkę", "&cJuż wkrótce!"));
             player.openInventory(inv);
             return 3;
@@ -256,6 +257,67 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
 
                             player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie wypłacono &9" + economy.format(finalAmount) + "&b z twojego konta."));
                         });
+                        return List.of(AnvilGUI.ResponseAction.close());
+                    })
+                    .open(player);
+        } else if (slot == 7) {
+            new AnvilGUI.Builder()
+                    .jsonTitle(Utils.getJsonByLegacyString(Prefix.ECONOMY + "Wpisz czas"))
+                    .text("Wpisz tutaj...")
+                    .itemLeft(GUI.createGuiItem(Material.PAPER, "&9Wprowadź czas...", "&bKliknij &9ESC&b, aby wyjść", "&bKliknij przedmiot po prawej, aby zaakceptować"))
+                    .plugin(plugin)
+                    .onClick((anvilSlot, state) -> {
+                        if (anvilSlot != AnvilGUI.Slot.OUTPUT) return Collections.emptyList();
+
+                        PremiumManager premium = plugin.getPremiumManager();
+                        if (premium.isSuperPremium(player.getUniqueId())) {
+                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cNie możesz kupić statusu premium, ponieważ jesteś graczem super premium."));
+                            return List.of(AnvilGUI.ResponseAction.close());
+                        }
+
+                        long time = 0;
+                        try {
+                            time = Utils.parseStringToMillis(state.getText().replace(" ", "").toLowerCase());
+                            time /= (3600 * 1000);
+                        } catch (Exception ignored) {}
+
+                        if (time <= 0) {
+                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cWprowadziłeś zły czas, na który chcesz kupić status premium. Przykładowe czasy: 5h, 30d, 1d12h"));
+                            return List.of(AnvilGUI.ResponseAction.close());
+                        }
+
+                        double amount = plugin.getConfig().getDouble("premium.amount-const", 0) * Math.sqrt(time);
+                        if (amount <= 0) {
+                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cNie możesz kupić teraz statusu premium."));
+                            return List.of(AnvilGUI.ResponseAction.close());
+                        }
+
+                        time *= 3600 * 1000;
+
+                        EconomyManager economy = plugin.getEconomyManager();
+                        if (!economy.has(player, amount)) {
+                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cAby kupić przedłużyć status premium o " + Utils.parseMillisToString(time, false) + " potrzebujesz " + economy.format(amount)));
+                            return List.of(AnvilGUI.ResponseAction.close());
+                        }
+
+                        EconomyResponse response = economy.withdrawPlayer(player, amount);
+                        if (!response.transactionSuccess()) {
+                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cNapotkano niespodziewany błąd. Spróbuj później."));
+                            return List.of(AnvilGUI.ResponseAction.close());
+                        }
+
+                        if (premium.extend(player.getUniqueId(), time)) {
+                            long remaining = premium.getRemainingTime(player.getUniqueId());
+                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Pomyślnie przedłużono twój status premium o " + Utils.parseMillisToString(time, false) + (remaining > 0 ? ". Pozostało: " + Utils.parseMillisToString(remaining, false) : "")));
+
+                            Logs.info("Gracz " + player.getName() + " przedłużył status premium o `" + Utils.parseMillisToString(time, false) + "` za `" + economy.format(amount) + "`" + (remaining > 0 ? ". Pozostało: " + Utils.parseMillisToString(remaining, false) : ""));
+                        } else {
+                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Napotkano niespodziewany błąd."));
+                            if (!economy.depositPlayer(player, amount).transactionSuccess()) {
+                                player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&c&lNapotkano błąd przy oddawaniu pieniędzy! Zgłoś się do administratora, aby je odzyskać. Przepraszamy."));
+                                Logs.warning("Gracz " + player.getName() + " (" + player.getUniqueId() + ") stracił " + plugin.getEconomyManager().format(amount) + " ze swojego konta! Kwota musi być przywrócona ręcznie.");
+                            }
+                        }
                         return List.of(AnvilGUI.ResponseAction.close());
                     })
                     .open(player);

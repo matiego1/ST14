@@ -1,9 +1,12 @@
 package me.matiego.st14.minigames;
 
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.*;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -97,6 +100,7 @@ public class MiniGamesUtils {
         return getLocationFromString(world, value);
     }
 
+    @SuppressWarnings("unused")
     public static @Nullable Location getRelativeLocationFromString(@NotNull Location baseLocation, @NotNull String string) {
         Location loc = getLocationFromString(baseLocation.getWorld(), string);
         if (loc == null) return null;
@@ -117,5 +121,57 @@ public class MiniGamesUtils {
         }
 
         return new Location(world, x, y, z, 0, 0);
+    }
+
+    public static @Nullable ItemStack getItemStackFromString(@NotNull String string) {
+        String[] values = string.split(";");
+        if (values.length < 3) {
+            Logs.warning("invalid item: `" + string + "` (#1)");
+            return null;
+        }
+
+        Material material = null;
+        try {
+            material = Material.valueOf(values[0]);
+        } catch (Exception ignored) {}
+        if (material == null) {
+            Logs.warning("invalid item: `" + string + "` (#2)");
+            return null;
+        }
+
+        int amount = -1;
+        try {
+            amount = Utils.getRandomNumber(Integer.parseInt(values[1]), Integer.parseInt(values[2]));
+        } catch (Exception ignored) {}
+        if (amount <= 0) {
+            Logs.warning("invalid item: `" + string + "` (#3)");
+            return null;
+        }
+
+        ItemStack item = new ItemStack(material, amount);
+
+        for (int j = 3; j < values.length; j++) {
+            String[] enchantmentValues = values[j].split(",");
+            if (enchantmentValues.length != 2) {
+                Logs.warning("invalid item: `" + string + "` (#4)");
+                return null;
+            }
+            Enchantment enchantment = Enchantment.getByKey(NamespacedKey.minecraft(enchantmentValues[0]));
+            if (enchantment == null) {
+                Logs.warning("invalid item: `" + string + "` (#5)");
+                return null;
+            }
+            int level = -1;
+            try {
+                level = Integer.parseInt(enchantmentValues[1]);
+            } catch (Exception ignored) {}
+            if (level <= 0) {
+                Logs.warning("invalid item: `" + string + "` (#6)");
+                return null;
+            }
+            item.addUnsafeEnchantment(enchantment, level);
+        }
+
+        return item;
     }
 }

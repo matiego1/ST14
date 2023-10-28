@@ -16,7 +16,8 @@ public enum MiniGameType {
     SNOWBALLS_BATTLE(SnowballsBattleMiniGame.class, "Bitwa na śnieżki", Material.SNOWBALL, 15 * 60),
     TNT_RUN(TNTRunMiniGame.class, "TNT Run", Material.TNT, 15 * 60),
     SPLEEF(SpleefMiniGame.class, "Spleef", Material.STONE_SHOVEL, 15 * 60),
-    RED_GREEN(RedGreenMiniGame.class, "Czerwone-Zielone", Material.BOW, 15 * 60),
+    BOWS(null, "Łuki", Material.BOW, 15 * 60),
+    RED_GREEN(RedGreenMiniGame.class, "Czerwone-Zielone", Material.SPECTRAL_ARROW, 15 * 60),
     MAZE(MazeMiniGame.class, "Labirynt", Material.BRICKS, 15 * 60),
     PVP(PvPMiniGame.class, "PvP", Material.WOODEN_SWORD, 15 * 60),
     SKYWARS(SkywarsMiniGame.class, "Skywars", Material.ENDER_EYE, 20 * 60),
@@ -54,9 +55,6 @@ public enum MiniGameType {
         return MiniGame.getMaps(plugin, getConfigPath());
     }
 
-    public @Nullable MiniGame getNewHandlerInstance() {
-        return getNewHandlerInstance(null);
-    }
     public @Nullable MiniGame getNewHandlerInstance(@Nullable String mapName) {
         Main plugin = Main.getInstance();
         if (plugin == null) return null;

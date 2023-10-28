@@ -16,8 +16,11 @@ import net.kyori.adventure.title.Title;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -97,7 +100,6 @@ public abstract class MiniGame implements Listener {
 
     protected abstract @NotNull String getMiniGameName();
     protected abstract @NotNull GameMode getSpectatorGameMode();
-
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="player status">
@@ -113,7 +115,7 @@ public abstract class MiniGame implements Listener {
         return players.getOrDefault(player, PlayerStatus.NOT_IN_MINI_GAME);
     }
 
-    protected enum PlayerStatus {
+    public enum PlayerStatus {
         IN_MINI_GAME,
         SPECTATOR,
         NOT_IN_MINI_GAME
@@ -129,6 +131,10 @@ public abstract class MiniGame implements Listener {
 
     public synchronized @NotNull List<Player> getPlayersInMiniGame() {
         return players.keySet().stream().filter(player -> getPlayerStatus(player) == PlayerStatus.IN_MINI_GAME).collect(Collectors.toList());
+    }
+
+    public synchronized @NotNull List<Player> getSpectators() {
+        return players.keySet().stream().filter(player -> getPlayerStatus(player) == PlayerStatus.SPECTATOR).collect(Collectors.toList());
     }
     //</editor-fold>
 
@@ -209,8 +215,73 @@ public abstract class MiniGame implements Listener {
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="minigame start logic">
-    public abstract void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException;
+    public  void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException {
+        if (isMiniGameStarted()) throw new MiniGameException("minigame is already started");
 
+        clearExistingData();
+        isMiniGameStarted = true;
+        lobby = true;
+
+        World world = MiniGamesUtils.getMiniGamesWorld();
+        if (world == null) throw new MiniGameException("cannot load world");
+
+        setMapConfigPath();
+        loadDataFromConfig(world);
+        registerEvents();
+        world.setPVP(false);
+        setUpGameRules(world);
+        setUpWorldBorder(world);
+        broadcastMiniGameStartMessage(sender);
+
+        for (Player player : players) {
+            changePlayerStatus(player, PlayerStatus.SPECTATOR);
+            MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
+            player.setWorldBorder(worldBorder);
+        }
+
+        long begin = Utils.now();
+        Utils.async(() -> {
+            if (shouldPasteMap()) {
+                Utils.sync(() -> sendActionBar("&eGenerowanie areny..."));
+                try {
+                    File file = getRandomMapFile();
+                    if (file == null) throw new NullPointerException("map file is null");
+                    manipulatePastedMap(world, pasteMap(world, file));
+                } catch (Exception e) {
+                    Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy generowaniu areny. Minigra anulowana.", "&dStart anulowany", ""));
+                    Logs.error("An error occurred while pasting a map for the minigame", e);
+                    return;
+                }
+                Utils.sync(() -> sendActionBar("&eWygenerowano arenę w " + Utils.parseMillisToString(Utils.now() - begin, true)));
+            }
+
+            try {
+                if (!MiniGamesUtils.teleportPlayers(players.stream().toList(), getLobbySpawn()).get()) {
+                    Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", ""));
+                    return;
+                }
+            } catch (Exception e) {
+                Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", ""));
+                Logs.error("An error occurred while teleporting players", e);
+                return;
+            }
+
+            Utils.sync(() -> startCountdown(10));
+        });
+    }
+
+    protected abstract void loadDataFromConfig(@NotNull World world) throws MiniGameException;
+    protected abstract void setUpGameRules(@NotNull World world);
+    protected void setUpWorldBorder(@NotNull World world) {}
+    protected boolean shouldPasteMap() {
+        return false;
+    }
+    protected void manipulatePastedMap(@NotNull World world, @NotNull Clipboard clipboard) throws MiniGameException {}
+    protected @NotNull Location getLobbySpawn() {
+        return spectatorSpawn;
+    }
+
+    @SuppressWarnings("SameParameterValue - it will be easier to change the countdownTimeInSeconds value in the future")
     @SneakyThrows(MiniGameException.class)
     protected synchronized void startCountdown(int countdownTimeInSeconds) {
         sendMessage("&dRozpoczynanie minigry za...");
@@ -243,14 +314,35 @@ public abstract class MiniGame implements Listener {
         }, delay);
     }
 
-    protected abstract void onCountdownEnd();
+    protected void onCountdownEnd() {
+        List<Player> playersToStartGameWith = getPlayers();
+
+        if (playersToStartGameWith.size() < getMinimumPlayersAmount()) {
+            scheduleStopMiniGameAndSendReason("Za mało graczy! Anulowanie startu minigry...", "&dStart anulowany", "&eZa mało graczy");
+            return;
+        }
+
+        lobby = false;
+
+        sendMessage("&dMinigra rozpoczęta. &ePowodzenia!");
+        sendTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
+
+        timer = getBossBarTimer();
+        timer.startTimer();
+
+        manipulatePlayersToStartGameWith(playersToStartGameWith);
+    }
+
+    protected abstract @NotNull BossBarTimer getBossBarTimer();
+
+    protected abstract void manipulatePlayersToStartGameWith(@NotNull List<Player> players);
 
     protected synchronized void broadcastMiniGameStartMessage(@NotNull Player sender) {
         Utils.broadcastMessage(
                 sender,
                 Prefix.MINI_GAMES,
-                "Rozpocząłeś minigrę &d" + getMiniGameName() + "&3 na mapie \"" + mapName + "\"",
-                "Gracz " + sender.getName() + " rozpoczął minigrę &d" + getMiniGameName()  + "&3 na mapie \"" + mapName + "\"",
+                "Rozpocząłeś minigrę &d" + getMiniGameName() + "&e na mapie \"" + mapName + "\"",
+                "Gracz " + sender.getName() + " rozpoczął minigrę &d" + getMiniGameName()  + "&e na mapie \"" + mapName + "\"",
                 "Gracz **" + sender.getName() + "** rozpoczął minigrę **" + getMiniGameName() + "** na mapie **" + mapName + "**"
         );
     }
@@ -275,13 +367,14 @@ public abstract class MiniGame implements Listener {
             sendMessage("Gracz " + player.getName() + " dołącza do minigry!");
         } else {
             sendMessage("Gracz " + player.getName() + " obserwuje minigrę");
-
         }
+
         runTaskLater(() -> {
             if (lobby) {
                 MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
             } else {
                 MiniGamesUtils.healPlayer(player, getSpectatorGameMode());
+                player.getInventory().addItem(new ItemStack(Material.SPYGLASS));
             }
 
             player.teleportAsync(spectatorSpawn);
@@ -332,6 +425,7 @@ public abstract class MiniGame implements Listener {
         runTaskLater(() -> {
             MiniGamesUtils.healPlayer(player, getSpectatorGameMode());
             player.teleportAsync(spectatorSpawn);
+            player.getInventory().addItem(new ItemStack(Material.SPYGLASS));
         }, 3);
     }
     //</editor-fold>
@@ -389,4 +483,11 @@ public abstract class MiniGame implements Listener {
     }
 
     //</editor-fold>
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerDropItem(@NotNull PlayerDropItemEvent event) {
+        if (getPlayerStatus(event.getPlayer()) != PlayerStatus.SPECTATOR) return;
+        if (event.getItemDrop().getItemStack().getType() != Material.SPYGLASS) return;
+        event.setCancelled(true);
+    }
 }

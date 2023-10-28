@@ -1,24 +1,27 @@
 package me.matiego.st14.minigames.handlers;
 
-import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGameException;
 import me.matiego.st14.minigames.MiniGamesUtils;
 import me.matiego.st14.objects.BossBarTimer;
-import me.matiego.st14.utils.Utils;
-import org.bukkit.GameMode;
-import org.bukkit.GameRule;
-import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class PvPMiniGame extends MiniGame {
     public PvPMiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime, @NotNull String configPath, @Nullable String mapName) {
@@ -26,8 +29,10 @@ public class PvPMiniGame extends MiniGame {
     }
 
     private final List<Location> spawns = new ArrayList<>();
+    private final List<ItemStack> items = new ArrayList<>();
+    private int mapRadius = 100;
     private int prepareTime = 30;
-    private int levelUpBeforeEnd = 90;
+    private int shrinkBorderBeforeEnd = 180;
 
     @Override
     public @NotNull String getMiniGameName() {
@@ -39,98 +44,127 @@ public class PvPMiniGame extends MiniGame {
         return GameMode.ADVENTURE;
     }
 
-    @Override
-    public void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException {
-        if (isMiniGameStarted()) throw new MiniGameException("minigame is already started");
+    protected void loadDataFromConfig(@NotNull World world) throws MiniGameException {
+//        baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
+//        if (baseLocation == null) throw new MiniGameException("cannot load base location");
 
-        clearExistingData();
-        isMiniGameStarted = true;
-        lobby = true;
-
-        World world = MiniGamesUtils.getMiniGamesWorld();
-        if (world == null) throw new MiniGameException("cannot load world");
-
-        setMapConfigPath();
-        loadDataFromConfig(world);
-        registerEvents();
-        setUpGameRules(world);
-        broadcastMiniGameStartMessage(sender);
-
-        for (Player player : players) {
-            changePlayerStatus(player, PlayerStatus.SPECTATOR);
-            MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
-        }
-
-        sendActionBar("&eTeleportowanie graczy...");
-        Utils.async(() -> {
-            try {
-                if (!MiniGamesUtils.teleportPlayers(players.stream().toList(), spectatorSpawn).get()) {
-                    Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", ""));
-                    return;
-                }
-            } catch (Exception e) {
-                Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", ""));
-                Logs.error("An error occurred while teleporting players", e);
-                return;
-            }
-
-            Utils.sync(() -> startCountdown(10));
-        });
-    }
-
-    private void loadDataFromConfig(@NotNull World world) throws MiniGameException {
-        //todo: load spawns
-//        spawn = MiniGamesUtils.getLocationFromConfig(world, mapConfigPath + "spawn");
-//        if (spawn == null) throw new MiniGameException("cannot load spawn location");
         spectatorSpawn = MiniGamesUtils.getLocationFromConfig(world, mapConfigPath + "spectator-spawn");
         if (spectatorSpawn == null) throw new MiniGameException("cannot load spectator spawn location");
+        for (String spawn : plugin.getConfig().getStringList(mapConfigPath + "spawns")) {
+            spawns.add(MiniGamesUtils.getLocationFromString(world, spawn));
+        }
+        if (spawns.size() < 2) throw new MiniGameException("not enough spawns found");
 
+        mapRadius = Math.max(5, plugin.getConfig().getInt(mapConfigPath + "radius", mapRadius));
         prepareTime = Math.max(0, plugin.getConfig().getInt(configPath + "prepare-time", prepareTime));
-        levelUpBeforeEnd = Math.max(0, plugin.getConfig().getInt(configPath + "level-up-before-end", levelUpBeforeEnd));
-        if (totalMiniGameTime < prepareTime + levelUpBeforeEnd) throw new MiniGameException("incorrect game times");
+        shrinkBorderBeforeEnd = Math.max(0, plugin.getConfig().getInt(configPath + "shrink-border-before-end", shrinkBorderBeforeEnd));
+        if (totalMiniGameTime < prepareTime + shrinkBorderBeforeEnd) throw new MiniGameException("incorrect game times");
+
+        List<String> itemsNames = plugin.getConfig().getStringList(mapConfigPath + "items");
+        if (itemsNames.isEmpty()) {
+            itemsNames = plugin.getConfig().getStringList(configPath + "items");
+        }
+        for (String string : itemsNames) {
+            ItemStack item = MiniGamesUtils.getItemStackFromString(string);
+            if (item != null) items.add(item);
+        }
     }
 
-    private void setUpGameRules(@NotNull World world) {
-        world.setPVP(false);
-        world.setGameRule(GameRule.KEEP_INVENTORY, true);
+    protected void setUpGameRules(@NotNull World world) {
+        world.setGameRule(GameRule.KEEP_INVENTORY, false);
         world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
-        world.setGameRule(GameRule.DO_ENTITY_DROPS, false);
+        world.setGameRule(GameRule.DO_ENTITY_DROPS, true);
         world.setGameRule(GameRule.FALL_DAMAGE, true);
-        world.setGameRule(GameRule.FIRE_DAMAGE, false);
-        world.setGameRule(GameRule.DO_FIRE_TICK, false);
-        world.setGameRule(GameRule.NATURAL_REGENERATION, false);
+        world.setGameRule(GameRule.DO_FIRE_TICK, true);
+        world.setGameRule(GameRule.FIRE_DAMAGE, true);
+        world.setGameRule(GameRule.NATURAL_REGENERATION, true);
     }
 
     @Override
-    protected void onCountdownEnd() {
-        List<Player> playersToStartGameWith = getPlayers();
+    protected void setUpWorldBorder(@NotNull World world) {
+        worldBorder = Bukkit.createWorldBorder();
+        worldBorder.setCenter(spectatorSpawn);
+        worldBorder.setSize(mapRadius);
+        worldBorder.setWarningDistance(0);
+        worldBorder.setDamageBuffer(0);
+        worldBorder.setDamageAmount(5);
+        worldBorder.setWarningTime(10);
+    }
 
-        if (playersToStartGameWith.size() < getMinimumPlayersAmount()) {
-            scheduleStopMiniGameAndSendReason("Za mało graczy! Anulowanie startu minigry...", "&dStart anulowany", "&eZa mało graczy");
-            return;
-        }
+    @Override
+    protected @NotNull BossBarTimer getBossBarTimer() {
+        return new BossBarTimer(plugin, prepareTime, "&eRozpoczęcie bitwy");
+    }
 
-        lobby = false;
-
-        sendMessage("&dMinigra rozpoczęta. &ePowodzenia!");
-        sendTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
-
-        timer = new BossBarTimer(plugin, prepareTime, "&eRozpoczęcie bitwy");
-        timer.startTimer();
-
-        playersToStartGameWith.forEach(player -> {
-            //todo: teleport players to spawn
-//            player.teleportAsync(spawn);
-            changePlayerStatus(player, PlayerStatus.IN_MINI_GAME);
-            MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
+    @Override
+    protected void manipulatePlayersToStartGameWith(@NotNull List<Player> players) {
+        Collections.shuffle(spawns);
+        int i = 0;
+        for (Player player : players) {
             player.setBedSpawnLocation(spectatorSpawn, true);
             timer.showBossBarToPlayer(player);
-            //todo: give tools to players
-        });
+            if (i >= spawns.size()) {
+                changePlayerStatus(player, PlayerStatus.SPECTATOR);
+                player.teleportAsync(spectatorSpawn);
+                MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
+                sendMessage("Gracz " + player.getName() + " obserwuję minigrę, ponieważ nie starczyło dla niego miejsca.");
+            } else {
+                changePlayerStatus(player, PlayerStatus.IN_MINI_GAME);
+                player.teleportAsync(spawns.get(i));
+                MiniGamesUtils.healPlayer(player, GameMode.SURVIVAL);
+                giveToolsToPlayer(player);
+
+                i++;
+            }
+        }
+    }
+
+    private void giveToolsToPlayer(@NotNull Player player) {
+        for (ItemStack item : items) {
+            switch (item.getType().toString().replaceFirst(".+_", "")) {
+                case "HELMET" -> player.getInventory().setItem(EquipmentSlot.HEAD, item);
+                case "CHESTPLATE" -> player.getInventory().setItem(EquipmentSlot.CHEST, item);
+                case "LEGGINGS" -> player.getInventory().setItem(EquipmentSlot.LEGS, item);
+                case "BOOTS" -> player.getInventory().setItem(EquipmentSlot.FEET, item);
+                case "SHIELD" -> player.getInventory().setItem(EquipmentSlot.OFF_HAND, item);
+                default -> player.getInventory().addItem(item);
+            }
+        }
     }
 
     @Override
     protected void miniGameTick() {
+        if (miniGameTime == prepareTime) {
+            timer.stopTimerAndHideBossBar();
+            timer = new BossBarTimer(plugin, totalMiniGameTime - prepareTime, "&eKoniec minigry");
+            timer.startTimer();
 
+            getPlayers().forEach(player -> {
+                timer.showBossBarToPlayer(player);
+                player.setWorldBorder(worldBorder);
+            });
+
+            World world = MiniGamesUtils.getMiniGamesWorld();
+            if (world != null) world.setPVP(true);
+        }
+
+        if (miniGameTime == totalMiniGameTime - shrinkBorderBeforeEnd) {
+            worldBorder.setSize(Math.max(1, 0.1 * mapRadius), TimeUnit.SECONDS, shrinkBorderBeforeEnd);
+            getPlayersInMiniGame().forEach(player -> player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, shrinkBorderBeforeEnd * 20, 255, false, false, true)));
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityDamageByEntity(@NotNull EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+        if (getPlayerStatus(player) != PlayerStatus.SPECTATOR) return;
+        event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onFoodLevelChange(@NotNull FoodLevelChangeEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+        if (getPlayerStatus(player) != PlayerStatus.SPECTATOR) return;
+        event.setFoodLevel(20);
     }
 }

@@ -4,7 +4,6 @@ import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.world.block.BaseBlock;
-import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGameException;
@@ -14,7 +13,8 @@ import me.matiego.st14.utils.Utils;
 import me.matiego.st14.utils.WorldEditUtils;
 import org.bukkit.*;
 import org.bukkit.block.Container;
-import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -26,11 +26,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
@@ -55,76 +53,17 @@ public class SkywarsMiniGame extends MiniGame {
         return GameMode.ADVENTURE;
     }
 
-    @Override
-    public void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException {
-        if (isMiniGameStarted()) throw new MiniGameException("minigame is already started");
-
-        clearExistingData();
-        isMiniGameStarted = true;
-        lobby = true;
-
-        World world = MiniGamesUtils.getMiniGamesWorld();
-        if (world == null) throw new MiniGameException("cannot load world");
-
-        setMapConfigPath();
-        loadDataFromConfig(world);
-        registerEvents();
-        setUpGameRules(world);
-        broadcastMiniGameStartMessage(sender);
-
-        for (Player player : players) {
-            changePlayerStatus(player, PlayerStatus.SPECTATOR);
-            MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
-        }
-
-        sendActionBar("&eGenerowanie areny...");
-        sendMessage("&eGenerowanie areny...");
-        long time = Utils.now();
-        Utils.async(() -> {
-            try {
-                File file = getRandomMapFile();
-                if (file == null) throw new NullPointerException("map file is null");
-                Clipboard clipboard = pasteMap(world, file);
-
-                Utils.sync(() -> sendActionBar("&eGenerowanie skrzynek..."));
-                loadSpawnsAndGenerateChests(world, clipboard);
-                if (spawns.size() < 2) throw new MiniGameException("not enough spawns found");
-                setUpWorldBorder();
-
-                Utils.sync(() -> sendActionBar("&eWygenerowano arenę w " + Utils.parseMillisToString(Utils.now() - time, true)));
-            } catch (Exception e) {
-                Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy generowaniu areny. Minigra anulowana.", "&dStart anulowany", ""));
-                Logs.error("An error occurred while pasting a map for the minigame", e);
-                return;
-            }
-
-            try {
-                if (!MiniGamesUtils.teleportPlayers(players.stream().toList(), spectatorSpawn).get()) {
-                    Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", ""));
-                    return;
-                }
-            } catch (Exception e) {
-                Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", ""));
-                Logs.error("An error occurred while teleporting players", e);
-                return;
-            }
-
-            Utils.sync(() -> startCountdown(15));
-        });
-    }
-
-    private void loadDataFromConfig(@NotNull World world) throws MiniGameException {
+    protected void loadDataFromConfig(@NotNull World world) throws MiniGameException {
         baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
         if (baseLocation == null) throw new MiniGameException("cannot load base location");
 
-        mapRadius = Math.max(5, plugin.getConfig().getInt(mapConfigPath + "radius", 100));
-        prepareTime = Math.max(0, plugin.getConfig().getInt(configPath + "prepare-time", 30));
-        shrinkBorderBeforeEnd = Math.max(0, plugin.getConfig().getInt(configPath + "shrink-border-before-end", 180));
+        mapRadius = Math.max(5, plugin.getConfig().getInt(mapConfigPath + "radius", mapRadius));
+        prepareTime = Math.max(0, plugin.getConfig().getInt(configPath + "prepare-time", prepareTime));
+        shrinkBorderBeforeEnd = Math.max(0, plugin.getConfig().getInt(configPath + "shrink-border-before-end", shrinkBorderBeforeEnd));
         if (totalMiniGameTime < prepareTime + shrinkBorderBeforeEnd) throw new MiniGameException("incorrect game times");
     }
 
-    private void setUpGameRules(@NotNull World world) {
-        world.setPVP(false);
+    protected void setUpGameRules(@NotNull World world) {
         world.setGameRule(GameRule.KEEP_INVENTORY, false);
         world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
         world.setGameRule(GameRule.DO_ENTITY_DROPS, true);
@@ -134,7 +73,7 @@ public class SkywarsMiniGame extends MiniGame {
         world.setGameRule(GameRule.NATURAL_REGENERATION, true);
     }
 
-    private void setUpWorldBorder() {
+    private void setUpSkywarsWorldBorder() {
         worldBorder = Bukkit.createWorldBorder();
         worldBorder.setCenter(spectatorSpawn);
         worldBorder.setSize(mapRadius);
@@ -142,6 +81,16 @@ public class SkywarsMiniGame extends MiniGame {
         worldBorder.setDamageBuffer(0);
         worldBorder.setDamageAmount(5);
         worldBorder.setWarningTime(10);
+    }
+
+    @Override
+    protected void manipulatePastedMap(@NotNull World world, @NotNull Clipboard clipboard) throws MiniGameException {
+        Utils.sync(() -> sendActionBar("&eGenerowanie skrzynek..."));
+        loadSpawnsAndGenerateChests(world, clipboard);
+        if (spawns.size() < 2) throw new MiniGameException("not enough spawns found");
+        setUpSkywarsWorldBorder();
+
+        spectatorSpawn.getNearbyEntitiesByType(Item.class, mapRadius).forEach(Entity::remove);
     }
 
     private void loadSpawnsAndGenerateChests(@NotNull World world, @NotNull Clipboard clipboard) {
@@ -196,93 +145,34 @@ public class SkywarsMiniGame extends MiniGame {
             min = max;
             max = x;
         }
-        List<String> items = plugin.getConfig().getStringList(configPath + "chests." + type + ".items");
+
+        List<ItemStack> items = new ArrayList<>();
+        for (String string : plugin.getConfig().getStringList(configPath + "chests." + type + ".items")) {
+            ItemStack item = MiniGamesUtils.getItemStackFromString(string);
+            if (item != null) items.add(item);
+        }
+
         Collections.shuffle(items);
 
-        int itemsAmount = (int) Math.min(Math.max(Math.ceil(ThreadLocalRandom.current().nextGaussian()) + Math.floor((max + min) / 2d) - plugin.getConfig().getInt(configPath + "chests." + type + ".subtract-from-mean", 0), min), max);
+        int itemsAmount = (int) Math.min(max, Math.max(min, Math.ceil(ThreadLocalRandom.current().nextGaussian()) + Math.floor((max + min) / 2d) - plugin.getConfig().getInt(configPath + "chests." + type + ".subtract-from-mean", 0)));
+        items = items.subList(0, itemsAmount);
 
-        List<ItemStack> result = new ArrayList<>();
-        for (int i = 0; i < Math.min(itemsAmount, items.size()); i++) {
-            String[] values = items.get(i).split(";");
-            if (values.length < 3) {
-                Logs.warning("incorrect skywars item! (#1) config value: `" + items.get(i) + "`");
-                continue;
-            }
-            Material material = null;
-            try {
-                material = Material.valueOf(values[0]);
-            } catch (Exception ignored) {}
-            if (material == null) {
-                Logs.warning("incorrect skywars item! (#2) config value: `" + items.get(i) + "`");
-                continue;
-            }
-
-            int amount = -1;
-            try {
-                amount = Utils.getRandomNumber(Integer.parseInt(values[1]), Integer.parseInt(values[2]));
-            } catch (Exception ignored) {}
-            if (amount <= 0) {
-                Logs.warning("incorrect skywars item! (#3) config value: `" + items.get(i) + "`");
-                continue;
-            }
-
-            ItemStack item = new ItemStack(material, amount);
-
-            for (int j = 3; j < values.length; j++) {
-                String[] enchantmentValues = values[j].split(",");
-                if (enchantmentValues.length != 2) {
-                    Logs.warning("incorrect skywars item! (#4) config value: `" + items.get(i) + "`");
-                    continue;
-                }
-                Enchantment enchantment = Enchantment.getByKey(NamespacedKey.minecraft(enchantmentValues[0]));
-                if (enchantment == null) {
-                    Logs.warning("incorrect skywars item! (#5) config value: `" + items.get(i) + "`");
-                    continue;
-                }
-                int level = -1;
-                try {
-                    level = Integer.parseInt(enchantmentValues[1]);
-                } catch (Exception ignored) {}
-                if (level <= 0) {
-                    Logs.warning("incorrect skywars item! (#6) config value: `" + items.get(i) + "`");
-                    continue;
-                }
-                item.addUnsafeEnchantment(enchantment, level);
-            }
-
-            result.add(item);
+        while (items.size() < 27) {
+            items.add(new ItemStack(Material.AIR));
         }
 
-        while (result.size() < 27) {
-            result.add(new ItemStack(Material.AIR));
-        }
+        Collections.shuffle(items);
 
-        Collections.shuffle(result);
-
-        return result;
+        return items;
     }
 
     @Override
-    protected void onCountdownEnd() {
-        List<Player> playersToStartGameWith = getPlayers();
-
-        if (playersToStartGameWith.size() < getMinimumPlayersAmount()) {
-            scheduleStopMiniGameAndSendReason("Za mało graczy! Anulowanie startu minigry...", "&dStart anulowany", "&eZa mało graczy");
-            return;
-        }
-
-        lobby = false;
-
-        sendMessage("&dMinigra rozpoczęta. &ePowodzenia!");
-        sendTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
-
-        timer = new BossBarTimer(plugin, prepareTime, "&eOtwarcie wysp");
-        timer.startTimer();
-
-        teleportPlayersToIslands(playersToStartGameWith);
+    protected @NotNull BossBarTimer getBossBarTimer() {
+        return new BossBarTimer(plugin, prepareTime, "&eOtwarcie wysp");
     }
 
-    private void teleportPlayersToIslands(@NotNull List<Player> players) {
+    @Override
+    protected void manipulatePlayersToStartGameWith(@NotNull List<Player> players) {
         Collections.shuffle(spawns);
         int i = 0;
         for (Player player : players) {
@@ -313,9 +203,6 @@ public class SkywarsMiniGame extends MiniGame {
 
     @Override
     protected void miniGameTick() {
-        teleportSpectatorsBackIfTooFarAway();
-        tickPlayers();
-
         if (miniGameTime == prepareTime) {
             timer.stopTimerAndHideBossBar();
             timer = new BossBarTimer(plugin, totalMiniGameTime - prepareTime, "&eKoniec minigry");
@@ -332,29 +219,8 @@ public class SkywarsMiniGame extends MiniGame {
 
         if (miniGameTime == totalMiniGameTime - shrinkBorderBeforeEnd) {
             worldBorder.setSize(Math.max(1, 0.1 * mapRadius), TimeUnit.SECONDS, shrinkBorderBeforeEnd);
+            getPlayersInMiniGame().forEach(player -> player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, shrinkBorderBeforeEnd * 20, 255, false, false, true)));
         }
-    }
-
-    private void tickPlayers() {
-        getPlayersInMiniGame().forEach(player -> {
-            if (miniGameTime == totalMiniGameTime - shrinkBorderBeforeEnd) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, shrinkBorderBeforeEnd * 20, 255, false, false, true));
-            }
-        });
-    }
-
-    private void teleportSpectatorsBackIfTooFarAway() {
-        getPlayers().stream()
-                .filter(player -> distance(player.getLocation(), spectatorSpawn) > mapRadius)
-                .filter(player -> getPlayerStatus(player) == PlayerStatus.SPECTATOR)
-                .forEach(player -> {
-                    player.teleportAsync(spectatorSpawn);
-                    player.sendActionBar(Utils.getComponentByString("&cOdleciałeś za daleko"));
-                });
-    }
-
-    private double distance(@NotNull Location l1, @NotNull Location l2) {
-        return Math.max(Math.abs(l1.getX() - l2.getX()), Math.abs(l1.getZ() - l2.getZ()));
     }
 
     @EventHandler (ignoreCancelled = true)

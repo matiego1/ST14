@@ -45,6 +45,22 @@ public class PremiumCommand implements CommandHandler.Minecraft, CommandHandler.
     public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         PremiumManager manager = plugin.getPremiumManager();
 
+        if (args.length == 0 && sender instanceof Player player) {
+            Utils.async(() -> {
+                long time = manager.getRemainingTime(player.getUniqueId());
+                if (manager.isSuperPremium(player.getUniqueId())) {
+                    sender.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Jesteś graczem super premium."));
+                    return;
+                }
+                if (time > 0) {
+                    sender.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Pozostało Ci &6" + Utils.parseMillisToString(time, false) + "&b do wygaśnięcia statusu premium."));
+                } else {
+                    sender.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Nie jesteś graczem premium."));
+                }
+            });
+            return 5;
+        }
+
         if (args.length < 2) return -1;
 
         UUID uuid = plugin.getOfflinePlayersManager().getIdByName(args[1]);

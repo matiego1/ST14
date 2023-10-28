@@ -1,6 +1,5 @@
 package me.matiego.st14.minigames.handlers;
 
-import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.minigames.MiniGame;
 import me.matiego.st14.minigames.MiniGameException;
@@ -25,8 +24,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
-import java.io.File;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
 
 public class SpleefMiniGame extends MiniGame {
     public SpleefMiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime, @NotNull String configPath, @Nullable String mapName) {
@@ -45,56 +44,7 @@ public class SpleefMiniGame extends MiniGame {
         return GameMode.SPECTATOR;
     }
 
-    @Override
-    public void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException {
-        if (isMiniGameStarted()) throw new MiniGameException("minigame is already started");
-
-        clearExistingData();
-        isMiniGameStarted = true;
-        lobby = true;
-
-        World world = MiniGamesUtils.getMiniGamesWorld();
-        if (world == null) throw new MiniGameException("cannot load world");
-
-        setMapConfigPath();
-        loadDataFromConfig(world);
-        registerEvents();
-        setUpGameRules(world);
-        broadcastMiniGameStartMessage(sender);
-
-        for (Player player : players) {
-            changePlayerStatus(player, PlayerStatus.SPECTATOR);
-            MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
-        }
-
-        sendActionBar("&eGenerowanie areny...");
-        Utils.async(() -> {
-            try {
-                File file = getRandomMapFile();
-                if (file == null) throw new NullPointerException("map file is null");
-                pasteMap(world, file);
-            } catch (Exception e) {
-                Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy generowaniu areny. Minigra anulowana.", "&dStart anulowany", ""));
-                Logs.error("An error occurred while pasting a map for the minigame", e);
-                return;
-            }
-
-            try {
-                if (!MiniGamesUtils.teleportPlayers(players.stream().toList(), spawn).get()) {
-                    Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", ""));
-                    return;
-                }
-            } catch (Exception e) {
-                Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", ""));
-                Logs.error("An error occurred while teleporting players", e);
-                return;
-            }
-
-            Utils.sync(() -> startCountdown(10));
-        });
-    }
-
-    private void loadDataFromConfig(@NotNull World world) throws MiniGameException {
+    protected void loadDataFromConfig(@NotNull World world) throws MiniGameException {
         baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
         if (baseLocation == null) throw new MiniGameException("cannot load base location");
 
@@ -104,8 +54,7 @@ public class SpleefMiniGame extends MiniGame {
         if (spectatorSpawn == null) throw new MiniGameException("cannot load spectator spawn location");
     }
 
-    private void setUpGameRules(@NotNull World world) {
-        world.setPVP(false);
+    protected void setUpGameRules(@NotNull World world) {
         world.setGameRule(GameRule.KEEP_INVENTORY, true);
         world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
         world.setGameRule(GameRule.DO_ENTITY_DROPS, false);
@@ -113,23 +62,23 @@ public class SpleefMiniGame extends MiniGame {
     }
 
     @Override
-    protected void onCountdownEnd() {
-        List<Player> playersToStartGameWith = getPlayers();
+    protected boolean shouldPasteMap() {
+        return true;
+    }
 
-        if (playersToStartGameWith.size() < getMinimumPlayersAmount()) {
-            scheduleStopMiniGameAndSendReason("Za mało graczy! Anulowanie startu minigry...", "&dStart anulowany", "&eZa mało graczy");
-            return;
-        }
+    @Override
+    protected @NotNull Location getLobbySpawn() {
+        return spawn;
+    }
 
-        lobby = false;
+    @Override
+    protected @NotNull BossBarTimer getBossBarTimer() {
+        return new BossBarTimer(plugin, totalMiniGameTime, "&eKoniec minigry");
+    }
 
-        sendMessage("&dMinigra rozpoczęta. &ePowodzenia!");
-        sendTitle("&dMinigra rozpoczęta", "&ePowodzenia!");
-
-        timer = new BossBarTimer(plugin, totalMiniGameTime, "&eKoniec minigry");
-        timer.startTimer();
-
-        playersToStartGameWith.forEach(player -> {
+    @Override
+    protected void manipulatePlayersToStartGameWith(@NotNull List<Player> players) {
+        players.forEach(player -> {
             changePlayerStatus(player, PlayerStatus.IN_MINI_GAME);
             player.teleportAsync(spawn);
             MiniGamesUtils.healPlayer(player, GameMode.SURVIVAL);
@@ -168,9 +117,8 @@ public class SpleefMiniGame extends MiniGame {
 
     private void teleportSpectatorsBackIfTooFarAway() {
         int maxDistance = Math.max(0, plugin.getConfig().getInt(mapConfigPath + "map-radius", 100));
-        getPlayers().stream()
+        getSpectators().stream()
                 .filter(player -> distanceSquared(player.getLocation(), spectatorSpawn) > maxDistance * maxDistance)
-                .filter(player -> getPlayerStatus(player) == PlayerStatus.SPECTATOR)
                 .forEach(player -> {
                     player.teleportAsync(spectatorSpawn);
                     player.sendActionBar(Utils.getComponentByString("&cOdleciałeś za daleko"));
