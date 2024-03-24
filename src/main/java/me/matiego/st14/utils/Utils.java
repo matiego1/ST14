@@ -23,7 +23,6 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.util.*;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -199,9 +198,8 @@ public class Utils {
         if (task.isBefore(now)) {
             task = task.plusDays(1);
         }
-        //todo: move to AsyncScheduler?
         long seconds = Duration.between(now.atZone(ZoneId.systemDefault()).toInstant(), task.atZone(ZoneId.systemDefault()).toInstant()).getSeconds();
-        Executors.newScheduledThreadPool(1).schedule(() -> Utils.sync(() -> {
+        Bukkit.getAsyncScheduler().runDelayed(Main.getInstance(), t -> Utils.sync(() -> {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 player.kick(Utils.getComponentByString("&cNa serwer możesz ponownie dołączyć 3 sekundy po północy. Przepraszamy."));
             }

@@ -88,7 +88,7 @@ public final class Main extends JavaPlugin implements Listener {
         instance = this;
         long time = Utils.now();
         //Check Bukkit version
-        if (!Bukkit.getBukkitVersion().equals("1.20.1-R0.1-SNAPSHOT")) {
+        if (!Bukkit.getBukkitVersion().equals("1.20.4-R0.1-SNAPSHOT")) {
             Logs.error("Detected incompatible Bukkit version: " + Bukkit.getBukkitVersion() + ".");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
@@ -411,6 +411,7 @@ public final class Main extends JavaPlugin implements Listener {
             callbackThreadPool = null;
         }
         //end all tasks
+        Bukkit.getAsyncScheduler().cancelTasks(this);
         Bukkit.getScheduler().cancelTasks(this);
         for (BukkitWorker task : Bukkit.getScheduler().getActiveWorkers()) {
             if (task.getOwner().equals(this)) {
