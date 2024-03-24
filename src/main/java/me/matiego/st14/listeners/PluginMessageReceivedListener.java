@@ -27,8 +27,8 @@ public class PluginMessageReceivedListener implements PluginMessageListener {
         if (plugin.getConfig().getStringList("brands.bypass").contains(player.getUniqueId().toString())) return;
 
         player.kick(Utils.getComponentByString(
-                "&cAby grać na tym serwerze musisz używać optifine!\n" +
-                "&cMożesz go pobrać tutaj: optifine.net"
+                "&cNie możesz grać na tym serwerze używając tego klienta!\n" +
+                "&cListę dozwolonych klientów znajdziesz na serwerze discord, na kanale #informacje."
         ));
         Logs.warning(player.getName() + " próbował grać na niedozwolonym kliencie minecraft. (" + brand + ")");
     }

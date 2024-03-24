@@ -46,7 +46,6 @@ public abstract class MiniGame implements Listener {
     protected final String configPath;
     protected final MiniGameType miniGameType;
     protected String mapName;
-    protected String previousMapName;
     protected final int totalMiniGameTime;
     protected String mapConfigPath = null;
     protected Location spectatorSpawn;
@@ -80,16 +79,14 @@ public abstract class MiniGame implements Listener {
     protected void setMapConfigPath() throws MiniGameException {
         if (mapName != null) {
             mapConfigPath = configPath + "maps." + mapName + ".";
-            previousMapName = miniGameType.getPreviousMapName();
             miniGameType.setPreviousMapName(mapName);
             return;
         }
 
         List<String> maps = getMaps(plugin, configPath);
         if (maps.isEmpty()) throw new MiniGameException("cannot find any map");
-        previousMapName = miniGameType.getPreviousMapName();
         if (maps.size() > 1) {
-            maps.remove(previousMapName);
+            maps.remove(miniGameType.getPreviousMapName());
         }
         Collections.shuffle(maps);
         mapConfigPath = configPath + "maps." + maps.get(0) + ".";
