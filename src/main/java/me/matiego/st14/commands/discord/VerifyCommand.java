@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -18,7 +17,6 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.context.UserContextInteraction;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
-import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
 
 public class VerifyCommand implements CommandHandler.Discord {
@@ -66,25 +64,16 @@ public class VerifyCommand implements CommandHandler.Discord {
             return 0;
         }
 
-        member.getUser().openPrivateChannel().queue(chn -> chn.sendMessage(member.getAsMention() + ", kliknij poniższy przycisk, aby dokończyć proces weryfikacji.")
-                .addActionRow(
-                        Button.success("verify-account", "Akceptuję regulamin")
-                )
-                .queue(
-                        success -> {
-                            hook.sendMessage("Pomyślnie wysłano prywatną wiadomość do użytkownika. Oczekiwanie na odpowiedź...").queue();
-                            Logs.info(sender + " rozpoczął proces weryfikacji nowego członka " + DiscordUtils.getAsTag(member));
-                        },
-                        failure -> {
-                            if (failure instanceof ErrorResponseException e && e.getErrorResponse() == ErrorResponse.CANNOT_SEND_TO_USER) {
-                                Logs.warning("User " + DiscordUtils.getAsTag(member) + " doesn't allow private messages.");
-                                hook.sendMessage("Ten użytkownik nie zezwala na prywatne wiadomości od bota.").queue();
-                            } else {
-                                Logs.error("An error occurred while sending a private message.", failure);
-                                hook.sendMessage("Napotkano niespodziewany błąd. Spróbuj ponownie.").queue();
-                            }
-                        }
-                ));
+        DiscordUtils.sendPrivateMessage(member.getUser(), member.getAsMention() + ", kliknij poniższy przycisk, aby dokończyć proces weryfikacji.", action -> action.addActionRow(Button.success("verify-account", "Akceptuję regulamin")), result -> {
+           switch (result) {
+               case SUCCESS -> {
+                   hook.sendMessage("Pomyślnie wysłano prywatną wiadomość do użytkownika. Oczekiwanie na odpowiedź...").queue();
+                   Logs.info(sender + " rozpoczął proces weryfikacji nowego członka " + DiscordUtils.getAsTag(member));
+               }
+               case CANNOT_SEND_TO_USER -> hook.sendMessage("Ten użytkownik nie zezwala na prywatne wiadomości od bota.").queue();
+               case FAILURE -> hook.sendMessage("Napotkano niespodziewany błąd. Spróbuj ponownie.").queue();
+           }
+        });
         return 0;
     }
 

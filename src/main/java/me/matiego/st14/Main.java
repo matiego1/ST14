@@ -9,9 +9,9 @@ import me.matiego.st14.commands.discord.*;
 import me.matiego.st14.commands.minecraft.*;
 import me.matiego.st14.listeners.*;
 import me.matiego.st14.managers.*;
+import me.matiego.st14.objects.GUI;
 import me.matiego.st14.rewards.RewardForPlaying;
 import me.matiego.st14.utils.DiscordUtils;
-import me.matiego.st14.objects.GUI;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -191,15 +191,15 @@ public final class Main extends JavaPlugin implements Listener {
                 new InventoryClickListener(this),
                 new InventoryCloseListener(this),
                 new InventoryOpenListener(this),
-                new PlayerAdvancementCriterionGrantListener(),
-                new PlayerAdvancementDoneListener(),
-                playerDeepSleepListener,
+                new PlayerAdvancementCriterionGrantListener(this),
+                new PlayerBedEnterListener(this),
                 new PlayerBedLeaveListener(this),
                 new PlayerBucketEmptyListener(),
                 new PlayerChangedWorldListener(this),
                 new PlayerCommandPreprocessListener(this),
                 new PlayerCommandSendListener(this),
                 new PlayerDeathListener(this),
+                playerDeepSleepListener,
                 new PlayerDropItemListener(this),
                 new PlayerInteractListener(this),
                 new PlayerItemFrameChangeListener(this),
@@ -214,6 +214,7 @@ public final class Main extends JavaPlugin implements Listener {
                 playerQuitListener,
                 new PlayerResourcePackStatusListener(),
                 new PlayerRespawnListener(this),
+                new PlayerSetSpawnListener(),
                 new PlayerSwapHandItemsListener(this),
                 new PlayerTeleportListener(),
                 new ServerCommandListener(),
@@ -255,7 +256,7 @@ public final class Main extends JavaPlugin implements Listener {
                     .setMemberCachePolicy(MemberCachePolicy.NONE)
                     .setCallbackPool(callbackThreadPool, false)
                     .setGatewayPool(Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("Counting - JDA Gateway").build()), true)
-                    .setRateLimitPool(new ScheduledThreadPoolExecutor(5, new ThreadFactoryBuilder().setNameFormat("Counting - JDA Rate Limit").build()), true)
+                    .setRateLimitScheduler(new ScheduledThreadPoolExecutor(5, new ThreadFactoryBuilder().setNameFormat("Counting - JDA Rate Limit").build()), true)
                     .setWebsocketFactory(new WebSocketFactory().setDualStackMode(DualStackMode.IPV4_ONLY))
                     .setHttpClient(DiscordUtils.getHttpClient())
                     .setAutoReconnect(true)
@@ -322,6 +323,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new FeedbackCommand(),
                 new ListCommand(this),
                 new PingCommand(),
+                new PrivateMessageCommand(),
                 new RankingMessageCommand(this),
                 new VerifyCommand(this)
         ));

@@ -15,7 +15,6 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.UserSnowflake;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
-import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -25,7 +24,6 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
-import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
@@ -49,6 +47,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
             Logs.warning("The command /accounts does not exist in the plugin.yml file and cannot be registered.");
         }
     }
+
     private final Main plugin;
     private final PluginCommand command;
 
@@ -98,21 +97,12 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                         DiscordUtils.sendPrivateMessage(user, "Twoje konto zostało połączone z kontem minecraft! Niestety z powodu niespodziewanego błędu nie możemy dostarczyć Ci więcej informacji.");
                         return;
                     }
-                    user.openPrivateChannel().queue(chn -> chn.sendMessageEmbeds(embed)
+                    DiscordUtils.sendPrivateMessage(user, embed, action -> action
                             .addActionRow(
                                     Button.danger("unlink-accounts", "Rozłącz konta")
                                             .withEmoji(Emoji.fromUnicode("U+1F4A3"))
-                            )
-                            .queue(
-                                    success -> {},
-                                    failure -> {
-                                        if (failure instanceof ErrorResponseException e && e.getErrorResponse() == ErrorResponse.CANNOT_SEND_TO_USER) {
-                                            Logs.warning("User " + DiscordUtils.getAsTag(user) + " doesn't allow private messages.");
-                                        } else {
-                                            Logs.error("An error occurred while sending a private message.", failure);
-                                        }
-                                    }
-                            ));
+                            ), result -> {
+                    });
                 } else {
                     hook.sendMessage("Napotkano niespodziewany błąd. Spróbuj ponownie.").queue();
                 }
@@ -266,17 +256,18 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
 
                     jda.retrieveUserById(id.getId()).queue(
                             user -> DiscordUtils.sendPrivateMessage(user, "Twoje konto zostało rozłączone z kontem minecraft!"),
-                            failure -> {}
+                            failure -> {
+                            }
                     );
                 } else {
                     String code = plugin.getAccountsManager().getNewVerificationCode(uuid, player.getName());
                     player.sendMessage(Utils.getComponentByString(
                             Prefix.DISCORD + "=================================\n" +
-                            Prefix.DISCORD + "Aby dokończyć proces łączenia kont,\n" +
-                            Prefix.DISCORD + "użyj komendy &9/accounts&b\n" +
-                            Prefix.DISCORD + "na Discord z kodem: &9" + code + "&b.\n" +
-                            Prefix.DISCORD + "UWAGA! Kod będzie ważny tylko 5 minut.\n" +
-                            Prefix.DISCORD + "=================================\n"
+                                    Prefix.DISCORD + "Aby dokończyć proces łączenia kont,\n" +
+                                    Prefix.DISCORD + "użyj komendy &9/accounts&b\n" +
+                                    Prefix.DISCORD + "na Discord z kodem: &9" + code + "&b.\n" +
+                                    Prefix.DISCORD + "UWAGA! Kod będzie ważny tylko 5 minut.\n" +
+                                    Prefix.DISCORD + "=================================\n"
                     ));
                 }
             });

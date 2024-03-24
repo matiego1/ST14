@@ -1,6 +1,5 @@
-package me.matiego.st14.objects;
+package me.matiego.st14;
 
-import me.matiego.st14.Main;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.Bukkit;

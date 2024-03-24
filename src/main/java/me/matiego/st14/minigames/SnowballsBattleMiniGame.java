@@ -1,10 +1,11 @@
-package me.matiego.st14.minigames.handlers;
+package me.matiego.st14.minigames;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.minigames.MiniGame;
-import me.matiego.st14.minigames.MiniGameException;
-import me.matiego.st14.minigames.MiniGamesUtils;
-import me.matiego.st14.objects.BossBarTimer;
+import me.matiego.st14.objects.minigames.MiniGame;
+import me.matiego.st14.objects.minigames.MiniGameException;
+import me.matiego.st14.objects.minigames.MiniGameType;
+import me.matiego.st14.utils.MiniGamesUtils;
+import me.matiego.st14.BossBarTimer;
 import org.bukkit.*;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -23,13 +24,12 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Range;
 
 import java.util.List;
 
 public class SnowballsBattleMiniGame extends MiniGame {
-    public SnowballsBattleMiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime, @NotNull String configPath, @Nullable String mapName) {
-        super(plugin, totalMiniGameTime, configPath, mapName);
+    public SnowballsBattleMiniGame(@NotNull Main plugin, @NotNull MiniGameType miniGameType, @Nullable String mapName) {
+        super(plugin, miniGameType, mapName);
     }
 
     private Location spawn = null;
@@ -80,7 +80,7 @@ public class SnowballsBattleMiniGame extends MiniGame {
             player.teleportAsync(spawn);
             changePlayerStatus(player, PlayerStatus.IN_MINI_GAME);
             MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
-            player.setBedSpawnLocation(spectatorSpawn, true);
+            player.setRespawnLocation(spectatorSpawn, true);
             timer.showBossBarToPlayer(player);
         });
     }

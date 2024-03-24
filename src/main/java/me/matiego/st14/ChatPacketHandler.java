@@ -1,4 +1,4 @@
-package me.matiego.st14.objects;
+package me.matiego.st14;
 
 import com.google.gson.JsonObject;
 import com.mojang.serialization.JsonOps;
@@ -7,14 +7,12 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.EncoderException;
 import io.netty.handler.codec.MessageToByteEncoder;
-import me.matiego.st14.Logs;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.minecraft.network.Connection;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.game.ClientboundPlayerChatPacket;
 import net.minecraft.network.protocol.game.ClientboundServerDataPacket;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
@@ -25,10 +23,9 @@ import net.minecraft.server.MinecraftServer;
 import java.util.Objects;
 import java.util.Optional;
 
-//Based on https://github.com/e-im/FreedomChat/
-@SuppressWarnings("rawtypes")
+//Based on https://github.com/e-im/FreedomChat/ (2f5440e)
 @ChannelHandler.Sharable
-public class ChatPacketHandler extends MessageToByteEncoder<Packet> {
+public class ChatPacketHandler extends MessageToByteEncoder<Packet<?>> {
     @Override
     public boolean acceptOutboundMessage(Object msg) {
         return msg instanceof ClientboundPlayerChatPacket
@@ -40,7 +37,6 @@ public class ChatPacketHandler extends MessageToByteEncoder<Packet> {
     protected void encode(ChannelHandlerContext ctx, Packet msg, ByteBuf out) {
         final FriendlyByteBuf fbb = new FriendlyByteBuf(out);
 
-        // no switch pattern matching for us...
         if (msg instanceof ClientboundPlayerChatPacket packet) {
             encode(ctx, packet, fbb);
         } else if (msg instanceof ClientboundServerDataPacket packet) {
@@ -87,6 +83,6 @@ public class ChatPacketHandler extends MessageToByteEncoder<Packet> {
     }
 
     private void writeId(final ChannelHandlerContext ctx, final Packet<?> packet, final FriendlyByteBuf buf) {
-        buf.writeVarInt(ctx.channel().attr(Connection.ATTRIBUTE_PROTOCOL).get().getPacketId(PacketFlow.CLIENTBOUND, packet));
+        buf.writeVarInt(ctx.channel().attr(Connection.ATTRIBUTE_CLIENTBOUND_PROTOCOL).get().packetId(packet));
     }
 }

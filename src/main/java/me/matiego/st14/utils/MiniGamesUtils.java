@@ -1,8 +1,7 @@
-package me.matiego.st14.minigames;
+package me.matiego.st14.utils;
 
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
-import me.matiego.st14.utils.Utils;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -38,7 +37,7 @@ public class MiniGamesUtils {
 
         if (!isInAnyMiniGameWorld(player)) return;
 
-        player.setBedSpawnLocation(world.getSpawnLocation(), true);
+        player.setRespawnLocation(world.getSpawnLocation(), true);
         player.setWorldBorder(null);
 
         player.teleportAsync(world.getSpawnLocation()).thenAcceptAsync(result -> Utils.sync(() -> {
@@ -156,7 +155,7 @@ public class MiniGamesUtils {
                 Logs.warning("invalid item: `" + string + "` (#4)");
                 return null;
             }
-            Enchantment enchantment = Enchantment.getByKey(NamespacedKey.minecraft(enchantmentValues[0]));
+            Enchantment enchantment = Registry.ENCHANTMENT.get(NamespacedKey.minecraft(enchantmentValues[0]));
             if (enchantment == null) {
                 Logs.warning("invalid item: `" + string + "` (#5)");
                 return null;

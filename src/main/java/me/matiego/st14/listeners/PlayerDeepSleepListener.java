@@ -24,7 +24,7 @@ public class PlayerDeepSleepListener implements Listener {
     private final HashMap<UUID, UUID> sleepingPlayers = new HashMap<>();
 
     @EventHandler(ignoreCancelled = true)
-    public void onPlayerBedEnter(@NotNull PlayerDeepSleepEvent event) {
+    public void onPlayerDeepSleep(@NotNull PlayerDeepSleepEvent event) {
         Player player = event.getPlayer();
         World world = player.getWorld();
 

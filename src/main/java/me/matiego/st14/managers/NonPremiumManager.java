@@ -106,11 +106,7 @@ public class NonPremiumManager {
         if (jda == null) return;
 
         jda.retrieveUserById(NonPremiumUtils.getIdByNonPremiumUuid(uuid)).queue(
-                user -> user.openPrivateChannel().queue(
-                        privateChannel -> privateChannel.sendMessage(message)
-                                .addActionRow(Button.danger("end-session", "Zakończ sesję non-premium"))
-                                .queue(success -> {}, failure -> {})
-                )
+                user -> DiscordUtils.sendPrivateMessage(user, message, action -> action.addActionRow(Button.danger("end-session", "Zakończ sesję non-premium")), result -> {})
         );
     }
 

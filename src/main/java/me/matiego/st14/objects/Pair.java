@@ -1,5 +1,8 @@
 package me.matiego.st14.objects;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.Objects;
 
 @SuppressWarnings("unused")
@@ -10,24 +13,8 @@ public class Pair<F, S> {
         this.second = second;
     }
 
-    private F first;
-    private S second;
-
-    public F getFirst() {
-        return first;
-    }
-
-    public void setFirst(F first) {
-        this.first = first;
-    }
-
-    public S getSecond() {
-        return second;
-    }
-
-    public void setSecond(S second) {
-        this.second = second;
-    }
+    @Getter @Setter private F first;
+    @Getter @Setter private S second;
 
     @Override
     public String toString() {

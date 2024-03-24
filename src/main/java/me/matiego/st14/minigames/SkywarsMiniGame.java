@@ -1,14 +1,15 @@
-package me.matiego.st14.minigames.handlers;
+package me.matiego.st14.minigames;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.world.block.BaseBlock;
 import me.matiego.st14.Main;
-import me.matiego.st14.minigames.MiniGame;
-import me.matiego.st14.minigames.MiniGameException;
-import me.matiego.st14.minigames.MiniGamesUtils;
-import me.matiego.st14.objects.BossBarTimer;
+import me.matiego.st14.objects.minigames.MiniGame;
+import me.matiego.st14.objects.minigames.MiniGameException;
+import me.matiego.st14.objects.minigames.MiniGameType;
+import me.matiego.st14.utils.MiniGamesUtils;
+import me.matiego.st14.BossBarTimer;
 import me.matiego.st14.utils.Utils;
 import me.matiego.st14.utils.WorldEditUtils;
 import org.bukkit.*;
@@ -24,7 +25,6 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Range;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,8 +33,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public class SkywarsMiniGame extends MiniGame {
-    public SkywarsMiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime, @NotNull String configPath, @Nullable String mapName) {
-        super(plugin, totalMiniGameTime, configPath, mapName);
+    public SkywarsMiniGame(@NotNull Main plugin, @NotNull MiniGameType miniGameType, @Nullable String mapName) {
+        super(plugin, miniGameType, mapName);
     }
 
     private final List<Location> spawns = new ArrayList<>();
@@ -176,7 +176,7 @@ public class SkywarsMiniGame extends MiniGame {
         Collections.shuffle(spawns);
         int i = 0;
         for (Player player : players) {
-            player.setBedSpawnLocation(spectatorSpawn, true);
+            player.setRespawnLocation(spectatorSpawn, true);
             timer.showBossBarToPlayer(player);
             if (i >= spawns.size()) {
                 changePlayerStatus(player, PlayerStatus.SPECTATOR);

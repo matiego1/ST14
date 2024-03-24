@@ -1,9 +1,9 @@
 package me.matiego.st14.managers;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.objects.GameTime;
+import me.matiego.st14.objects.times.GameTime;
 import me.matiego.st14.Logs;
-import me.matiego.st14.objects.PlayerTime;
+import me.matiego.st14.objects.times.PlayerTime;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

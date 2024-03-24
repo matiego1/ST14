@@ -143,7 +143,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
             if (args.length != 0) return -1;
 
             if (Utils.checkIfCanNotExecuteCommandInWorld(player, "economy")) {
-                Utils.async(() -> player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Saldo twojego konta: &9" + plugin.getEconomyManager().format(plugin.getEconomyManager().getBalance(player)))));
+                Utils.async(() -> player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Saldo twojego konta: &9" + plugin.getEconomyManager().format(plugin.getEconomyManager().getBalance(player)) + "&b. Nie możesz wykonać innych operacji w tym świecie.")));
                 return 5;
             }
 
@@ -227,10 +227,12 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                         if (amount >= 500d) {
                             return List.of(AnvilGUI.ResponseAction.replaceInputText("Za duża kwota!"));
                         }
+
                         amount = Utils.round(amount, 2);
+                        double tax = Utils.round(Math.max(0, plugin.getConfig().getDouble("economy.banknote-tax", 0)), 2);
 
                         EconomyManager economy = plugin.getEconomyManager();
-                        if (!economy.has(player, amount)) {
+                        if (!economy.has(player, amount + tax)) {
                             return List.of(AnvilGUI.ResponseAction.replaceInputText("Brak środków"));
                         }
 
@@ -242,7 +244,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                                 return;
                             }
 
-                            EconomyResponse response = economy.withdrawPlayer(player, finalAmount);
+                            EconomyResponse response = economy.withdrawPlayer(player, finalAmount + tax);
                             if (!response.transactionSuccess()) {
                                 player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd. Spróbuj później."));
                                 return;
@@ -253,9 +255,9 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                                 player.getWorld().dropItem(player.getLocation().add(0, 0.5, 0), item);
                             }
 
-                            Logs.info("Gracz " + player.getName() + " wypłacił " + economy.format(finalAmount) + " ze swojego konta. (Na ziemi? " + (drop.isEmpty() ? "Nie" : "Tak") + ")");
+                            Logs.info("Gracz " + player.getName() + " wypłacił " + economy.format(finalAmount) + " ze swojego konta za opłatą " + economy.format(tax) + ". (Na ziemi? " + (drop.isEmpty() ? "Nie" : "Tak") + ")");
 
-                            player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie wypłacono &9" + economy.format(finalAmount) + "&b z twojego konta."));
+                            player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie wypłacono &9" + economy.format(finalAmount) + "&b z twojego konta za opłatą &9" + economy.format(tax)));
                         });
                         return List.of(AnvilGUI.ResponseAction.close());
                     })
@@ -342,12 +344,14 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                         return List.of(AnvilGUI.ResponseAction.replaceInputText("To twój nick!"));
                     }
 
+                    double tax = Utils.round(Math.max(0, plugin.getConfig().getDouble("economy.banknote-tax", 0)), 2);
+
                     EconomyManager economy = plugin.getEconomyManager();
-                    if (!economy.has(player, amount)) {
+                    if (!economy.has(player, amount + tax)) {
                         player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cBrak środków!"));
                         return List.of(AnvilGUI.ResponseAction.close());
                     }
-                    EconomyResponse r1 = economy.withdrawPlayer(player, amount);
+                    EconomyResponse r1 = economy.withdrawPlayer(player, amount + tax);
                     if (!r1.transactionSuccess()) {
                         player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd. Spróbuj później."));
                         return List.of(AnvilGUI.ResponseAction.close());
@@ -355,13 +359,13 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                     EconomyResponse r2 = economy.depositPlayer(Bukkit.getOfflinePlayer(target), amount);
                     if (!r2.transactionSuccess()) {
                         player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd. Zgłoś się do administratora, żeby odzyskać swoje pieniądze. Przepraszamy."));
-                        Logs.warning("Gracz " + player.getName() + " (" + player.getUniqueId() + ") stracił " + economy.format(amount) + " ze swojego konta! Kwota musi być przywrócona ręcznie.");
+                        Logs.warning("Gracz " + player.getName() + " (" + player.getUniqueId() + ") stracił " + economy.format(amount + tax) + " ze swojego konta! Kwota musi być przywrócona ręcznie.");
                         return List.of(AnvilGUI.ResponseAction.close());
                     }
 
-                    Logs.info("Gracz " + player.getName() + " przelał " + economy.format(amount) + " graczowi " + state.getText() + ".");
+                    Logs.info("Gracz " + player.getName() + " przelał " + economy.format(amount) + " graczowi " + state.getText() + " za opłatą " + economy.format(tax) + ".");
 
-                    player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie przelano " + economy.format(amount) + " graczowi " + state.getText() + "."));
+                    player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie przelano " + economy.format(amount) + " graczowi " + state.getText() + " za opłatą " + economy.format(tax) + "."));
                     informPlayer(target, player.getName(), amount, Type.ADD);
                     return List.of(AnvilGUI.ResponseAction.close());
                 })

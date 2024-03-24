@@ -1,4 +1,4 @@
-package me.matiego.st14.minigames;
+package me.matiego.st14.objects.minigames;
 
 import org.jetbrains.annotations.NotNull;
 

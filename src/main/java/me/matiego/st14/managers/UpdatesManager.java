@@ -1,7 +1,7 @@
 package me.matiego.st14.managers;
 
-import me.matiego.st14.Main;
 import me.matiego.st14.Logs;
+import me.matiego.st14.Main;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class UpdatesManager {
 
@@ -39,8 +38,8 @@ public class UpdatesManager {
         List<Integer> bList = null;
 
         try {
-            aList = Arrays.stream(a.split("\\.")).map(Integer::parseInt).collect(Collectors.toList());
-            bList = Arrays.stream(b.split("\\.")).map(Integer::parseInt).collect(Collectors.toList());
+            aList = Arrays.stream(a.split("\\.")).map(Integer::parseInt).toList();
+            bList = Arrays.stream(b.split("\\.")).map(Integer::parseInt).toList();
         } catch (NumberFormatException ignored) {}
 
         if (aList == null || bList == null || aList.size() != bList.size()) {

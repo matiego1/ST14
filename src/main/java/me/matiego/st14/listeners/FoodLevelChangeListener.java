@@ -1,7 +1,7 @@
 package me.matiego.st14.listeners;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.minigames.MiniGamesUtils;
+import me.matiego.st14.utils.MiniGamesUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

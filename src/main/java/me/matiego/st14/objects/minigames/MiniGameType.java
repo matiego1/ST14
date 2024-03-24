@@ -1,8 +1,9 @@
-package me.matiego.st14.minigames;
+package me.matiego.st14.objects.minigames;
 
 import lombok.Getter;
+import lombok.Setter;
 import me.matiego.st14.Main;
-import me.matiego.st14.minigames.handlers.*;
+import me.matiego.st14.minigames.*;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public enum MiniGameType {
-    TAG(null, "Berek", Material.NAME_TAG, 10 * 60),
+    TAG(TagMiniGame.class, "Berek", Material.NAME_TAG, 10 * 60),
     HIDE_AND_SEEK(null, "Chowany", Material.TALL_GRASS, 15 * 60),
     SNOWBALLS_BATTLE(SnowballsBattleMiniGame.class, "Bitwa na śnieżki", Material.SNOWBALL, 15 * 60),
     TNT_RUN(TNTRunMiniGame.class, "TNT Run", Material.TNT, 15 * 60),
@@ -31,7 +32,7 @@ public enum MiniGameType {
     @Getter private final String name;
     @Getter private final Material guiMaterial;
     @Getter private final int gameTimeInSeconds;
-
+    @Getter @Setter private String previousMapName;
 
     MiniGameType(@Nullable Class<? extends MiniGame> handler, @NotNull String name, @NotNull Material guiMaterial, int gameTimeInSeconds) {
         this.handler = handler;
@@ -68,7 +69,7 @@ public enum MiniGameType {
         return null;
     }
 
-    private @NotNull String getConfigPath() {
+    public @NotNull String getConfigPath() {
         return "minigames." + name().toLowerCase().replace("_", "-") + ".";
     }
 

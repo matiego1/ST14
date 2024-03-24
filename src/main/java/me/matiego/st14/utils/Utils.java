@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 
 
 public class Utils {
-    public static Pattern STRING_TO_MILLIS = Pattern.compile("([1-9][0-9]{0,3}d)?(([1-9]|1[0-9]|2[0-3])h)?(([1-9]|[1-5][0-9])m)?(([1-9]|[1-5][0-9])s)?");
+    public static final Pattern STRING_TO_MILLIS = Pattern.compile("([1-9][0-9]{0,3}d)?(([1-9]|1[0-9]|2[0-3])h)?(([1-9]|[1-5][0-9])m)?(([1-9]|[1-5][0-9])s)?");
 
     /**
      * Runs the given task async.

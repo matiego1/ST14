@@ -2,7 +2,7 @@ package me.matiego.st14.managers;
 
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
-import me.matiego.st14.minigames.MiniGame;
+import me.matiego.st14.objects.minigames.MiniGame;
 import me.matiego.st14.utils.NonPremiumUtils;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;

@@ -1,8 +1,8 @@
 package me.matiego.st14.managers;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.objects.GameTime;
-import me.matiego.st14.objects.PlayerTime;
+import me.matiego.st14.objects.times.GameTime;
+import me.matiego.st14.objects.times.PlayerTime;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;
@@ -16,11 +16,12 @@ import java.util.Set;
 
 public class AfkManager {
     private final Main plugin;
+
     public AfkManager(@NotNull Main plugin) {
         this.plugin = plugin;
     }
 
-    private final int AFK_TIME_SECOND = 90;
+    private final int AFK_TIME_SECOND = 3 * 60;
 
     private BukkitTask task;
     private final HashMap<Player, Long> lastMove = new HashMap<>();

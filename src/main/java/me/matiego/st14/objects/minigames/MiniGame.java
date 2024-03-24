@@ -1,14 +1,15 @@
-package me.matiego.st14.minigames;
+package me.matiego.st14.objects.minigames;
 
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.math.BlockVector3;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.Synchronized;
+import me.matiego.st14.BossBarTimer;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
-import me.matiego.st14.objects.BossBarTimer;
+import me.matiego.st14.utils.MiniGamesUtils;
 import me.matiego.st14.utils.Utils;
 import me.matiego.st14.utils.WorldEditUtils;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -31,18 +32,22 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class MiniGame implements Listener {
-    public MiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime, @NotNull String configPath, @Nullable String mapName) {
+    public MiniGame(@NotNull Main plugin, @NotNull MiniGameType miniGameType, @Nullable String mapName) {
         this.plugin = plugin;
-        this.totalMiniGameTime = totalMiniGameTime;
-        this.configPath = configPath;
+        this.miniGameType = miniGameType;
         this.mapName = mapName;
+
+        this.totalMiniGameTime = miniGameType.getGameTimeInSeconds();
+        this.configPath = miniGameType.getConfigPath();
     }
 
     //<editor-fold defaultstate="collapsed" desc="variables">
     protected final Main plugin;
     protected final String configPath;
-    protected final int totalMiniGameTime;
+    protected final MiniGameType miniGameType;
     protected String mapName;
+    protected String previousMapName;
+    protected final int totalMiniGameTime;
     protected String mapConfigPath = null;
     protected Location spectatorSpawn;
     protected Location baseLocation;
@@ -75,14 +80,21 @@ public abstract class MiniGame implements Listener {
     protected void setMapConfigPath() throws MiniGameException {
         if (mapName != null) {
             mapConfigPath = configPath + "maps." + mapName + ".";
+            previousMapName = miniGameType.getPreviousMapName();
+            miniGameType.setPreviousMapName(mapName);
             return;
         }
 
         List<String> maps = getMaps(plugin, configPath);
         if (maps.isEmpty()) throw new MiniGameException("cannot find any map");
+        previousMapName = miniGameType.getPreviousMapName();
+        if (maps.size() > 1) {
+            maps.remove(previousMapName);
+        }
         Collections.shuffle(maps);
         mapConfigPath = configPath + "maps." + maps.get(0) + ".";
         mapName = maps.get(0);
+        miniGameType.setPreviousMapName(mapName);
     }
 
     public static @NotNull List<String> getMaps(@NotNull Main plugin, @NotNull String configPath) {
@@ -91,9 +103,11 @@ public abstract class MiniGame implements Listener {
         return new ArrayList<>(section.getKeys(false));
     }
 
+    @SuppressWarnings("SameReturnValue")
     public @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount() {
         return 2;
     }
+    @SuppressWarnings("SameReturnValue")
     public @Range(from = 2, to = Integer.MAX_VALUE) int getMaximumPlayersAmount() {
         return 15;
     }

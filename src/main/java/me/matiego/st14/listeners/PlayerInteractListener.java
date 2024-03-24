@@ -1,7 +1,7 @@
 package me.matiego.st14.listeners;
 
-import me.matiego.st14.Main;
 import me.matiego.st14.Logs;
+import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.entity.Player;
@@ -42,7 +42,7 @@ public class PlayerInteractListener implements Listener {
 
         if (!plugin.getBanknoteManager().isBanknote(item)) return;
 
-        if (!plugin.getConfig().getStringList("economy-worlds").contains(player.getWorld().getName())) return;
+        if (!plugin.getConfig().getStringList("economy.worlds").contains(player.getWorld().getName())) return;
 
         event.setCancelled(true);
         event.setUseInteractedBlock(Event.Result.DENY);

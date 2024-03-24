@@ -16,6 +16,7 @@ import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.internal.utils.IOUtil;
 import okhttp3.Dns;
@@ -38,6 +39,7 @@ import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class DiscordUtils {
@@ -212,22 +214,61 @@ public class DiscordUtils {
     }
 
     private static final FixedSizeMap<Long, Long> privateMessages = new FixedSizeMap<>(100);
+
     public static void sendPrivateMessage(@NotNull User user, @NotNull String message) {
-        user.openPrivateChannel().queue(
-                privateChannel -> privateChannel.sendMessage(checkLength(message, Message.MAX_CONTENT_LENGTH)).queue(
-                        success -> {},
-                        failure -> {
-                            if (failure instanceof ErrorResponseException e && e.getErrorResponse() == ErrorResponse.CANNOT_SEND_TO_USER) {
-                                long now = Utils.now();
-                                if (now - privateMessages.getOrDefault(user.getIdLong(), 0L) >= 15 * 60 * 1000L) {
-                                    Logs.warning("User " + DiscordUtils.getAsTag(user) + " doesn't allow private messages.");
-                                    privateMessages.put(user.getIdLong(), now);
-                                }
-                            } else {
-                                Logs.error("An error occurred while sending a private message.", failure);
-                            }
-                        })
-        );
+        sendPrivateMessage(user, message, action -> {}, result -> {});
+    }
+    public static void sendPrivateMessage(@NotNull User user, @NotNull String message, @NotNull Consumer<MessageCreateAction> messageCreateAction, @NotNull Consumer<PrivateMessageResult> result) {
+        try {
+            user.openPrivateChannel().queue(
+                    privateChannel -> {
+                        MessageCreateAction action = privateChannel.sendMessage(checkLength(message, Message.MAX_CONTENT_LENGTH));
+                        messageCreateAction.accept(action);
+                        executePrivateMessageAction(user, action, result);
+                    }
+            );
+        } catch (UnsupportedOperationException e) {
+            result.accept(PrivateMessageResult.FAILURE);
+        }
+    }
+    public static void sendPrivateMessage(@NotNull User user, @NotNull MessageEmbed embed, @NotNull Consumer<MessageCreateAction> messageCreateAction, @NotNull Consumer<PrivateMessageResult> result) {
+        try {
+            user.openPrivateChannel().queue(
+                    privateChannel -> {
+                        MessageCreateAction action = privateChannel.sendMessageEmbeds(embed);
+                        messageCreateAction.accept(action);
+                        executePrivateMessageAction(user, action, result);
+                    }
+            );
+        } catch (UnsupportedOperationException e) {
+            result.accept(PrivateMessageResult.FAILURE);
+        }
+    }
+    private static void executePrivateMessageAction(User user, @NotNull MessageCreateAction action, @NotNull Consumer<PrivateMessageResult> result) {
+        action.queue(
+                success -> result.accept(PrivateMessageResult.SUCCESS),
+                failure -> {
+                    if (failure instanceof ErrorResponseException e && e.getErrorResponse() == ErrorResponse.CANNOT_SEND_TO_USER) {
+                        long now = Utils.now();
+                        if (now - privateMessages.getOrDefault(user.getIdLong(), 0L) >= 15 * 60 * 1000L) {
+                            Logs.warning("User " + DiscordUtils.getAsTag(user) + " doesn't allow private messages.");
+                            privateMessages.put(user.getIdLong(), now);
+
+                            TextChannel chn = DiscordUtils.getChatMinecraftChannel();
+                            if (chn == null) return;
+                            chn.sendMessage(user.getAsMention() + " nie mogę wysłać do ciebie prywatnej wiadomości :( Czy możesz mi na to zezwolić w ustawieniach prywatności tego serwera?").queue();
+                        }
+                        result.accept(PrivateMessageResult.CANNOT_SEND_TO_USER);
+                    } else {
+                        Logs.error("An error occurred while sending a private message.", failure);
+                        result.accept(PrivateMessageResult.FAILURE);
+                    }
+                });
+    }
+    public enum PrivateMessageResult {
+        SUCCESS,
+        CANNOT_SEND_TO_USER,
+        FAILURE
     }
 
     public static boolean sendWebhook(@NotNull String url, @Nullable String iconUrl, @Nullable String name, @NotNull String message) {

@@ -1,10 +1,11 @@
-package me.matiego.st14.minigames.handlers;
+package me.matiego.st14.minigames;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.minigames.MiniGame;
-import me.matiego.st14.minigames.MiniGameException;
-import me.matiego.st14.minigames.MiniGamesUtils;
-import me.matiego.st14.objects.BossBarTimer;
+import me.matiego.st14.objects.minigames.MiniGame;
+import me.matiego.st14.objects.minigames.MiniGameException;
+import me.matiego.st14.objects.minigames.MiniGameType;
+import me.matiego.st14.utils.MiniGamesUtils;
+import me.matiego.st14.BossBarTimer;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -16,7 +17,6 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Range;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class PvPMiniGame extends MiniGame {
-    public PvPMiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime, @NotNull String configPath, @Nullable String mapName) {
-        super(plugin, totalMiniGameTime, configPath, mapName);
+    public PvPMiniGame(@NotNull Main plugin, @NotNull MiniGameType miniGameType, @Nullable String mapName) {
+        super(plugin, miniGameType, mapName);
     }
 
     private final List<Location> spawns = new ArrayList<>();
@@ -101,7 +101,7 @@ public class PvPMiniGame extends MiniGame {
         Collections.shuffle(spawns);
         int i = 0;
         for (Player player : players) {
-            player.setBedSpawnLocation(spectatorSpawn, true);
+            player.setRespawnLocation(spectatorSpawn, true);
             timer.showBossBarToPlayer(player);
             if (i >= spawns.size()) {
                 changePlayerStatus(player, PlayerStatus.SPECTATOR);
@@ -134,6 +134,8 @@ public class PvPMiniGame extends MiniGame {
 
     @Override
     protected void miniGameTick() {
+        tickPlayers();
+
         if (miniGameTime == prepareTime) {
             timer.stopTimerAndHideBossBar();
             timer = new BossBarTimer(plugin, totalMiniGameTime - prepareTime, "&eKoniec minigry");
@@ -152,6 +154,11 @@ public class PvPMiniGame extends MiniGame {
             worldBorder.setSize(Math.max(1, 0.1 * mapRadius), TimeUnit.SECONDS, shrinkBorderBeforeEnd);
             getPlayersInMiniGame().forEach(player -> player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, shrinkBorderBeforeEnd * 20, 255, false, false, true)));
         }
+    }
+
+    private void tickPlayers() {
+        List<Player> playersInMiniGame = getPlayersInMiniGame();
+        playersInMiniGame.forEach(player -> player.setLevel(playersInMiniGame.size()));
     }
 
     @EventHandler(ignoreCancelled = true)

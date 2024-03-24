@@ -1,10 +1,11 @@
-package me.matiego.st14.minigames.handlers;
+package me.matiego.st14.minigames;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.minigames.MiniGame;
-import me.matiego.st14.minigames.MiniGameException;
-import me.matiego.st14.minigames.MiniGamesUtils;
-import me.matiego.st14.objects.BossBarTimer;
+import me.matiego.st14.objects.minigames.MiniGame;
+import me.matiego.st14.objects.minigames.MiniGameException;
+import me.matiego.st14.objects.minigames.MiniGameType;
+import me.matiego.st14.utils.MiniGamesUtils;
+import me.matiego.st14.BossBarTimer;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -22,14 +23,13 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Range;
 
 import java.util.Comparator;
 import java.util.List;
 
 public class SpleefMiniGame extends MiniGame {
-    public SpleefMiniGame(@NotNull Main plugin, @Range(from = 0, to = Integer.MAX_VALUE) int totalMiniGameTime, @NotNull String configPath, @Nullable String mapName) {
-        super(plugin, totalMiniGameTime, configPath, mapName);
+    public SpleefMiniGame(@NotNull Main plugin, @NotNull MiniGameType miniGameType, @Nullable String mapName) {
+        super(plugin, miniGameType, mapName);
     }
 
     private Location spawn;
@@ -82,7 +82,7 @@ public class SpleefMiniGame extends MiniGame {
             changePlayerStatus(player, PlayerStatus.IN_MINI_GAME);
             player.teleportAsync(spawn);
             MiniGamesUtils.healPlayer(player, GameMode.SURVIVAL);
-            player.setBedSpawnLocation(spectatorSpawn, true);
+            player.setRespawnLocation(spectatorSpawn, true);
             timer.showBossBarToPlayer(player);
             giveToolsToPlayer(player);
         });
