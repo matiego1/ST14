@@ -6,8 +6,8 @@ import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.AccountsManager;
 import me.matiego.st14.managers.IncognitoManager;
 import me.matiego.st14.objects.CommandHandler;
-import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.objects.GUI;
+import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;
@@ -17,7 +17,6 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -159,7 +158,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
                     .open(player);
         } else if (slot >= 9) {
             if (item.getType() == Material.BARRIER) return;
-            UUID trustedUuid = plugin.getOfflinePlayersManager().getIdByName(PlainTextComponentSerializer.plainText().serialize(Objects.requireNonNull(item.getItemMeta().displayName())));
+            UUID trustedUuid = plugin.getOfflinePlayersManager().getIdByName(Utils.getPlainTextByComponent(Objects.requireNonNull(item.getItemMeta().displayName())));
             if (trustedUuid == null) {
                 player.sendMessage(Utils.getComponentByString(Prefix.INCOGNITO + "Napotkano niespodziewany błąd. Spróbuj później."));
                 player.closeInventory();

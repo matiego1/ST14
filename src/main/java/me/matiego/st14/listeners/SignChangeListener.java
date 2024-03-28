@@ -2,7 +2,6 @@ package me.matiego.st14.listeners;
 
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.Utils;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
@@ -26,7 +25,7 @@ public class SignChangeListener implements Listener {
         Sign sign = getSign(event.getBlock());
         if (sign == null) return;
 
-        if (!updateMarker(sign, event.lines().stream().map(c -> PlainTextComponentSerializer.plainText().serialize(c)).toList(), event.getPlayer())) {
+        if (!updateMarker(sign, event.lines().stream().map(Utils::getPlainTextByComponent).toList(), event.getPlayer())) {
             plugin.getDynmapManager().getSignsMarker().deleteMarker(sign.getLocation());
         }
     }

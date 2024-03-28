@@ -6,6 +6,7 @@ import me.matiego.st14.Prefix;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -64,6 +65,10 @@ public class Utils {
 
     public static @NotNull String getJsonByLegacyString(@NotNull String string) {
         return JSONComponentSerializer.json().serialize(Utils.getComponentByString(string));
+    }
+
+    public static @NotNull String getPlainTextByComponent(@NotNull Component component) {
+        return PlainTextComponentSerializer.plainText().serialize(component);
     }
 
     public static double round(double number, int decimalPlaces) {

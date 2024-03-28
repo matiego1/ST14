@@ -37,7 +37,6 @@ public class PlayerQuitListener implements Listener {
         plugin.getNonPremiumManager().clearDataAfterSession(player.getUniqueId());
 
         event.quitMessage(Utils.getComponentByString("&eGracz " + player.getName() + " opuścił grę"));
-        plugin.getChatMinecraftManager().sendConsoleQuitMessage(player);
         plugin.getChatMinecraftManager().sendQuitMessage(player);
 
         Utils.async(() -> {

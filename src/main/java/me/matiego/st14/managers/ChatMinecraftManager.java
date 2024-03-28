@@ -3,10 +3,13 @@ package me.matiego.st14.managers;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
-import me.matiego.st14.objects.*;
+import me.matiego.st14.objects.Ban;
+import me.matiego.st14.objects.FixedSizeMap;
+import me.matiego.st14.objects.Pair;
 import me.matiego.st14.objects.times.GameTime;
 import me.matiego.st14.objects.times.PlayerTime;
-import me.matiego.st14.utils.*;
+import me.matiego.st14.utils.DiscordUtils;
+import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Message;
@@ -30,7 +33,6 @@ public class ChatMinecraftManager extends ListenerAdapter {
         this.plugin = plugin;
     }
 
-    @SuppressWarnings("FieldCanBeLocal")
     private final String DISALLOWED_CHARS = "[^\\p{L}\\p{M}\\p{N}\\p{P}\\p{Z}\\p{Cf}\\p{Cs}\\s]";
     private final FixedSizeMap<UUID, Pair<Long, Integer>> joinCooldown = new FixedSizeMap<>(100);
 
@@ -108,12 +110,9 @@ public class ChatMinecraftManager extends ListenerAdapter {
     }
 
     public void sendJoinMessage(@NotNull Player player) {
+        Logs.discord("Gracz **" + player.getName() + "** dołączył do gry.");
         if (plugin.getIncognitoManager().isIncognito(player.getUniqueId())) return;
         sendFakeJoinMessage(player);
-    }
-
-    public void sendConsoleJoinMessage(@NotNull Player player) {
-        Logs.discord("Gracz **" + player.getName() + "** dołączył do gry.");
     }
 
     public void sendFakeJoinMessage(@NotNull Player player) {
@@ -139,6 +138,7 @@ public class ChatMinecraftManager extends ListenerAdapter {
     }
 
     public void sendQuitMessage(@NotNull Player player) {
+        sendConsoleQuitMessage(player);
         if (plugin.getIncognitoManager().isIncognito(player.getUniqueId())) return;
         sendFakeQuitMessage(player);
     }
@@ -158,7 +158,7 @@ public class ChatMinecraftManager extends ListenerAdapter {
         }
     }
 
-    public void sendConsoleQuitMessage(@NotNull Player player) {
+    private void sendConsoleQuitMessage(@NotNull Player player) {
         PlayerTime playerTime = plugin.getTimeManager().getTime(player.getUniqueId());
         String time = "";
         if (playerTime != null) {
@@ -193,6 +193,20 @@ public class ChatMinecraftManager extends ListenerAdapter {
         eb.setColor(Color.RED);
         TextChannel chn = DiscordUtils.getChatMinecraftChannel();
         if (chn != null) {
+            chn.sendMessageEmbeds(eb.build()).queue();
+        }
+    }
+
+    public void sendAdvancementMessage(@NotNull String message, @NotNull Player player) {
+        Logs.discord(message);
+
+        if (plugin.getIncognitoManager().isIncognito(player.getUniqueId())) return;
+
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setDescription(message);
+        eb.setColor(Color.ORANGE);
+        TextChannel chn = DiscordUtils.getChatMinecraftChannel();
+        if (chn != null)  {
             chn.sendMessageEmbeds(eb.build()).queue();
         }
     }

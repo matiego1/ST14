@@ -3,7 +3,6 @@ package me.matiego.st14.listeners;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -27,9 +26,9 @@ public class PlayerDeathListener implements Listener {
         Component component = event.deathMessage();
         String msg = player.getName() + " died";
         if (component != null) {
-            msg = PlainTextComponentSerializer.plainText().serialize(component);
+            msg = Utils.getPlainTextByComponent(component);
         }
         event.deathMessage(Utils.getComponentByString("&4[" + Utils.getWorldPrefix(player.getWorld()) + "]&c " + msg));
-        plugin.getChatMinecraftManager().sendDeathMessage("**[" + Utils.getWorldPrefix(player.getWorld()) + "]** " + msg, event.getPlayer());
+        plugin.getChatMinecraftManager().sendDeathMessage("**[" + Utils.getWorldPrefix(player.getWorld()) + "]** " + msg, player);
     }
 }

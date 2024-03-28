@@ -6,9 +6,8 @@ import me.matiego.st14.Prefix;
 import me.matiego.st14.objects.CommandHandler;
 import me.matiego.st14.objects.GUI;
 import me.matiego.st14.objects.Pair;
-import me.matiego.st14.utils.*;
+import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -160,6 +159,6 @@ public class WorldsCommand implements CommandHandler.Minecraft {
         if (meta == null) return "";
         Component name = meta.displayName();
         if (name == null) return "";
-        return PlainTextComponentSerializer.plainText().serialize(name);
+        return Utils.getPlainTextByComponent(name);
     }
 }

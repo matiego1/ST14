@@ -5,7 +5,6 @@ import me.matiego.st14.Main;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextReplacementConfig;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -46,6 +45,6 @@ public class AsyncChatListener implements Listener {
                         .append(Utils.getComponentByString("&f: "))
                         .append(message)
         );
-        plugin.getChatMinecraftManager().sendChatMessage(PlainTextComponentSerializer.plainText().serialize(message), player);
+        plugin.getChatMinecraftManager().sendChatMessage(Utils.getPlainTextByComponent(message), player);
     }
 }

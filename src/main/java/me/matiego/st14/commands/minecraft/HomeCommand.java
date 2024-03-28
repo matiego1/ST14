@@ -9,7 +9,6 @@ import me.matiego.st14.objects.CommandHandler;
 import me.matiego.st14.objects.GUI;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -215,6 +214,6 @@ public class HomeCommand implements CommandHandler.Minecraft {
         if (meta == null) return "";
         Component name = meta.displayName();
         if (name == null) return "";
-        return PlainTextComponentSerializer.plainText().serialize(name);
+        return Utils.getPlainTextByComponent(name);
     }
 }

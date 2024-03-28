@@ -4,11 +4,11 @@ import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.MiniGamesManager;
+import me.matiego.st14.objects.CommandHandler;
+import me.matiego.st14.objects.GUI;
 import me.matiego.st14.objects.minigames.MiniGame;
 import me.matiego.st14.objects.minigames.MiniGameType;
 import me.matiego.st14.utils.MiniGamesUtils;
-import me.matiego.st14.objects.CommandHandler;
-import me.matiego.st14.objects.GUI;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
@@ -17,7 +17,6 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
@@ -168,7 +167,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
 
         Component displayNameComponent = item.getItemMeta().displayName();
         if (displayNameComponent == null) return;
-        String displayName = PlainTextComponentSerializer.plainText().serialize(displayNameComponent);
+        String displayName = Utils.getPlainTextByComponent(displayNameComponent);
 
         if (title.equals(Prefix.MINI_GAMES + "Wybierz minigrę")) {
             MiniGameType type = MiniGameType.getMiniGameTypeByName(displayName);

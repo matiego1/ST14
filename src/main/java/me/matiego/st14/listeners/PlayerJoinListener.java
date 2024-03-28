@@ -57,7 +57,6 @@ public class PlayerJoinListener implements Listener {
         //join messages
         event.joinMessage(Utils.getComponentByString("&eGracz " + player.getName() + " dołączył do gry"));
         plugin.getChatMinecraftManager().sendJoinMessage(player);
-        plugin.getChatMinecraftManager().sendConsoleJoinMessage(player);
         //handle minigame
         plugin.getMiniGamesManager().onPlayerJoin(player);
         //non-premium

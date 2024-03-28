@@ -1,14 +1,13 @@
 package me.matiego.st14.commands.minecraft;
 
 import me.matiego.st14.Logs;
-import me.matiego.st14.Prefix;
-import me.matiego.st14.objects.CommandHandler;
-import me.matiego.st14.managers.EconomyManager;
 import me.matiego.st14.Main;
+import me.matiego.st14.Prefix;
+import me.matiego.st14.managers.EconomyManager;
+import me.matiego.st14.objects.CommandHandler;
 import me.matiego.st14.objects.GUI;
-import me.matiego.st14.utils.*;
+import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -250,7 +249,7 @@ public class TpaCommand implements CommandHandler.Minecraft {
         if (meta == null) return "";
         Component name = meta.displayName();
         if (name == null) return "";
-        return PlainTextComponentSerializer.plainText().serialize(name);
+        return Utils.getPlainTextByComponent(name);
     }
 
     public void cancel(@NotNull Player player) {

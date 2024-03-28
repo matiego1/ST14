@@ -28,7 +28,6 @@ public class GS4QueryListener implements Listener {
             if (player == null) return;
             if (plugin.getIncognitoManager().isIncognito(player.getUniqueId())) it.remove();
         }
-        list.add("hosting mysli, ze ktos gra, wiec nie restartuje serwera co 5h ;)");
         event.setResponse(response.toBuilder()
                 .clearPlayers()
                 .clearPlugins()

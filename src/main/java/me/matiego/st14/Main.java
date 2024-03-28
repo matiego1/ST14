@@ -192,6 +192,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new InventoryCloseListener(this),
                 new InventoryOpenListener(this),
                 new PlayerAdvancementCriterionGrantListener(this),
+                new PlayerAdvancementDoneListener(this),
                 new PlayerBedEnterListener(this),
                 new PlayerBedLeaveListener(this),
                 new PlayerBucketEmptyListener(),

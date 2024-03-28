@@ -12,7 +12,6 @@ import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.MiniGamesUtils;
 import me.matiego.st14.utils.Utils;
 import me.matiego.st14.utils.WorldEditUtils;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
@@ -171,7 +170,7 @@ public abstract class MiniGame implements Listener {
         if (message.isBlank()) return;
 
         Bukkit.getConsoleSender().sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + message));
-        Logs.discord(PlainTextComponentSerializer.plainText().serialize(Utils.getComponentByString(Prefix.MINI_GAMES + message)));
+        Logs.discord(Utils.getPlainTextByComponent(Utils.getComponentByString(Prefix.MINI_GAMES + message)));
         for (Player player : getPlayers()) {
             player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + message));
         }
