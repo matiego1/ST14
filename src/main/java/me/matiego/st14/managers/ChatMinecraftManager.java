@@ -204,7 +204,7 @@ public class ChatMinecraftManager extends ListenerAdapter {
 
         EmbedBuilder eb = new EmbedBuilder();
         eb.setDescription(message);
-        eb.setColor(Color.ORANGE);
+        eb.setColor(Color.MAGENTA);
         TextChannel chn = DiscordUtils.getChatMinecraftChannel();
         if (chn != null)  {
             chn.sendMessageEmbeds(eb.build()).queue();
