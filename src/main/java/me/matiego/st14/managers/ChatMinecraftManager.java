@@ -197,13 +197,17 @@ public class ChatMinecraftManager extends ListenerAdapter {
         }
     }
 
-    public void sendAdvancementMessage(@NotNull String message, @NotNull Player player) {
+    public void sendAdvancementMessage(@NotNull String message, @NotNull String description, @NotNull Player player) {
         Logs.discord(message);
 
         if (plugin.getIncognitoManager().isIncognito(player.getUniqueId())) return;
 
         EmbedBuilder eb = new EmbedBuilder();
-        eb.setDescription(message);
+        if (description.isBlank()) {
+            eb.setDescription(message);
+        } else {
+            eb.setDescription(message + ":\n" + description);
+        }
         eb.setColor(Color.MAGENTA);
         TextChannel chn = DiscordUtils.getChatMinecraftChannel();
         if (chn != null)  {

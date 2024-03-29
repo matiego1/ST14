@@ -1,5 +1,6 @@
 package me.matiego.st14.listeners;
 
+import io.papermc.paper.advancement.AdvancementDisplay;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.Component;
@@ -16,8 +17,13 @@ public class PlayerAdvancementDoneListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerAdvancementDone(@NotNull PlayerAdvancementDoneEvent event) {
-        Component component = event.message();
-        if (component == null) return;
-        plugin.getChatMinecraftManager().sendAdvancementMessage(Utils.getPlainTextByComponent(component), event.getPlayer());
+        Component message = event.message();
+        if (message == null) return;
+        AdvancementDisplay advancementDisplay = event.getAdvancement().getDisplay();
+        plugin.getChatMinecraftManager().sendAdvancementMessage(
+                Utils.getPlainTextByComponent(message),
+                advancementDisplay == null ? "" : Utils.getPlainTextByComponent(advancementDisplay.description()),
+                event.getPlayer()
+        );
     }
 }
