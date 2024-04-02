@@ -92,7 +92,7 @@ commands:
     usage: 'Poprawne użycie: /nonpremium <hasło>'
   ranking:
     permission: st14.ranking
-    usage: 'Poprawne użycie: /ranking [economy|minigame|time] (gracz)'
+    usage: 'Poprawne użycie: /ranking [economy|minigame|time|advancements] (gracz)'
 permissions:
   st14.st14:
     default: op

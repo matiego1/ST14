@@ -30,9 +30,10 @@ public class AdvancementsManager {
         int amount = objective.getScore(player).getScore();
 
         try (Connection conn = plugin.getMySQLConnection();
-             PreparedStatement stmt = conn.prepareStatement("UPDATE st14_advancements SET amount = ? WHERE uuid = ?")) {
-            stmt.setInt(1, amount);
-            stmt.setString(2, player.getUniqueId().toString());
+             PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_advancements(uuid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = ?")) {
+            stmt.setString(1, player.getUniqueId().toString());
+            stmt.setInt(2, amount);
+            stmt.setInt(3, amount);
             stmt.execute();
         } catch (SQLException e) {
             Logs.error(ERROR_MSG, e);
