@@ -3,11 +3,11 @@ package me.matiego.st14.managers;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
-import me.matiego.st14.objects.Ban;
+import me.matiego.st14.objects.bans.Ban;
 import me.matiego.st14.objects.FixedSizeMap;
 import me.matiego.st14.objects.Pair;
-import me.matiego.st14.objects.times.GameTime;
-import me.matiego.st14.objects.times.PlayerTime;
+import me.matiego.st14.objects.time.GameTime;
+import me.matiego.st14.objects.time.PlayerTime;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -206,7 +206,7 @@ public class ChatMinecraftManager extends ListenerAdapter {
         if (description.isBlank()) {
             eb.setDescription(message);
         } else {
-            eb.setDescription(message + ":\n" + description);
+            eb.setDescription(message + ":\n`" + description + "`");
         }
         eb.setColor(Color.MAGENTA);
         TextChannel chn = DiscordUtils.getChatMinecraftChannel();

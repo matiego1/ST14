@@ -1,6 +1,6 @@
 package me.matiego.st14.rankings;
 
-import me.matiego.st14.objects.Ranking;
+import me.matiego.st14.objects.rankings.Ranking;
 import me.matiego.st14.utils.Utils;
 import org.jetbrains.annotations.NotNull;
 

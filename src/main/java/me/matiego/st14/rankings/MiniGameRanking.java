@@ -1,6 +1,6 @@
 package me.matiego.st14.rankings;
 
-import me.matiego.st14.objects.Ranking;
+import me.matiego.st14.objects.rankings.Ranking;
 import org.jetbrains.annotations.NotNull;
 
 public class MiniGameRanking extends Ranking {

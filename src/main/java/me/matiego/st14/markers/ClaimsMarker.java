@@ -5,7 +5,7 @@ import me.matiego.st14.Main;
 import me.matiego.st14.listeners.ClaimChangeListener;
 import me.matiego.st14.listeners.ClaimCreateListener;
 import me.matiego.st14.listeners.ClaimDeleteListener;
-import me.matiego.st14.objects.DynmapMarker;
+import me.matiego.st14.objects.dynmap.DynmapMarker;
 import me.matiego.st14.utils.Utils;
 import net.crashcraft.crashclaim.CrashClaim;
 import net.crashcraft.crashclaim.api.CrashClaimAPI;

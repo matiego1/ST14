@@ -1,4 +1,4 @@
-package me.matiego.st14.objects;
+package me.matiego.st14.objects.rewards;
 
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;

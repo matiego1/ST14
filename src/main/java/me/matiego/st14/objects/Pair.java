@@ -5,7 +5,6 @@ import lombok.Setter;
 
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class Pair<F, S> {
 
     public Pair(F first, S second) {

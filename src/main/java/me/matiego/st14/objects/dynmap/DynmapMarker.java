@@ -1,4 +1,4 @@
-package me.matiego.st14.objects;
+package me.matiego.st14.objects.dynmap;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;

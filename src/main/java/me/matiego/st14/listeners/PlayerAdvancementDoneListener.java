@@ -4,6 +4,8 @@ import io.papermc.paper.advancement.AdvancementDisplay;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerAdvancementDoneEvent;
@@ -17,13 +19,17 @@ public class PlayerAdvancementDoneListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerAdvancementDone(@NotNull PlayerAdvancementDoneEvent event) {
+        Player player = event.getPlayer();
+
         Component message = event.message();
         if (message == null) return;
         AdvancementDisplay advancementDisplay = event.getAdvancement().getDisplay();
         plugin.getChatMinecraftManager().sendAdvancementMessage(
                 Utils.getPlainTextByComponent(message),
                 advancementDisplay == null ? "" : Utils.getPlainTextByComponent(advancementDisplay.description()),
-                event.getPlayer()
+                player
         );
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getAdvancementsManager().updateAmount(player), 2);
     }
 }

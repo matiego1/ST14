@@ -1,7 +1,7 @@
 package me.matiego.st14.rewards;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.objects.Reward;
+import me.matiego.st14.objects.rewards.Reward;
 import org.jetbrains.annotations.NotNull;
 
 public class RewardForCounting extends Reward {

@@ -2,7 +2,7 @@ package me.matiego.st14.commands;
 
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
-import me.matiego.st14.objects.CommandHandler;
+import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.interactions.commands.*;

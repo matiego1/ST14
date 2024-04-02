@@ -1,4 +1,4 @@
-package me.matiego.st14.objects;
+package me.matiego.st14.objects.command;
 
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction;

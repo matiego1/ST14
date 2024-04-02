@@ -2,7 +2,7 @@ package me.matiego.st14.commands.minecraft;
 
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
-import me.matiego.st14.objects.CommandHandler;
+import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.objects.GUI;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.command.CommandSender;

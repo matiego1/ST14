@@ -2,7 +2,7 @@ package me.matiego.st14.managers;
 
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
-import me.matiego.st14.objects.Ban;
+import me.matiego.st14.objects.bans.Ban;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;

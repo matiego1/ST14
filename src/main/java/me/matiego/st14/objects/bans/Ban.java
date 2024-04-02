@@ -1,4 +1,4 @@
-package me.matiego.st14.objects;
+package me.matiego.st14.objects.bans;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -41,6 +41,7 @@ public final class Main extends JavaPlugin implements Listener {
     private MySQL mySQL;
 
     @Getter private AccountsManager accountsManager;
+    @Getter private AdvancementsManager advancementsManager;
     @Getter private AfkManager afkManager;
     @Getter private AntyLogoutManager antyLogoutManager;
     @Getter private BackpackManager backpackManager;
@@ -138,6 +139,7 @@ public final class Main extends JavaPlugin implements Listener {
 
         //Register managers
         accountsManager = new AccountsManager(this);
+        advancementsManager = new AdvancementsManager(this);
         afkManager = new AfkManager(this);
         antyLogoutManager = new AntyLogoutManager(this);
         backpackManager = new BackpackManager(this);

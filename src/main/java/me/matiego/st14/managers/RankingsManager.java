@@ -4,7 +4,8 @@ import lombok.Getter;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.objects.Pair;
-import me.matiego.st14.objects.Ranking;
+import me.matiego.st14.objects.rankings.Ranking;
+import me.matiego.st14.rankings.AdvancementsRanking;
 import me.matiego.st14.rankings.EconomyRanking;
 import me.matiego.st14.rankings.MiniGameRanking;
 import me.matiego.st14.rankings.TimeRanking;
@@ -185,7 +186,8 @@ public class RankingsManager {
     public enum Type {
         ECONOMY(new EconomyRanking(), "ekonomii"),
         MINIGAME(new MiniGameRanking(), "wygranych minigier"),
-        TIME(new TimeRanking(), "czasu gry");
+        TIME(new TimeRanking(), "czasu gry"),
+        ADVANCEMENTS(new AdvancementsRanking(), "zdobytych osiągnięć");
 
         Type(@NotNull Ranking instance, @NotNull String rankingName) {
             this.instance = instance;

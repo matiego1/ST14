@@ -4,7 +4,7 @@ import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.AccountsManager;
-import me.matiego.st14.objects.CommandHandler;
+import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.objects.GUI;
 import me.matiego.st14.objects.Pair;
 import me.matiego.st14.utils.DiscordUtils;

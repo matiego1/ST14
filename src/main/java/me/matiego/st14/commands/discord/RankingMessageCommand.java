@@ -2,7 +2,7 @@ package me.matiego.st14.commands.discord;
 
 import me.matiego.st14.Main;
 import me.matiego.st14.managers.RankingsManager;
-import me.matiego.st14.objects.CommandHandler;
+import me.matiego.st14.objects.command.CommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.channel.ChannelType;

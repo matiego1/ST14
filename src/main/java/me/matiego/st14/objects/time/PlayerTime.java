@@ -1,4 +1,4 @@
-package me.matiego.st14.objects.times;
+package me.matiego.st14.objects.time;
 
 import lombok.Getter;
 import lombok.Synchronized;

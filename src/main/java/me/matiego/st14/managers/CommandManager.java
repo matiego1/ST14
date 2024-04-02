@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.Synchronized;
 import me.matiego.st14.Logs;
-import me.matiego.st14.objects.CommandHandler;
+import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.objects.FixedSizeMap;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Utils;

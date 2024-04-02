@@ -1,7 +1,7 @@
 package me.matiego.st14.markers;
 
 import me.matiego.st14.Logs;
-import me.matiego.st14.objects.DynmapMarker;
+import me.matiego.st14.objects.dynmap.DynmapMarker;
 import org.bukkit.Location;
 import org.dynmap.markers.Marker;
 import org.dynmap.markers.MarkerAPI;
