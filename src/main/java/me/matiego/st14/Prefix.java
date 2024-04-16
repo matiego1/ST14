@@ -20,7 +20,8 @@ public enum Prefix {
     MINI_GAMES("&d[&9MG&d]&e ", "Minigry"),
     AUTO_MOD("[AutoMod]", ""),
     HOME("&6[&aDom&6]&a ", ""),
-    RANKING("&6[&7Ranking&6]&7 ", "");
+    RANKING("&6[&7Ranking&6]&7 ", ""),
+    HEADS("&5[&9Główki&5]&b ", "");
 
     @Getter private final String minecraft;
     @Getter private final String discord;

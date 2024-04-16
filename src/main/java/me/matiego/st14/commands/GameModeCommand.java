@@ -39,7 +39,7 @@ public class GameModeCommand implements CommandHandler.Minecraft, CommandHandler
 
     @Override
     public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
-        if (!(sender instanceof Player player)) {
+        if (!(sender instanceof Player player) || (player.isOp() && args.length > 0)) {
             Bukkit.dispatchCommand(sender, "minecraft:gamemode " + String.join(" ", args));
             return 1; //not zero to prevent a loop if it somehow happened
         }

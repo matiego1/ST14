@@ -224,7 +224,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
         }
 
         if (players.size() > miniGame.getMaximumPlayersAmount()) {
-            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "W tą minigrę może grać tylko " + miniGame.getMinimumPlayersAmount() + " graczy, a znaleziono " + players.size() + "."));
+            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "W tę minigrę może grać tylko " + miniGame.getMinimumPlayersAmount() + " graczy, a znaleziono " + players.size() + "."));
             return;
         }
 

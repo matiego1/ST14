@@ -93,6 +93,12 @@ commands:
   ranking:
     permission: st14.ranking
     usage: 'Poprawne użycie: /ranking [economy|minigame|time|advancements] (gracz)'
+  heads:
+    permission: st14.heads
+    usage: 'Poprawne użycie: /heads download (kategoria)'
+  help:
+    permission: st14.help
+    usage: 'Poprawne użycie: /help'
 permissions:
   st14.st14:
     default: op
@@ -141,4 +147,8 @@ permissions:
   st14.premium:
     default: true
   st14.ranking:
+    default: true
+  st14.heads:
+    default: true
+  st14.help:
     default: true

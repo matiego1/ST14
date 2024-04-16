@@ -53,6 +53,7 @@ public final class Main extends JavaPlugin implements Listener {
     private DidYouKnowManager didYouKnowManager;
     @Getter private DynmapManager dynmapManager;
     @Getter private EconomyManager economyManager;
+    @Getter private HeadsManager headsManager;
     @Getter private HomeManager homeManager;
     @Getter private IncognitoManager incognitoManager;
     @Getter private ListenersManager listenersManager;
@@ -149,7 +150,8 @@ public final class Main extends JavaPlugin implements Listener {
         chatReportsManager = new ChatReportsManager();
         didYouKnowManager = new DidYouKnowManager(this);
         dynmapManager = new DynmapManager(this);
-        economyManager = new EconomyManager(this, true);
+        economyManager = new EconomyManager(this);
+        headsManager = new HeadsManager(this);
         homeManager = new HomeManager(this);
         incognitoManager = new IncognitoManager(this);
         listenersManager = new ListenersManager(this);
@@ -218,6 +220,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new PlayerResourcePackStatusListener(),
                 new PlayerRespawnListener(this),
                 new PlayerSetSpawnListener(),
+                new PlayerStatisticIncrementListener(this),
                 new PlayerSwapHandItemsListener(this),
                 new PlayerTeleportListener(),
                 new ServerCommandListener(),
@@ -300,6 +303,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new DifficultyCommand(this),
                 economyCommand,
                 new GameModeCommand(this),
+                new HeadsCommand(this),
                 incognitoCommand,
                 miniGameCommand,
                 new NonPremiumCommand(this),
@@ -313,6 +317,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new VersionCommand(this),
                 //Minecraft commands
                 new BackpackCommand(this),
+                new HelpCommand(this),
                 new HomeCommand(this),
                 new McreloadCommand(this),
                 new ReplyCommand(this),

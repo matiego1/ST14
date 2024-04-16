@@ -21,12 +21,11 @@ import java.util.UUID;
 public class EconomyManager implements net.milkbowl.vault.economy.Economy {
 
     private final Main plugin;
-    public EconomyManager(@NotNull Main plugin, boolean enabled) {
+    public EconomyManager(@NotNull Main plugin) {
         this.plugin = plugin;
-        this.enabled = enabled;
     }
 
-    @Getter @Setter private boolean enabled;
+    @Getter @Setter private boolean enabled = true;
 
     /**
      * Gets name of economy method

@@ -168,6 +168,11 @@
             <id>dynmap-repo</id>
             <url>https://repo.mikeprimm.com/</url>
         </repository>
+        <!--Multiverse-Core-->
+        <repository>
+            <id>OnARandomBox</id>
+            <url>https://repo.onarandombox.com/content/groups/public/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -261,7 +266,7 @@
             <artifactId>graves</artifactId>
             <version>4.9</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}\Graves-4.9.jar</systemPath>
+            <systemPath>${project.basedir}\Graves-4.9.1.6.jar</systemPath>
         </dependency>
         <!--CountingBot-->
         <dependency>
@@ -303,6 +308,13 @@
             <groupId>us.dynmap</groupId>
             <artifactId>dynmap-api</artifactId>
             <version>3.3</version>
+            <scope>provided</scope>
+        </dependency>
+        <!--Multiverse-Core-->
+        <dependency>
+            <groupId>com.onarandombox.multiversecore</groupId>
+            <artifactId>Multiverse-Core</artifactId>
+            <version>4.3.1</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

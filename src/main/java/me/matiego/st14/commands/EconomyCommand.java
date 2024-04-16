@@ -6,8 +6,8 @@ import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.AccountsManager;
 import me.matiego.st14.managers.EconomyManager;
 import me.matiego.st14.managers.PremiumManager;
-import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.objects.GUI;
+import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
@@ -142,7 +142,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
         } else {
             if (args.length != 0) return -1;
 
-            if (Utils.checkIfCanNotExecuteCommandInWorld(player, "economy")) {
+            if (Utils.checkIfCanNotExecuteCommandInWorld(player, "economy", '.')) {
                 Utils.async(() -> player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Saldo twojego konta: &9" + plugin.getEconomyManager().format(plugin.getEconomyManager().getBalance(player)) + "&b. Nie możesz wykonać innych operacji w tym świecie.")));
                 return 5;
             }
@@ -152,7 +152,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
             inv.setItem(1, GUI.createGuiItem(Material.PAPER, "&9Wypłata", "&bWypłać pieniądze w postaci banknotu"));
             Utils.async(() -> inv.setItem(4, GUI.createGuiItem(Material.DIAMOND, "&9Saldo konta", "&b" + plugin.getEconomyManager().format(plugin.getEconomyManager().getBalance(player)))));
             inv.setItem(7, GUI.createGuiItem(Material.VILLAGER_SPAWN_EGG, "&9Kup status premium", "&cJuż wkrótce!"));
-            inv.setItem(8, GUI.createGuiItem(Material.CREEPER_HEAD, "&9Kup główkę", "&cJuż wkrótce!"));
+            inv.setItem(8, GUI.createGuiItem(Material.CREEPER_HEAD, "&9Kup główkę"));
             player.openInventory(inv);
             return 3;
         }
@@ -323,6 +323,9 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                         return List.of(AnvilGUI.ResponseAction.close());
                     })
                     .open(player);
+        } else if (slot == 8) {
+            player.closeInventory();
+            player.performCommand("st14:heads");
         }
     }
 
