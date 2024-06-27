@@ -469,8 +469,8 @@ public abstract class MiniGame implements Listener {
 
     private synchronized int requiredVotesToStop() {
         return Math.max(
-                (int) Math.round(Math.max(0, Math.min(1, plugin.getConfig().getDouble(configPath + "votes-to-stop.percent"))) * getPlayersInMiniGame().size()),
-                plugin.getConfig().getInt(configPath + "votes-to-stop.min")
+                (int) Math.round(Math.max(0, Math.min(1, plugin.getConfig().getDouble("minigames.votes-to-stop.percent"))) * getPlayersInMiniGame().size()),
+                plugin.getConfig().getInt("minigames.votes-to-stop.min")
         );
     }
 
