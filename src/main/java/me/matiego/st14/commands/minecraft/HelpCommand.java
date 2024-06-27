@@ -34,10 +34,10 @@ public class HelpCommand implements CommandHandler.Minecraft {
             return 1; //not zero to prevent a loop if it somehow happened
         }
 
-        Component link = Component.text("mapa.st14.pl/tutorial")
+        Component link = Utils.getComponentByString("&2mapa.st14.pl/tutorial")
                 .clickEvent(ClickEvent.openUrl("http://mapa.st14.pl/tutorial"));
 
-        player.sendMessage(Utils.getComponentByString("&aNa stronie &2").append(link).append(Utils.getComponentByString("&a znajdziesz opis wszystkich funkcji i komend na tym serwerze.")));
+        player.sendMessage(Utils.getComponentByString("&aNa stronie ").append(link).append(Utils.getComponentByString("&a znajdziesz opis wszystkich funkcji i komend na tym serwerze.")));
         return 1;
     }
 }

@@ -108,14 +108,14 @@ public class DiscordUtils {
                             Logs.error("DNS server " + dnsServer.getHostAddress() + " failed to resolve " + host, e);
                         }
 
-                        // this dns server gave us an error so we move this dns server to the end of the
+                        // this dns server gave us an error, so we move this dns server to the end of the
                         // list, effectively making it the last resort for future requests
                         fallbackDnsServers.remove(dnsServer);
                         fallbackDnsServers.add(dnsServer);
                     }
 
                     // this sleep is here to prevent OkHTTP from repeatedly trying to query DNS servers with no
-                    // delay of it's own when internet connectivity is lost. that's extremely bad because it'll be
+                    // delay of its own when internet connectivity is lost. that's extremely bad because it'll be
                     // spitting errors into the console and consuming 100% cpu
                     try {
                         Thread.sleep(500);
@@ -256,7 +256,7 @@ public class DiscordUtils {
 
                             TextChannel chn = DiscordUtils.getChatMinecraftChannel();
                             if (chn == null) return;
-                            chn.sendMessage(user.getAsMention() + " nie mogę wysłać do ciebie prywatnej wiadomości :( Czy możesz mi na to zezwolić w ustawieniach prywatności tego serwera?").queue();
+                            chn.sendMessage(user.getAsMention() + " nie mogę wysłać do ciebie prywatnej wiadomości :( Czy możesz mi na to zezwolić?").queue();
                         }
                         result.accept(PrivateMessageResult.CANNOT_SEND_TO_USER);
                     } else {

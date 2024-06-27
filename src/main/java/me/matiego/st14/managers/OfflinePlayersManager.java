@@ -19,7 +19,6 @@ public class OfflinePlayersManager {
     private final Main plugin;
     public OfflinePlayersManager(@NotNull Main plugin) {
         this.plugin = plugin;
-        refreshCache();
     }
 
     private final String ERROR_MSG = "An error occurred while modifying values in \"st14_offline_players\" table in the database.";
@@ -67,7 +66,7 @@ public class OfflinePlayersManager {
 
     public static boolean createTable() {
         try (Connection conn = Main.getInstance().getMySQLConnection();
-             PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS test(uuid VARCHAR(36) NOT NULL, name VARCHAR(36) NOT NULL, PRIMARY KEY (uuid), UNIQUE KEY (name))")) {
+             PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_offline_players(uuid VARCHAR(36) NOT NULL, name VARCHAR(36) NOT NULL, PRIMARY KEY (uuid), UNIQUE KEY (name))")) {
             stmt.execute();
             return true;
         } catch (SQLException e) {
@@ -89,7 +88,7 @@ public class OfflinePlayersManager {
         }
         refreshCache();
     }
-    private synchronized void refreshCache() {
+    public synchronized void refreshCache() {
         try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT name FROM st14_offline_players")) {
             ResultSet result = stmt.executeQuery();

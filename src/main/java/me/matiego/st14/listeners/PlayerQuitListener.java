@@ -24,7 +24,7 @@ public class PlayerQuitListener implements Listener {
     public void onPlayerQuit(@NotNull PlayerQuitEvent event) {
         Player player = event.getPlayer();
 
-        plugin.getAntyLogoutManager().quit(player);
+        if (event.getReason() == PlayerQuitEvent.QuitReason.DISCONNECTED) plugin.getAntyLogoutManager().quit(player);
         plugin.getTellCommand().removeReply(player.getUniqueId());
         plugin.getTpaCommand().cancel(player);
         plugin.getPlayerMoveListener().removeBossBarForPlayer(player);
@@ -57,8 +57,8 @@ public class PlayerQuitListener implements Listener {
         );
     }
 
-    public void cancelDisableIncognitoTask(@NotNull Player player) {
-        BukkitTask task = disableIncognitoTasks.remove(player.getUniqueId());
+    public void cancelDisableIncognitoTask(@NotNull UUID uuid) {
+        BukkitTask task = disableIncognitoTasks.remove(uuid);
         if (task != null) {
             task.cancel();
         }

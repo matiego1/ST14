@@ -99,7 +99,7 @@ public class AsyncPlayerPreLoginListener implements Listener {
             plugin.getAccountsManager().unlink(uuid);
             disallow(event, Prefix.DISCORD + "Twoje konto zostało rozłączone przed administratora. Dołącz ponownie, aby je połączyć.");
         }
-        //refresh player name
+        //refresh player name - at the end to prevent random player nicknames from being refreshed
         plugin.getOfflinePlayersManager().refresh(uuid, event.getName());
     }
     private void disallow(@NotNull AsyncPlayerPreLoginEvent event, @NotNull String msg) {

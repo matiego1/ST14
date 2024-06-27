@@ -95,7 +95,7 @@ commands:
     usage: 'Poprawne użycie: /ranking [economy|minigame|time|advancements] (gracz)'
   heads:
     permission: st14.heads
-    usage: 'Poprawne użycie: /heads download (kategoria)'
+    usage: 'Poprawne użycie: /heads'
   help:
     permission: st14.help
     usage: 'Poprawne użycie: /help'

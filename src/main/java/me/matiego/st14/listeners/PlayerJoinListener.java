@@ -39,7 +39,7 @@ public class PlayerJoinListener implements Listener {
             }
         });
         //incognito
-        plugin.getPlayerQuitListener().cancelDisableIncognitoTask(player);
+        plugin.getPlayerQuitListener().cancelDisableIncognitoTask(uuid);
         if (plugin.getIncognitoManager().isIncognito(uuid)) {
             player.sendMessage(Utils.getComponentByString(Prefix.INCOGNITO + "Jesteś incognito!"));
         }

@@ -226,7 +226,8 @@ public final class Main extends JavaPlugin implements Listener {
                 new ServerCommandListener(),
                 new ServerListPingListener(this),
                 new SignChangeListener(this),
-                new StructureGrowListener()
+                new StructureGrowListener(),
+                new VehicleMoveListener(this)
 
         );
         listenersManager.registerListener("minecraft:brand", new PluginMessageReceivedListener(this));
@@ -350,6 +351,7 @@ public final class Main extends JavaPlugin implements Listener {
         getRankingsManager().start();
         Utils.registerRecipes();
         Utils.kickPlayersAtMidnightTask();
+        getOfflinePlayersManager().refreshCache();
 
         Utils.async(() -> {
             Utils.deleteOldLogFiles();

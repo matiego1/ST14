@@ -73,6 +73,7 @@ public class MySQL {
         if (!MiniGamesManager.createTable()) return false;
         if (!RankingsManager.createTable()) return false;
         if (!AdvancementsManager.createTable()) return false;
+        if (!HeadsManager.createTable()) return false;
         return WorldsLastLocationManager.createTable();
     }
 }

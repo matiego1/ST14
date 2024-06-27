@@ -151,7 +151,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
             inv.setItem(0, GUI.createGuiItem(Material.DISPENSER, "&9Przelew", "&bPrzelej pieniądze innemu graczowi"));
             inv.setItem(1, GUI.createGuiItem(Material.PAPER, "&9Wypłata", "&bWypłać pieniądze w postaci banknotu"));
             Utils.async(() -> inv.setItem(4, GUI.createGuiItem(Material.DIAMOND, "&9Saldo konta", "&b" + plugin.getEconomyManager().format(plugin.getEconomyManager().getBalance(player)))));
-            inv.setItem(7, GUI.createGuiItem(Material.VILLAGER_SPAWN_EGG, "&9Kup status premium", "&cJuż wkrótce!"));
+            inv.setItem(7, GUI.createGuiItem(Material.VILLAGER_SPAWN_EGG, "&9Kup status premium"));
             inv.setItem(8, GUI.createGuiItem(Material.CREEPER_HEAD, "&9Kup główkę"));
             player.openInventory(inv);
             return 3;
@@ -229,7 +229,10 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                         }
 
                         amount = Utils.round(amount, 2);
-                        double tax = Utils.round(Math.max(0, plugin.getConfig().getDouble("economy.banknote-tax", 0)), 2);
+                        double tax = Utils.round(Math.max(
+                                Math.max(0, plugin.getConfig().getDouble("economy.banknote-tax-min", 0)),
+                                amount * Math.max(0, plugin.getConfig().getDouble("economy.banknote-tax-percent", 0))
+                        ), 2);
 
                         EconomyManager economy = plugin.getEconomyManager();
                         if (!economy.has(player, amount + tax)) {
@@ -284,11 +287,11 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                         } catch (Exception ignored) {}
 
                         if (time <= 0) {
-                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cWprowadziłeś zły czas, na który chcesz kupić status premium. Przykładowe czasy: 5h, 30d, 1d12h"));
+                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cWprowadziłeś zły czas, na który chcesz kupić status premium. Przykładowe czasy: 5h, 30d, 1d12h. Minimalny czas: 1h."));
                             return List.of(AnvilGUI.ResponseAction.close());
                         }
 
-                        double amount = plugin.getConfig().getDouble("premium.amount-const", 0) * Math.sqrt(time);
+                        double amount = Math.max(plugin.getConfig().getDouble("premium.min-cost", 0), plugin.getConfig().getDouble("premium.cost-const", 0) * Math.sqrt(time));
                         if (amount <= 0) {
                             player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cNie możesz kupić teraz statusu premium."));
                             return List.of(AnvilGUI.ResponseAction.close());
@@ -298,7 +301,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
 
                         EconomyManager economy = plugin.getEconomyManager();
                         if (!economy.has(player, amount)) {
-                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cAby kupić przedłużyć status premium o " + Utils.parseMillisToString(time, false) + " potrzebujesz " + economy.format(amount)));
+                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cAby przedłużyć status premium o " + Utils.parseMillisToString(time, false) + " potrzebujesz " + economy.format(amount)) + ", a masz " + economy.getBalance(player));
                             return List.of(AnvilGUI.ResponseAction.close());
                         }
 
@@ -347,7 +350,10 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                         return List.of(AnvilGUI.ResponseAction.replaceInputText("To twój nick!"));
                     }
 
-                    double tax = Utils.round(Math.max(0, plugin.getConfig().getDouble("economy.banknote-tax", 0)), 2);
+                    double tax = Utils.round(Math.max(
+                            Math.max(0, plugin.getConfig().getDouble("economy.transfer-tax-min", 0)),
+                            amount * Math.max(0, plugin.getConfig().getDouble("economy.transfer-tax-percent", 0))
+                    ), 2);
 
                     EconomyManager economy = plugin.getEconomyManager();
                     if (!economy.has(player, amount + tax)) {

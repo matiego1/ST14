@@ -36,6 +36,7 @@ public class IncognitoManager {
 
     public synchronized void setIncognito(@NotNull UUID uuid, boolean value) {
         if (isIncognito(uuid) == value) return;
+        plugin.getPlayerQuitListener().cancelDisableIncognitoTask(uuid);
         Player player = Bukkit.getPlayer(uuid);
         if (value) {
             if (player != null) {

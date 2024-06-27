@@ -55,7 +55,7 @@ public enum HeadsCategory {
         HeadsManager manager = Main.getInstance().getHeadsManager();
         if (manager == null || !manager.isAvailable()) return null;
         try (Connection conn = Main.getInstance().getMySQLConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT uuid, name, value, tags FROM st14_heads WHERE category = ?")) {
+             PreparedStatement stmt = conn.prepareStatement("SELECT uuid, name, value, IFNULL((SELECT GROUP_CONCAT(tag SEPARATOR ', ') FROM st14_heads_tags WHERE uuid = st14_heads.uuid), '') as tags FROM st14_heads WHERE category = ?")) {
             stmt.setString(1, name());
 
             ResultSet result = stmt.executeQuery();
@@ -82,43 +82,58 @@ public enum HeadsCategory {
         if (guiHead != null) return guiHead.clone();
 
         HeadsManager manager = Main.getInstance().getHeadsManager();
-        if (manager == null || !manager.isAvailable()) return GUI.createGuiItem(Material.PLAYER_HEAD, "&5" + this);
+        if (manager == null || !manager.isAvailable()) return GUI.createGuiItem(Material.CREEPER_HEAD, "&9" + this);
 
         try (Connection conn = Main.getInstance().getMySQLConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT uuid, name, value, tags FROM st14_heads WHERE category = ? LIMIT 1")) {
+             PreparedStatement stmt = conn.prepareStatement("SELECT uuid, name, value FROM st14_heads WHERE category = ? LIMIT 1")) {
             stmt.setString(1, name());
 
             ResultSet result = stmt.executeQuery();
-            if (!result.next()) return GUI.createGuiItem(Material.PLAYER_HEAD, "&5" + this);
+            if (!result.next()) return GUI.createGuiItem(Material.CREEPER_HEAD, "&9" + this);
 
             ItemStack item = new Head(
                     UUID.fromString(result.getString("uuid")),
                     result.getString("name"),
                     result.getString("value"),
-                    Arrays.asList(result.getString("tags").split(",")),
+                    new ArrayList<>(),
                     this
             ).getItem();
 
             ItemMeta meta = item.getItemMeta();
-            meta.displayName(Utils.getComponentByString("&5" + this));
-            meta.lore(List.of(Utils.getComponentByString("&bKliknij, aby wyświetlić!")));
+            meta.displayName(Utils.getComponentByString("&9" + this));
             item.setItemMeta(meta);
 
             guiHead = item;
+            return guiHead;
         } catch (SQLException e) {
             Logs.error(ERROR_MSG, e);
         }
-        return GUI.createGuiItem(Material.PLAYER_HEAD, "&5" + this);
+        return GUI.createGuiItem(Material.CREEPER_HEAD, "&9" + this);
     }
 
+    public int getHeadsAmount() {
+        HeadsManager manager = Main.getInstance().getHeadsManager();
+        if (manager == null || !manager.isAvailable()) return -1;
+        try (Connection conn = Main.getInstance().getMySQLConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) as amount FROM st14_heads WHERE category = ?")) {
+            stmt.setString(1, name());
 
+            return stmt.executeQuery().getInt("amount");
+        } catch (SQLException e) {
+            Logs.error(ERROR_MSG, e);
+        }
+        return -1;
+    }
 
     public boolean downloadCategory() {
         try {
             String json = getCategoryJson();
             if (json == null) return false;
             JsonArray jsonArray = JsonParser.parseString(json).getAsJsonArray();
-            return saveHeads(parseCategoryJson(jsonArray));
+            if (saveHeads(parseCategoryJson(jsonArray))) {
+                guiHead = null;
+                return true;
+            }
         } catch (Exception e) {
             Logs.error("An error occurred while refreshing heads from " + name().toLowerCase() + " category.", e);
         }
@@ -151,6 +166,66 @@ public enum HeadsCategory {
         }
     }
 
+    private boolean saveHeads(@NotNull List<Head> heads) {
+        HeadsManager manager = Main.getInstance().getHeadsManager();
+        if (manager != null && manager.isAvailable()) return false;
+
+        try (Connection conn = Main.getInstance().getMySQLConnection()) {
+            try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM st14_heads WHERE category = ?")) {
+                stmt.setString(1, name());
+                stmt.execute();
+            }
+            try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM st14_heads_tags WHERE category = ?")) {
+                stmt.setString(1, name());
+                stmt.execute();
+            }
+
+            final int BATCH_SIZE = 500;
+
+            try (PreparedStatement stmt_heads = conn.prepareStatement("INSERT INTO st14_heads(uuid, name, value, category) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = ?, value = ?, category = ?");
+                 PreparedStatement stmt_tags = conn.prepareStatement("INSERT INTO st14_heads_tags(uuid, tag, category) VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE category = ?")) {
+                int index_heads = 0;
+                int index_tags = 0;
+
+                for (Head head : heads) {
+                    stmt_heads.setString(1, head.getUuid().toString());
+                    stmt_heads.setString(2, head.getName());
+                    stmt_heads.setString(3, head.getValue());
+                    stmt_heads.setString(4, name());
+
+                    stmt_heads.setString(5, head.getName());
+                    stmt_heads.setString(6, head.getValue());
+                    stmt_heads.setString(7, name());
+
+                    stmt_heads.addBatch();
+                    index_heads++;
+                    if (index_heads % BATCH_SIZE == 0) {
+                        stmt_heads.executeBatch();
+                    }
+
+                    for (String tag : head.getTags()) {
+                        stmt_tags.setString(1, head.getUuid().toString());
+                        stmt_tags.setString(2, tag);
+                        stmt_tags.setString(3, name());
+                        stmt_tags.setString(4, name());
+
+                        stmt_tags.addBatch();
+                        index_tags++;
+                        if (index_tags % BATCH_SIZE == 0) {
+                            stmt_tags.executeBatch();
+                        }
+                    }
+                }
+                if (index_heads % BATCH_SIZE != 0) stmt_heads.executeBatch();
+                if (index_tags % BATCH_SIZE != 0) stmt_tags.executeBatch();
+            }
+            return true;
+        } catch (SQLException e) {
+            Logs.error(ERROR_MSG, e);
+        }
+        return false;
+    }
+
     private @NotNull List<Head> parseCategoryJson(@NotNull JsonArray json) {
         List<Head> heads = new ArrayList<>();
         for (JsonElement element : json) {
@@ -172,59 +247,14 @@ public enum HeadsCategory {
         return heads;
     }
 
-    private boolean saveHeads(@NotNull List<Head> heads) {
-        HeadsManager manager = Main.getInstance().getHeadsManager();
-        if (manager != null && manager.isAvailable()) return false;
-
-        try (Connection conn = Main.getInstance().getMySQLConnection()) {
-            try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM st14_heads WHERE category = ?")) {
-                stmt.setString(1, name());
-            }
-            try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_heads(uuid, name, value, tags, category) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = ?, value = ?, tags = ?, category = ?")) {
-                int index = 0;
-                for (Head head : heads) {
-                    stmt.setString(1, head.getUuid().toString());
-                    stmt.setString(2, head.getName());
-                    stmt.setString(3, head.getValue());
-                    stmt.setString(4, String.join(",", head.getTags()));
-                    stmt.setString(5, name());
-
-                    stmt.setString(6, head.getName());
-                    stmt.setString(7, head.getValue());
-                    stmt.setString(8, String.join(",", head.getTags()));
-                    stmt.setString(9, name());
-
-                    stmt.addBatch();
-                    index++;
-
-                    if (index % 1000 == 0) {
-                        stmt.executeBatch();
-                    }
-                }
-                if (index % 1000 != 0) stmt.executeBatch();
-            }
-            return true;
-        } catch (SQLException e) {
-            Logs.error(ERROR_MSG, e);
-        }
-        return false;
-    }
-
     @Override
     public String toString() {
         return name;
     }
 
-    public static @Nullable HeadsCategory getCategoryByApiName(@NotNull String apiName) {
-        for (HeadsCategory category : HeadsCategory.values()) {
-            if (category.apiName.equalsIgnoreCase(apiName)) return category;
-        }
-        return null;
-    }
-
     public static @Nullable HeadsCategory getCategoryByName(@NotNull String name) {
         for (HeadsCategory category : HeadsCategory.values()) {
-            if (category.name.equals(name)) return category;
+            if (category.name.equalsIgnoreCase(name)) return category;
         }
         return null;
     }

@@ -55,7 +55,7 @@ public class Head {
         List<Component> lores = new ArrayList<>();
         lores.add(Utils.getComponentByString("&7Kategoria: " + category));
         if (!getTags().isEmpty()) {
-            lores.add(Utils.getComponentByString("&7Tagi" + String.join(", ", getTags())));
+            lores.add(Utils.getComponentByString("&7Tagi: " + String.join(", ", getTags())));
         }
         meta.lore(lores);
 

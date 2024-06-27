@@ -6,6 +6,7 @@ import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.HeadsManager;
 import me.matiego.st14.objects.GUI;
 import me.matiego.st14.objects.command.CommandHandler;
+import me.matiego.st14.objects.heads.Head;
 import me.matiego.st14.objects.heads.HeadsCategory;
 import me.matiego.st14.objects.heads.HeadsGUI;
 import me.matiego.st14.utils.Utils;
@@ -16,7 +17,7 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
@@ -51,43 +52,40 @@ public class HeadsCommand implements CommandHandler.Minecraft, CommandHandler.Di
 
     @Override
     public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
+        HeadsManager manager = plugin.getHeadsManager();
         if (hasAdminPermission(sender) && args.length > 0) {
-            if (args.length != 1 && args.length != 2) {
+            if (!(args.length == 1 || args.length == 2) && !args[0].equalsIgnoreCase("download")) {
                 sender.sendMessage(Utils.getComponentByString("&cPoprawne użycie: /heads download (kategoria)"));
                 return 0;
             }
 
-            HeadsManager manager = plugin.getHeadsManager();
+            long time = Utils.now();
+
             if (!manager.isAvailable()) {
                 sender.sendMessage(Utils.getComponentByString(Prefix.HEADS + "&cPobieranie główek już zostało rozpoczęte."));
                 return 3;
             }
             manager.setAvailable(false);
 
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                if (player.getInventory().getHolder() instanceof HeadsGUI) {
-                    player.closeInventory();
-                    player.sendMessage(Utils.getComponentByString(Prefix.HEADS + "Pobieranie nowych główek... Otwórz sklep jeszcze raz."));
-                }
-            }
-
             if (args.length == 1) {
                 Utils.async(() -> {
-                    sender.sendMessage(Utils.getComponentByString(Prefix.HEADS + "Rozpoczynam pobieranie główek..."));
+                    sender.sendMessage(Utils.getComponentByString(Prefix.HEADS + "Rozpoczynam pobieranie wszystkich kategorii..."));
 
                     for (HeadsCategory category : HeadsCategory.values()) {
-                        if (!category.downloadCategory()) {
-                            sender.sendMessage(Utils.getComponentByString(Prefix.HEADS + "&cNapotkano błąd przy pobieraniu kategorii " + category + "."));
+                        if (category.downloadCategory()) {
+                            sender.sendMessage(Utils.getComponentByString(Prefix.HEADS + "-> Pomyślnie pobrano kategorię " + category + "."));
+                        } else {
+                            sender.sendMessage(Utils.getComponentByString(Prefix.HEADS + "-> &cNapotkano błąd przy pobieraniu kategorii " + category + "."));
                         }
                     }
 
-                    sender.sendMessage(Utils.getComponentByString(Prefix.HEADS + "Pobieranie główek zakończone!"));
+                    sender.sendMessage(Utils.getComponentByString(Prefix.HEADS + "Pobieranie wszystkich kategorii zakończone w " + Utils.parseMillisToString(Utils.now() - time, true) + "."));
                     manager.setAvailable(true);
                 });
                 return 15;
             }
 
-            HeadsCategory category = HeadsCategory.getCategoryByApiName(args[1]);
+            HeadsCategory category = HeadsCategory.getCategoryByName(args[1]);
             if (category == null) {
                 sender.sendMessage(Utils.getComponentByString(Prefix.HEADS + "&cNie istnieje kategoria z taką nazwą."));
                 manager.setAvailable(true);
@@ -95,8 +93,9 @@ public class HeadsCommand implements CommandHandler.Minecraft, CommandHandler.Di
             }
 
             Utils.async(() -> {
+                sender.sendMessage(Utils.getComponentByString(Prefix.HEADS + "Rozpoczynam pobieranie kategorii " + category + "..."));
                 if (category.downloadCategory()) {
-                    sender.sendMessage(Utils.getComponentByString(Prefix.HEADS + "Pomyślnie pobrano tę kategorie."));
+                    sender.sendMessage(Utils.getComponentByString(Prefix.HEADS + "Pomyślnie pobrano tę kategorie w " + Utils.parseMillisToString(Utils.now() - time, true) + "."));
                 } else {
                     sender.sendMessage(Utils.getComponentByString(Prefix.HEADS + "&cNapotkano błąd przy pobieraniu tej kategorii."));
                 }
@@ -109,12 +108,44 @@ public class HeadsCommand implements CommandHandler.Minecraft, CommandHandler.Di
             sender.sendMessage(Utils.getComponentByString(Prefix.HEADS + "&cTej komendy mogą użyć tylko gracze."));
             return 0;
         }
-        if (args.length != 0) return -1;
 
         if (Utils.checkIfCanNotExecuteCommandInWorld(player, "heads", '.')) {
             player.sendMessage(Utils.getComponentByString(Prefix.HEADS + "&cNie możesz użyć tej komendy w tym świecie."));
             return 3;
         }
+
+        if (args.length == 2) {
+            if (!(args[0].equalsIgnoreCase("find-by-name") || args[0].equalsIgnoreCase("find-by-tag"))) return -1;
+            if (!manager.isAvailable()) {
+                player.sendMessage(Utils.getComponentByString(Prefix.HEADS + "&cTrwa pobieranie nowych główek. Spróbuj później."));
+                return 5;
+            }
+
+            List<Head> heads = switch (args[0].toLowerCase()) {
+                case "find-by-name" -> manager.findHeadsByName(args[1]);
+                case "find-by-tag" -> manager.findHeadsByTag(args[1]);
+                default -> null;
+            };
+
+            if (heads == null) {
+                player.sendMessage(Utils.getComponentByString(Prefix.HEADS + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
+                return 7;
+            }
+            if (heads.isEmpty()) {
+                player.sendMessage(Utils.getComponentByString(Prefix.HEADS + "&cNie znaleziono żadnych główek z tą nazwą/tagiem."));
+                return 7;
+            }
+
+            Utils.async(() -> {
+                HeadsGUI gui = new HeadsGUI(heads, player.getWorld(), plugin);
+                player.sendMessage(Utils.getComponentByString(Prefix.HEADS + "Znaleziono " + heads.size() + " główek!"));
+                Utils.sync(() -> player.openInventory(gui.getInventory()));
+            });
+
+            return 3;
+        }
+
+        if (args.length != 0) return -1;
 
         int guiSize = HeadsCategory.values().length / 9;
         if (HeadsCategory.values().length % 9 != 0) {
@@ -123,12 +154,29 @@ public class HeadsCommand implements CommandHandler.Minecraft, CommandHandler.Di
         guiSize = Math.max(9, guiSize * 9);
 
         Inventory inv = GUI.createInventory(guiSize, Prefix.HEADS + "Wybierz kategorie");
+        int i = 0;
         for (HeadsCategory category : HeadsCategory.values()) {
-            inv.addItem(category.getGuiHead());
+            int finalI = i++;
+            Utils.async(() -> {
+                ItemStack guiHead = category.getGuiHead();
+                ItemMeta meta = guiHead.getItemMeta();
+                int headsAmount = category.getHeadsAmount();
+                if (headsAmount < 0) {
+                    meta.lore(List.of(Utils.getComponentByString("&bKliknij, aby wyświetlić!").decoration(TextDecoration.ITALIC, false)));
+                } else {
+                    meta.lore(List.of(
+                            Utils.getComponentByString("&b" + headsAmount + " główek").decoration(TextDecoration.ITALIC, false),
+                            Utils.getComponentByString("&bKliknij, aby wyświetlić!").decoration(TextDecoration.ITALIC, false)
+                    ));
+                }
+                guiHead.setItemMeta(meta);
+
+                inv.setItem(finalI, guiHead);
+            });
         }
         player.openInventory(inv);
 
-        return 15;
+        return 5;
     }
 
     private boolean hasAdminPermission(@NotNull CommandSender sender) {
@@ -141,14 +189,14 @@ public class HeadsCommand implements CommandHandler.Minecraft, CommandHandler.Di
     public void onInventoryClick(@NotNull InventoryClickEvent event) {
         InventoryHolder holder = event.getView().getTopInventory().getHolder();
         if (holder instanceof HeadsGUI headsGUI) {
-            headsGUI.processInventoryClick(event, plugin);
+            headsGUI.processInventoryClick(event);
             return;
         }
 
         if (!GUI.checkInventory(event,Prefix.HEADS + "Wybierz kategorie")) return;
         Player player = (Player) event.getWhoClicked();
 
-        if (Utils.checkIfCanNotExecuteCommandInWorld(player, "spawn", '.')) {
+        if (Utils.checkIfCanNotExecuteCommandInWorld(player, "heads", '.')) {
             player.sendMessage(Utils.getComponentByString(Prefix.HEADS + "&cNie możesz użyć tej komendy w tym świecie."));
             player.closeInventory();
             return;
@@ -161,14 +209,22 @@ public class HeadsCommand implements CommandHandler.Minecraft, CommandHandler.Di
             return;
         }
 
-        HeadsGUI gui = HeadsGUI.createHeadsGUI(category);
-        if (gui == null) {
-            player.sendMessage(Utils.getComponentByString(Prefix.HEADS + "&cAktualnie nie możesz kupić żadnego główki w tej kategorii. Spróbuj później."));
-            player.closeInventory();
-            return;
-        }
+        Utils.async(() -> {
+            HeadsGUI gui = HeadsGUI.createHeadsGUI(category, player.getWorld(), plugin);
+            Utils.sync(() -> {
+                player.closeInventory();
+                if (gui == null) {
+                    player.sendMessage(Utils.getComponentByString(Prefix.HEADS + "&cTrwa pobieranie nowych główek albo napotkano niespodziewany błąd. Spróbuj później."));
+                    return;
+                }
+                if (gui.getHeads().isEmpty()) {
+                    player.sendMessage(Utils.getComponentByString(Prefix.HEADS + "&cW tej kategorii nie ma jeszcze żadnych główek."));
+                    return;
+                }
 
-        player.openInventory(gui.getInventory());
+                player.openInventory(gui.getInventory());
+            });
+        });
     }
 
     private @NotNull String getItemName(@Nullable ItemStack item) {
@@ -202,10 +258,12 @@ public class HeadsCommand implements CommandHandler.Minecraft, CommandHandler.Di
         event.deferReply(true).queue();
         InteractionHook hook = event.getHook();
 
+        long time = Utils.now();
+
         HeadsCategory category;
         String categoryName = event.getOption("kategoria", OptionMapping::getAsString);
         if (categoryName != null) {
-            category = HeadsCategory.getCategoryByApiName(categoryName);
+            category = HeadsCategory.getCategoryByName(categoryName);
             if (category == null) {
                 hook.sendMessage("Nie istnieje kategoria z taką nazwą.").queue();
                 return 1;
@@ -230,7 +288,7 @@ public class HeadsCommand implements CommandHandler.Minecraft, CommandHandler.Di
                         downloaded++;
                     }
                 }
-                hook.sendMessage("Pomyślnie pobrano " + downloaded + "/" + HeadsCategory.values().length + " kategorii główek.").queue();
+                hook.sendMessage("Pomyślnie pobrano " + downloaded + "/" + HeadsCategory.values().length + " kategorii główek w " + Utils.parseMillisToString(Utils.now() - time, true) + ".").queue();
                 manager.setAvailable(true);
             });
             return 15;
@@ -238,7 +296,7 @@ public class HeadsCommand implements CommandHandler.Minecraft, CommandHandler.Di
 
         Utils.async(() -> {
             if (category.downloadCategory()) {
-                hook.sendMessage("Pomyślnie pobrano tę kategorie.").queue();
+                hook.sendMessage("Pomyślnie pobrano tę kategorie w " + Utils.parseMillisToString(Utils.now() - time, true) + ".").queue();
             } else {
                 hook.sendMessage("Napotkano błąd przy pobieraniu tej kategorii.").queue();
             }
