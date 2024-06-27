@@ -121,6 +121,7 @@ public class HeadsGUI extends GUI {
         } else if (slot < PAGE_SIZE) {
             ItemStack item = event.getCurrentItem();
             if (item == null) return;
+            if (item.getType() != Material.PLAYER_HEAD) return;
 
             Component nameComponent = item.getItemMeta().displayName();
             String name = (nameComponent == null ? "[?]" : Utils.getPlainTextByComponent(nameComponent));
