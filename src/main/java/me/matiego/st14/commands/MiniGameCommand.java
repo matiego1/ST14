@@ -54,8 +54,33 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
 
         if (args.length == 1) {
             String subCommand = args[0].toLowerCase();
-            if (!hasPermissionToSubCommand(sender, subCommand)) return -1;
+            switch (subCommand) {
+                case "damage" -> {
+                    sender.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Już wkrótce!"));
+                    return 1;
+                }
+                case "vote-stop" -> {
+                    if (!(sender instanceof Player player)) {
+                        sender.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Tej komendy może użyć tylko gracz"));
+                        return 0;
+                    }
 
+                    MiniGame miniGame = manager.getActiveMiniGame();
+                    if (miniGame == null) {
+                        player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "&cŻadna minigra nie jest rozpoczęta."));
+                        return 3;
+                    }
+
+                    if (miniGame.getPlayerStatus(player) != MiniGame.PlayerStatus.IN_MINI_GAME) {
+                        player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "&cNie bierzesz udziału w toczącej się minigrze."));
+                        return 3;
+                    }
+
+                    miniGame.voteToStop(player);
+                }
+            }
+
+            if (!hasPermissionToSubCommand(sender, subCommand)) return -1;
             switch (subCommand) {
                 case "stop" -> {
                     if (manager.getActiveMiniGame() == null) {
@@ -75,7 +100,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
                     }
 
                     manager.setEditorMode(player, !manager.isInEditorMode(player));
-                    return 10;
+                    return 7;
                 }
             }
             return -1;
@@ -116,7 +141,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
                         "&eKliknij, aby rozpocząć!",
                         "&eCzas minigry: &d" + Utils.parseMillisToString(type.getGameTimeInSeconds() * 1000L, false),
                         "",
-                        (type.isMiniGameEnabled() ? "" : "&4Ta gra jest wyłączona")
+                        (type.isMiniGameEnabled() ? "" : "&4Ta minigra jest wyłączona")
                 };
             }
             inv.addItem(GUI.createGuiItem(type.getGuiMaterial(), "&9" + type.getName(), lores));
@@ -137,6 +162,17 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
             return player.hasPermission("st14.minigame." + subCommand);
         }
         return true;
+    }
+
+    @Override
+    public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args) {
+        if (args.length != 1) return new ArrayList<>();
+        List<String> completions = new ArrayList<>();
+        if (sender instanceof Player) completions.add("vote-stop");
+        if (sender instanceof Player) completions.add("damage");
+        if (hasPermissionToSubCommand(sender, "stop")) completions.add("stop");
+        if (hasPermissionToSubCommand(sender, "editor")) completions.add("editor");
+        return completions;
     }
 
     @Override
@@ -209,7 +245,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
         }
         MiniGame miniGame = type.getNewHandlerInstance(mapName);
         if (miniGame == null) {
-            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Ta gra jest wyłączona."));
+            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Ta minigra jest wyłączona."));
             return;
         }
 

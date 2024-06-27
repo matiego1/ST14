@@ -66,7 +66,7 @@ public class HeadsGUI extends GUI {
             inventory.setItem(49, GUI.createGuiItem(
                     Material.CREEPER_HEAD,
                     (category == null ? "Wynik wyszukiwania" : "&9Kategoria: &b" + category),
-                    (category == null ? "(&bZnaleziono " + headsSize + " główek)" : "&b(" + headsSize + " główek)"),
+                    (category == null ? "&b(Znaleziono " + headsSize + " główek)" : "&b(" + headsSize + " główek)"),
                     "&9Strona: &b" + currentPage + " / " + numberOfPages,
                     "&9Cena: &b" + plugin.getEconomyManager().format(getCost()),
                     "&bKliknij na główkę, aby kupić!"

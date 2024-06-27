@@ -64,7 +64,7 @@ public enum MiniGameType {
 
         if (handler == null) return null;
         try {
-            return handler.getConstructor(Main.class, Integer.TYPE, String.class, String.class).newInstance(plugin, getGameTimeInSeconds(), getConfigPath(), mapName);
+            return handler.getConstructor(Main.class, MiniGameType.class, String.class).newInstance(plugin, this, mapName);
         } catch (Exception ignored) {}
         return null;
     }

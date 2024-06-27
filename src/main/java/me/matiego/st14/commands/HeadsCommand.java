@@ -53,8 +53,8 @@ public class HeadsCommand implements CommandHandler.Minecraft, CommandHandler.Di
     @Override
     public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         HeadsManager manager = plugin.getHeadsManager();
-        if (hasAdminPermission(sender) && args.length > 0) {
-            if (!(args.length == 1 || args.length == 2) && !args[0].equalsIgnoreCase("download")) {
+        if (hasAdminPermission(sender) && args.length > 0 && args[0].equalsIgnoreCase("download")) {
+            if (args.length > 2) {
                 sender.sendMessage(Utils.getComponentByString("&cPoprawne użycie: /heads download (kategoria)"));
                 return 0;
             }
@@ -114,16 +114,21 @@ public class HeadsCommand implements CommandHandler.Minecraft, CommandHandler.Di
             return 3;
         }
 
-        if (args.length == 2) {
+        if (args.length >= 2) {
             if (!(args[0].equalsIgnoreCase("find-by-name") || args[0].equalsIgnoreCase("find-by-tag"))) return -1;
             if (!manager.isAvailable()) {
                 player.sendMessage(Utils.getComponentByString(Prefix.HEADS + "&cTrwa pobieranie nowych główek. Spróbuj później."));
                 return 5;
             }
 
+            StringBuilder arg = new StringBuilder();
+            for (int i = 1; i < args.length; i++) {
+                arg.append(args[i]).append(" ");
+            }
+
             List<Head> heads = switch (args[0].toLowerCase()) {
-                case "find-by-name" -> manager.findHeadsByName(args[1]);
-                case "find-by-tag" -> manager.findHeadsByTag(args[1]);
+                case "find-by-name" -> manager.findHeadsByName(arg.substring(0, arg.length() - 1).toLowerCase());
+                case "find-by-tag" -> manager.findHeadsByTag(arg.substring(0, arg.length() - 1).toLowerCase());
                 default -> null;
             };
 
@@ -238,8 +243,12 @@ public class HeadsCommand implements CommandHandler.Minecraft, CommandHandler.Di
 
     @Override
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args) {
-        if (args.length == 1) return List.of("download");
-        if (args.length == 2) return Arrays.stream(HeadsCategory.values()).map(HeadsCategory::toString).toList();
+        if (hasAdminPermission(sender)) {
+            if (args.length == 1) return Arrays.asList("download", "find-by-name", "find-by-tag");
+            if (args.length == 2 && args[1].equalsIgnoreCase("download")) return Arrays.stream(HeadsCategory.values()).map(HeadsCategory::toString).toList();
+            return new ArrayList<>();
+        }
+        if (args.length == 1) return Arrays.asList("find-by-name", "find-by-tag");
         return new ArrayList<>();
     }
 

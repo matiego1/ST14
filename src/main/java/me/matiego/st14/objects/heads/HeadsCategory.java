@@ -55,7 +55,7 @@ public enum HeadsCategory {
         HeadsManager manager = Main.getInstance().getHeadsManager();
         if (manager == null || !manager.isAvailable()) return null;
         try (Connection conn = Main.getInstance().getMySQLConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT uuid, name, value, IFNULL((SELECT GROUP_CONCAT(tag SEPARATOR ', ') FROM st14_heads_tags WHERE uuid = st14_heads.uuid), '') as tags FROM st14_heads WHERE category = ?")) {
+             PreparedStatement stmt = conn.prepareStatement("SELECT uuid, name, value, IFNULL((SELECT GROUP_CONCAT(tag SEPARATOR ',') FROM st14_heads_tags WHERE uuid = st14_heads.uuid), '') as tags FROM st14_heads WHERE category = ?")) {
             stmt.setString(1, name());
 
             ResultSet result = stmt.executeQuery();
@@ -118,7 +118,9 @@ public enum HeadsCategory {
              PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) as amount FROM st14_heads WHERE category = ?")) {
             stmt.setString(1, name());
 
-            return stmt.executeQuery().getInt("amount");
+            ResultSet set = stmt.executeQuery();
+            if (!set.next()) return 0;
+            return set.getInt("amount");
         } catch (SQLException e) {
             Logs.error(ERROR_MSG, e);
         }
@@ -240,7 +242,7 @@ public enum HeadsCategory {
                     uuid,
                     object.get("name").getAsString(),
                     object.get("value").getAsString(),
-                    Arrays.asList(object.get("tags").getAsString().split(",")),
+                    Arrays.asList(object.get("tags").getAsString().split(",(?! )")),
                     this
             ));
         }

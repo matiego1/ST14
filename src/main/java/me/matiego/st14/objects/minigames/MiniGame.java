@@ -55,6 +55,7 @@ public abstract class MiniGame implements Listener {
     protected boolean isMiniGameStarted = false;
     protected boolean lobby = true;
     protected int miniGameTime = 0;
+    private final List<Player> votesToStop = new ArrayList<>();
     private final Set<BukkitTask> tasks = new HashSet<>();
     private final HashMap<Player, PlayerStatus> players = new HashMap<>();
 
@@ -73,6 +74,7 @@ public abstract class MiniGame implements Listener {
         lobby = true;
         miniGameTime = 0;
         mapConfigPath = null;
+        votesToStop.clear();
     }
 
     protected void setMapConfigPath() throws MiniGameException {
@@ -121,7 +123,7 @@ public abstract class MiniGame implements Listener {
         }
     }
 
-    protected synchronized @NotNull PlayerStatus getPlayerStatus(@NotNull Player player) {
+    public synchronized @NotNull PlayerStatus getPlayerStatus(@NotNull Player player) {
         return players.getOrDefault(player, PlayerStatus.NOT_IN_MINI_GAME);
     }
 
@@ -409,7 +411,8 @@ public abstract class MiniGame implements Listener {
 
         if (status == PlayerStatus.IN_MINI_GAME) {
             sendMessage("Gracz " + player.getName() + " opuścił minigrę.");
-            endGameIfLessThanTwoPlayersLeft();
+            if (endGameIfLessThanTwoPlayersLeft()) return;
+            resetVotesToStop();
         } else {
             sendMessage("Gracz " + player.getName() + " przestał obserwować minigrę.");
         }
@@ -431,6 +434,7 @@ public abstract class MiniGame implements Listener {
 
         if (endGameIfLessThanTwoPlayersLeft()) return;
 
+        resetVotesToStop();
         sendMessage("Gracz " + player.getName() + " obserwuje minigrę.");
         runTaskLater(() -> {
             MiniGamesUtils.healPlayer(player, getSpectatorGameMode());
@@ -441,6 +445,35 @@ public abstract class MiniGame implements Listener {
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="minigame end logic">
+    private synchronized void resetVotesToStop() {
+        if (votesToStop.isEmpty()) return;
+        votesToStop.clear();
+        sendMessage("Oddane głosy za zakończeniem tej minigry zostały unieważnione.");
+    }
+
+    public synchronized void voteToStop(@NotNull Player player) {
+        if (votesToStop.contains(player)) {
+            votesToStop.remove(player);
+            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Anulowałeś swój głos za zakończeniem tej minigry."));
+        } else {
+            votesToStop.add(player);
+            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Oddałeś głos za zakończeniem tej minigry."));
+        }
+        int required = requiredVotesToStop();
+        if (votesToStop.size() < required) {
+            sendMessage("Głosy za zakończeniem tej minigry: " + votesToStop.size() + "/" + required + ". Aby zagłosować użyj komendy /minigame vote-stop");
+            return;
+        }
+        scheduleStopMiniGameAndSendReason("Koniec minigry! " + votesToStop.size() + " graczy zagłosowało za jej zakończeniem.", "&dKoniec minigry", "");
+    }
+
+    private synchronized int requiredVotesToStop() {
+        return Math.max(
+                (int) Math.round(Math.max(0, Math.min(1, plugin.getConfig().getDouble(configPath + "votes-to-stop.percent"))) * getPlayersInMiniGame().size()),
+                plugin.getConfig().getInt(configPath + "votes-to-stop.min")
+        );
+    }
+
     protected synchronized boolean endGameIfLessThanTwoPlayersLeft() {
         List<Player> players = getPlayersInMiniGame();
         if (players.size() <= 1) {
