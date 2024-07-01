@@ -64,6 +64,6 @@ public class VehicleMoveListener implements Listener {
     }
 
     private double getSpeedDelta() {
-        return Math.max(MIN_MAX_SPEED, plugin.getConfig().getDouble("minecarts.delta", VANILLA_MAX_SPEED));
+        return Math.max(MIN_MAX_SPEED, plugin.getConfig().getDouble("minecarts.delta", 100));
     }
 }

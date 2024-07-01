@@ -110,23 +110,23 @@ public class HomeCommand implements CommandHandler.Minecraft {
                 if (getItemName(event.getCurrentItem()).equals("Twój dom")) return;
                 closeInventory(event);
 
-                double deposit = Math.max(0, Utils.round(plugin.getConfig().getDouble("home.deposit"), 2));
+                double creation = Math.max(0, Utils.round(plugin.getConfig().getDouble("home.creation"), 2));
                 EconomyManager economy = plugin.getEconomyManager();
-                if (deposit != 0) {
-                    if (!economy.withdrawPlayer(player, deposit).transactionSuccess()) {
-                        player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cUstawienie domu kosztuje " + economy.format(deposit) + ", a masz tylko " + economy.format(economy.getBalance(player)) + "."));
+                if (creation != 0) {
+                    if (!economy.withdrawPlayer(player, creation).transactionSuccess()) {
+                        player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cUstawienie domu kosztuje " + economy.format(creation) + ", a masz tylko " + economy.format(economy.getBalance(player)) + "."));
                         return;
                     }
                 }
 
                 if (manager.setHomeLocation(uuid, player.getLocation())) {
-                    player.sendMessage(Utils.getComponentByString(Prefix.HOME + "Pomyślnie ustawiono twój dom za " + economy.format(deposit) + "."));
+                    player.sendMessage(Utils.getComponentByString(Prefix.HOME + "Pomyślnie ustawiono twój dom za " + economy.format(creation) + "."));
                     Logs.info("Gracz " + player.getName() + " ustawił swój dom. (`" + player.getLocation() + "`)");
                 } else {
                     player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
-                    if (deposit != 0 && !economy.depositPlayer(player, deposit).transactionSuccess()) {
+                    if (creation != 0 && !economy.depositPlayer(player, creation).transactionSuccess()) {
                         player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&c&lNapotkano niespodziewany błąd przy zwracaniu pobranych pieniędzy. Zgłoś się do administratora, aby je odzyskać. Przepraszamy."));
-                        Logs.warning("Gracz " + player.getName() + " (" + player.getUniqueId() + ") stracił " + economy.format(deposit) + " ze swojego konta! Kwota musi być przywrócona ręcznie.");
+                        Logs.warning("Gracz " + player.getName() + " (" + player.getUniqueId() + ") stracił " + economy.format(creation) + " ze swojego konta! Kwota musi być przywrócona ręcznie.");
                     }
                 }
             });

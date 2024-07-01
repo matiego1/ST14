@@ -230,8 +230,8 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
 
                         amount = Utils.round(amount, 2);
                         double tax = Utils.round(Math.max(
-                                Math.max(0, plugin.getConfig().getDouble("economy.banknote-tax-min", 0)),
-                                amount * Math.max(0, plugin.getConfig().getDouble("economy.banknote-tax-percent", 0))
+                                Math.max(0, plugin.getConfig().getDouble("economy.banknote-tax.min", 0)),
+                                amount * Math.max(0, plugin.getConfig().getDouble("economy.banknote-tax.percent", 0))
                         ), 2);
 
                         EconomyManager economy = plugin.getEconomyManager();
@@ -351,8 +351,8 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                     }
 
                     double tax = Utils.round(Math.max(
-                            Math.max(0, plugin.getConfig().getDouble("economy.transfer-tax-min", 0)),
-                            amount * Math.max(0, plugin.getConfig().getDouble("economy.transfer-tax-percent", 0))
+                            Math.max(0, plugin.getConfig().getDouble("economy.transfer-tax.min", 0)),
+                            amount * Math.max(0, plugin.getConfig().getDouble("economy.transfer-tax.percent", 0))
                     ), 2);
 
                     EconomyManager economy = plugin.getEconomyManager();
