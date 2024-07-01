@@ -4,15 +4,11 @@ import me.matiego.st14.Main;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Minecart;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 
 public class VehicleMoveListener implements Listener {
     public VehicleMoveListener(@NotNull Main plugin) {
@@ -27,15 +23,7 @@ public class VehicleMoveListener implements Listener {
     public void onVehicleMove(@NotNull VehicleMoveEvent event) {
         if (!(event.getVehicle() instanceof Minecart minecart)) return;
 
-        List<Entity> passengers = minecart.getPassengers();
-        boolean isNoneOfPassengersPlayer = true;
-        for (Entity entity : passengers) {
-            if (entity instanceof Player) {
-                isNoneOfPassengersPlayer = false;
-                break;
-            }
-        }
-        if (isNoneOfPassengersPlayer) {
+        if (minecart.getPassengers().isEmpty()) {
             minecart.setMaxSpeed(VANILLA_MAX_SPEED);
             return;
         }
