@@ -4,6 +4,7 @@ import me.matiego.st14.Main;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Minecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -48,7 +49,14 @@ public class VehicleMoveListener implements Listener {
     }
 
     private double getMaxSpeed(@NotNull Material block) {
-        return Math.max(MIN_MAX_SPEED, plugin.getConfig().getDouble("minecarts.blocks." + block, VANILLA_MAX_SPEED));
+        ConfigurationSection section = plugin.getConfig().getConfigurationSection("minecarts.blocks");
+        if (section == null) return VANILLA_MAX_SPEED;
+        for (String key : section.getKeys(false)) {
+            if (block.toString().toLowerCase().matches(key)) {
+                return Math.max(MIN_MAX_SPEED, plugin.getConfig().getDouble("minecarts.blocks." + key, VANILLA_MAX_SPEED));
+            }
+        }
+        return VANILLA_MAX_SPEED;
     }
 
     private double getSpeedDelta() {

@@ -13,6 +13,7 @@ import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.data.NodeMap;
 import net.luckperms.api.node.Node;
 import net.luckperms.api.node.NodeEqualityPredicate;
+import net.luckperms.api.util.Tristate;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
@@ -175,7 +176,7 @@ public class MiniGamesManager {
             LuckPermsProvider.get().getUserManager().modifyUser(player.getUniqueId(), user -> {
                 Node node = Node.builder(permission).build();
                 NodeMap data = user.data();
-                if (data.contains(node, NodeEqualityPredicate.ONLY_KEY).asBoolean()) {
+                if (data.contains(node, NodeEqualityPredicate.ONLY_KEY) == Tristate.TRUE) {
                     data.remove(node);
                 } else {
                     data.add(node);

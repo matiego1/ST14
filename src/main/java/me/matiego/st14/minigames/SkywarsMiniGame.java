@@ -53,6 +53,11 @@ public class SkywarsMiniGame extends MiniGame {
         return GameMode.ADVENTURE;
     }
 
+    @Override
+    protected boolean shouldPasteMap() {
+        return true;
+    }
+
     protected void loadDataFromConfig(@NotNull World world) throws MiniGameException {
         baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
         if (baseLocation == null) throw new MiniGameException("cannot load base location");
@@ -90,7 +95,7 @@ public class SkywarsMiniGame extends MiniGame {
         if (spawns.size() < 2) throw new MiniGameException("not enough spawns found");
         setUpSkywarsWorldBorder();
 
-        spectatorSpawn.getNearbyEntitiesByType(Item.class, mapRadius).forEach(Entity::remove);
+        Utils.sync(() -> spectatorSpawn.getNearbyEntitiesByType(Item.class, mapRadius).forEach(Entity::remove));
     }
 
     private void loadSpawnsAndGenerateChests(@NotNull World world, @NotNull Clipboard clipboard) {
