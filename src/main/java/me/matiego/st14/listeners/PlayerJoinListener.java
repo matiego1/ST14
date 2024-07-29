@@ -62,6 +62,7 @@ public class PlayerJoinListener implements Listener {
         //non-premium
         if (NonPremiumUtils.isNonPremiumUuid(uuid)) {
             player.sendMessage(Utils.getComponentByString("&e&lSystem umożliwiający grę graczom non-premium jest w wersji BETA. Zgłaszaj wszystkie napotkane błędy!"));
+            //TODO: wyrzuci gracza, nawet jesli jest zalogowany
             Bukkit.getScheduler().runTaskLater(plugin, () -> player.kick(Utils.getComponentByString("&cNie zalogowałeś się w przeciągu 30 sekund! Ponownie rozpocznij sesję.")), 20 * 30);
         }
         //unlock recipes
@@ -72,5 +73,7 @@ public class PlayerJoinListener implements Listener {
                 }
             }
         });
+        //send f3 brand
+        plugin.getF3BrandManager().refreshPlayerF3Brand(player);
     }
 }

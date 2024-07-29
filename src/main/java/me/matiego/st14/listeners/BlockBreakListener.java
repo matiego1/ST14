@@ -51,5 +51,4 @@ public class BlockBreakListener implements Listener {
             plugin.getDynmapManager().getSignsMarker().deleteMarker(up.getLocation());
         }
     }
-
 }

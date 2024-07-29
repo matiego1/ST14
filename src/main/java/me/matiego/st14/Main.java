@@ -53,6 +53,7 @@ public final class Main extends JavaPlugin implements Listener {
     private DidYouKnowManager didYouKnowManager;
     @Getter private DynmapManager dynmapManager;
     @Getter private EconomyManager economyManager;
+    @Getter private F3BrandManager f3BrandManager;
     @Getter private HeadsManager headsManager;
     @Getter private HomeManager homeManager;
     @Getter private IncognitoManager incognitoManager;
@@ -151,6 +152,7 @@ public final class Main extends JavaPlugin implements Listener {
         didYouKnowManager = new DidYouKnowManager(this);
         dynmapManager = new DynmapManager(this);
         economyManager = new EconomyManager(this);
+        f3BrandManager = new F3BrandManager(this);
         headsManager = new HeadsManager(this);
         homeManager = new HomeManager(this);
         incognitoManager = new IncognitoManager(this);

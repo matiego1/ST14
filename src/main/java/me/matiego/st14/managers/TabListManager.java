@@ -11,17 +11,17 @@ import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
 public class TabListManager {
-    private final Main plugin;
     public TabListManager(@NotNull Main plugin) {
         this.plugin = plugin;
     }
 
+    private final Main plugin;
     private BukkitTask task;
     private boolean log15 = false;
     private boolean log10 = false;
 
     private void refreshTabList() {
-        String tps = formatTps(Utils.getTps());
+        String tps = processAndFormatTps(Utils.getTps());
         MiniGame miniGame = plugin.getMiniGamesManager().getActiveMiniGame();
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.sendPlayerListHeaderAndFooter(Utils.getComponentByString("&a&lSerwer ST14"), Utils.getComponentByString("&aTPS: " + tps + "&a; PING: " + (player.getPing() == 0 ? "&cWczytywanie..." : player.getPing() + " ms")));
@@ -39,7 +39,7 @@ public class TabListManager {
         }
     }
 
-    private synchronized @NotNull String formatTps(double tps) {
+    private synchronized @NotNull String processAndFormatTps(double tps) {
         tps = Utils.round(tps, 2);
         if (tps >= 18d) {
             if (log15 || log10) {

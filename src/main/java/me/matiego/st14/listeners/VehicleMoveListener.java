@@ -52,7 +52,7 @@ public class VehicleMoveListener implements Listener {
         ConfigurationSection section = plugin.getConfig().getConfigurationSection("minecarts.blocks");
         if (section == null) return VANILLA_MAX_SPEED;
         for (String key : section.getKeys(false)) {
-            if (block.toString().toLowerCase().matches(key)) {
+            if (block.toString().matches(key)) {
                 return Math.max(MIN_MAX_SPEED, plugin.getConfig().getDouble("minecarts.blocks." + key, VANILLA_MAX_SPEED));
             }
         }

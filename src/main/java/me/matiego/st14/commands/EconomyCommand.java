@@ -92,7 +92,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
 
                 double amount;
                 try {
-                    amount = Utils.round(Double.parseDouble(args[2]), 2);
+                    amount = Utils.round(Double.parseDouble(args[2].replace(",", ".")), 2);
                 } catch (Exception e) {
                     sender.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cPodaj poprawną ilość pieniędzy."));
                     return;
@@ -151,7 +151,9 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
             inv.setItem(0, GUI.createGuiItem(Material.DISPENSER, "&9Przelew", "&bPrzelej pieniądze innemu graczowi"));
             inv.setItem(1, GUI.createGuiItem(Material.PAPER, "&9Wypłata", "&bWypłać pieniądze w postaci banknotu"));
             Utils.async(() -> inv.setItem(4, GUI.createGuiItem(Material.DIAMOND, "&9Saldo konta", "&b" + plugin.getEconomyManager().format(plugin.getEconomyManager().getBalance(player)))));
-            inv.setItem(7, GUI.createGuiItem(Material.VILLAGER_SPAWN_EGG, "&9Kup status premium"));
+
+            inv.setItem(6, GUI.createGuiItem(Material.VILLAGER_SPAWN_EGG, "&9Sprzedaj przedmioty", "&cJuż wkrótce!"));
+            inv.setItem(7, GUI.createGuiItem(Material.VILLAGER_SPAWN_EGG, "&9Kup status premium", "&cJuż wkrótce!"));
             inv.setItem(8, GUI.createGuiItem(Material.CREEPER_HEAD, "&9Kup główkę"));
             player.openInventory(inv);
             return 3;
@@ -188,7 +190,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
 
                         double amount;
                         try {
-                            amount = Utils.round(Double.parseDouble(state.getText()), 2);
+                            amount = Utils.round(Double.parseDouble(state.getText().replace(",", ".")), 2);
                         } catch (Exception e) {
                             return List.of(AnvilGUI.ResponseAction.replaceInputText("Podaj liczbę!"));
                         }
@@ -217,7 +219,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
 
                         double amount;
                         try {
-                            amount = Utils.round(Double.parseDouble(state.getText()), 2);
+                            amount = Utils.round(Double.parseDouble(state.getText().replace(",", ".")), 2);
                         } catch (Exception e) {
                             return List.of(AnvilGUI.ResponseAction.replaceInputText("Podaj liczbę!"));
                         }
@@ -265,6 +267,9 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                         return List.of(AnvilGUI.ResponseAction.close());
                     })
                     .open(player);
+        } else if (slot == 6) {
+            player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Już wkrótce!"));
+            player.closeInventory();
         } else if (slot == 7) {
             new AnvilGUI.Builder()
                     .jsonTitle(Utils.getJsonByLegacyString(Prefix.ECONOMY + "Wpisz czas"))
