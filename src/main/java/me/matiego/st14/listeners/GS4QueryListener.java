@@ -28,6 +28,7 @@ public class GS4QueryListener implements Listener {
             if (player == null) return;
             if (plugin.getIncognitoManager().isIncognito(player.getUniqueId())) it.remove();
         }
+        list.add("do-not-restart-my-server!"); // prevent the hosting from restarting the server when no one is online
         event.setResponse(response.toBuilder()
                 .clearPlayers()
                 .clearPlugins()
