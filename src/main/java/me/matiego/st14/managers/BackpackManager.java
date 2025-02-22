@@ -46,6 +46,7 @@ public class BackpackManager {
 
     public boolean saveBackpack(@NotNull UUID uuid, @NotNull List<ItemStack> itemStacks) {
         String string = GUI.itemsToString(itemStacks);
+        cache.put(uuid, string);
         try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_backpack(uuid, inv) VALUES (?, ?) ON DUPLICATE KEY UPDATE inv = ?")) {
             stmt.setString(1, uuid.toString());

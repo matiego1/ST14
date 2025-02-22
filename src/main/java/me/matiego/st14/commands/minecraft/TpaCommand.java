@@ -179,8 +179,8 @@ public class TpaCommand implements CommandHandler.Minecraft {
         }
 
         EconomyManager economy = plugin.getEconomyManager();
-        if (cost != 0 && !economy.has(player, cost)) {
-            requester.sendMessage(Utils.getComponentByString(Prefix.TPA + "Aby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.getBalance(player) + "."));
+        if (cost != 0 && !economy.has(requester, cost)) {
+            requester.sendMessage(Utils.getComponentByString(Prefix.TPA + "Aby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.getBalance(requester) + "."));
             return;
         }
 
@@ -229,7 +229,8 @@ public class TpaCommand implements CommandHandler.Minecraft {
                     }
                 }
             } catch (Exception e) {
-                player.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
+                player.sendMessage(Utils.getComponentByString(Prefix.TPA + "Gracz " + requester.getName() + " nie może się do ciebie przeteleportować."));
+                requester.sendMessage(Utils.getComponentByString(Prefix.TPA + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
                 Logs.error("An error occurred while teleporting player", e);
             }
         });

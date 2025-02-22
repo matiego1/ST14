@@ -232,6 +232,7 @@ public class Utils {
 
 
     public static boolean doesBlockContactPortalBlock(@NotNull Block block) {
+        if (block.getType().toString().contains("RAIL")) return false;
         World world = block.getWorld();
         int x = block.getX(), y = block.getY(), z = block.getZ();
         if (world.getBlockAt(x + 1, y, z).getType() == Material.NETHER_PORTAL) return true;

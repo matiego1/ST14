@@ -2,7 +2,6 @@ package me.matiego.st14.rewards;
 
 import me.matiego.st14.Main;
 import me.matiego.st14.managers.EconomyManager;
-import me.matiego.st14.managers.RankingsManager;
 import me.matiego.st14.managers.RewardsManager;
 import me.matiego.st14.objects.time.GameTime;
 import me.matiego.st14.objects.time.PlayerTime;
@@ -57,12 +56,6 @@ public class RewardForPlaying extends Reward {
                     final double max = Math.max(0, Utils.round(plugin.getConfig().getDouble("reward-for-playing.max", 100), 2));
                     if (limit >= max) {
                         sendActionBar(player, "&cUzbierałeś dzienny limit pieniędzy za granie");
-                        cache.put(uuid, data);
-                        return;
-                    }
-
-                    RankingsManager.Data rankingData = RankingsManager.Type.ECONOMY.get(uuid);
-                    if (rankingData != null && rankingData.getRank() == 1) {
                         cache.put(uuid, data);
                         return;
                     }

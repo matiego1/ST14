@@ -12,6 +12,7 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.UUID;
 
 public class PlayerMoveListener implements Listener {
@@ -28,6 +29,14 @@ public class PlayerMoveListener implements Listener {
         if (!plugin.getNonPremiumManager().isLoggedIn(player)) {
             event.setCancelled(true);
             player.sendActionBar(Utils.getComponentByString("&cMusisz się zalogować, aby to zrobić!"));
+            return;
+        }
+
+        if (!Optional.ofNullable(player.getWorldBorder())
+                .orElseGet(() -> player.getWorld().getWorldBorder())
+                .isInside(event.getTo())) {
+            event.setCancelled(true);
+            player.sendActionBar(Utils.getComponentByString("&cNie możesz wyjść po za granicę świata!"));
             return;
         }
 

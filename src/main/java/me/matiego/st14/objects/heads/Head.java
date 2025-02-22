@@ -1,22 +1,20 @@
 package me.matiego.st14.objects.heads;
 
-import com.destroystokyo.paper.profile.PlayerProfile;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 import lombok.Getter;
 import me.matiego.st14.Logs;
 import me.matiego.st14.objects.GUI;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.profile.PlayerTextures;
 import org.jetbrains.annotations.NotNull;
 
-import java.net.URL;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
@@ -62,13 +60,23 @@ public class Head {
         meta.lore(lores);
 
         try {
-            PlayerProfile profile = Bukkit.createProfile(getUuid(), getName());
-            PlayerTextures textures = profile.getTextures();
-            String url = new String(Base64.getDecoder().decode(getValue()));
-            textures.setSkin(new URL(url.substring("{\"textures\":{\"SKIN\":{\"url\":\"".length(), url.length() - "\"}}}".length())));
-            profile.setTextures(textures);
-            //noinspection deprecation
-            meta.setOwnerProfile(profile);
+            String name = getName();
+            StringBuilder profileName = new StringBuilder();
+            for (int i = 0; i < Math.min(name.length(), 16); i++) {
+                char c = name.charAt(i);
+                if (c <= 32 || c >= 127) {
+                    profileName.append("_");
+                } else {
+                    profileName.append(c);
+                }
+            }
+
+            GameProfile profile = new GameProfile(getUuid(), profileName.toString());
+            profile.getProperties().put("textures", new Property("textures", getValue()));
+
+            Field profileField = meta.getClass().getDeclaredField("profile");
+            profileField.setAccessible(true);
+            profileField.set(meta, profile);
         } catch (Exception e) {
             Logs.error("An error occurred while creating a custom player head.", e);
 

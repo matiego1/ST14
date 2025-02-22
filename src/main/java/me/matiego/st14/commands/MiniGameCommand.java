@@ -77,6 +77,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
                     }
 
                     miniGame.voteToStop(player);
+                    return 3;
                 }
             }
 
@@ -100,7 +101,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
                     }
 
                     manager.setEditorMode(player, !manager.isInEditorMode(player));
-                    return 7;
+                    return 5;
                 }
             }
             return -1;
@@ -125,7 +126,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
 
         if (manager.getActiveMiniGame() != null) {
             player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Jakaś minigra jest już rozpoczęta."));
-            return 10;
+            return 5;
         }
 
         Inventory inv = GUI.createInventory(18, Prefix.MINI_GAMES + "Wybierz minigrę");
@@ -219,7 +220,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
                 return;
             }
             if (maps.size() == 1) {
-                startMiniGame(player, maps.get(0));
+                startMiniGame(player, maps.getFirst());
                 return;
             }
 

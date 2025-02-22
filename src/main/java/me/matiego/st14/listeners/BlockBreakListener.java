@@ -1,10 +1,9 @@
 package me.matiego.st14.listeners;
 
-import me.matiego.st14.Main;
 import me.matiego.st14.Logs;
+import me.matiego.st14.Main;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -20,16 +19,17 @@ public class BlockBreakListener implements Listener {
     }
     private final Main plugin;
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(ignoreCancelled = true)
     public void onBlockBreak(@NotNull BlockBreakEvent event) {
         Player player = event.getPlayer();
+        if (plugin.getNonPremiumManager().isLoggedIn(player)) return;
+        event.setCancelled(true);
+        player.sendActionBar(Utils.getComponentByString("&cMusisz się zalogować, aby to zrobić!"));
+    }
 
-        if (!plugin.getNonPremiumManager().isLoggedIn(player)) {
-            event.setCancelled(true);
-            player.sendActionBar(Utils.getComponentByString("&cMusisz się zalogować, aby to zrobić!"));
-            return;
-        }
-
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBlockBreakMonitor(@NotNull BlockBreakEvent event) {
+        Player player = event.getPlayer();
         Block block = event.getBlock();
         String material = block.getType().name();
         Utils.async(() -> {
@@ -38,17 +38,12 @@ public class BlockBreakListener implements Listener {
                     Logs.info("Gracz " + player.getName() + " wykopał " + material + " w " + Utils.getWorldName(player.getWorld()));
                 }
             } catch (PatternSyntaxException e) {
-                Logs.warning("block-break-warn regex's syntax is invalid", e);
+                Logs.warning("block-break-warn regex syntax is invalid", e);
             }
         });
 
         if (material.contains("SIGN")) {
             plugin.getDynmapManager().getSignsMarker().deleteMarker(block.getLocation());
-        }
-
-        Block up = event.getBlock().getRelative(BlockFace.UP);
-        if (up.getType().name().contains("SIGN")) {
-            plugin.getDynmapManager().getSignsMarker().deleteMarker(up.getLocation());
         }
     }
 }

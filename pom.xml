@@ -119,6 +119,21 @@
                     </execution>
                 </executions>
             </plugin>
+            <!--Version number-->
+<!--            <plugin>-->
+<!--                <groupId>org.codehaus.mojo</groupId>-->
+<!--                <artifactId>buildnumber-maven-plugin</artifactId>-->
+<!--                <version>0.9.4</version>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>useLastCommittedRevision</id>-->
+<!--                        <phase>validate</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>create</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
         </plugins>
         <resources>
             <resource>
@@ -173,7 +188,7 @@
             <id>OnARandomBox</id>
             <url>https://repo.onarandombox.com/content/groups/public/</url>
         </repository>
-        <!--Graves-->
+        <!--GravesX-->
         <repository>
             <id>ugandavrc-maven-releases</id>
             <url>https://mvn.ugandavrc.com/releases</url>
@@ -257,7 +272,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.26</version>
+            <version>1.18.30</version>
             <scope>compile</scope>
         </dependency>
         <!--Commons lang-->
@@ -266,15 +281,12 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.12.0</version>
         </dependency>
-        <!--Graves-->
+        <!--GravesX-->
         <dependency>
             <groupId>com.ranull</groupId>
-            <artifactId>graves</artifactId>
-            <version>4.9</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}\GravesX-4.9.3.3.jar</systemPath>
+            <artifactId>GravesX</artifactId>
+            <version>4.9.3.4-api</version>
         </dependency>
-        <!--CountingBot-->
         <dependency>
             <groupId>com.github.matiego1</groupId>
             <artifactId>CountingBot</artifactId>

@@ -4,6 +4,8 @@ import me.matiego.st14.Main;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.Rail;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Minecart;
 import org.bukkit.event.EventHandler;
@@ -30,9 +32,16 @@ public class VehicleMoveListener implements Listener {
         }
 
         Block block = minecart.getLocation().getBlock();
-        if (!block.getType().toString().contains("RAIL")) return;
+        BlockData data = block.getBlockData();
+        if (!(data instanceof Rail rail)) return;
 
-        double newMaxSpeed = getMaxSpeed(block.getRelative(BlockFace.DOWN).getType());
+        double newMaxSpeed;
+        if (rail.getShape().toString().contains("ASCENDING")) {
+            newMaxSpeed = VANILLA_MAX_SPEED;
+        } else {
+            newMaxSpeed = getMaxSpeed(block.getRelative(BlockFace.DOWN).getType());
+        }
+
         double currentMaxSpeed = minecart.getMaxSpeed();
         double delta = getSpeedDelta();
 

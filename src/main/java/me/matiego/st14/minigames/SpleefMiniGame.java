@@ -104,7 +104,7 @@ public class SpleefMiniGame extends MiniGame {
         meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ENCHANTS);
         tool.setItemMeta(meta);
 
-        tool.addUnsafeEnchantment(Enchantment.DIG_SPEED, 50);
+        tool.addUnsafeEnchantment(Enchantment.EFFICIENCY, 50);
 
         return tool;
     }
@@ -140,7 +140,7 @@ public class SpleefMiniGame extends MiniGame {
 
         playersInMiniGame.sort(Comparator.comparingInt(a -> a.getLocation().getBlockY()));
         if (playersInMiniGame.size() < 2) return;
-        Player max1 = playersInMiniGame.get(playersInMiniGame.size() - 1);
+        Player max1 = playersInMiniGame.getLast();
         Player max2 = playersInMiniGame.get(playersInMiniGame.size() - 2);
 
         if (max1.getLocation().getBlockY() - max2.getLocation().getBlockY() > Math.max(0, plugin.getConfig().getInt(mapConfigPath + "vertical-max-distance", 10)) && miniGameTime % 3 == 0) {

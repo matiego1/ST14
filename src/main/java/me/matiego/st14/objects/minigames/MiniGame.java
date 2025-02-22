@@ -90,8 +90,8 @@ public abstract class MiniGame implements Listener {
             maps.remove(miniGameType.getPreviousMapName());
         }
         Collections.shuffle(maps);
-        mapConfigPath = configPath + "maps." + maps.get(0) + ".";
-        mapName = maps.get(0);
+        mapConfigPath = configPath + "maps." + maps.getFirst() + ".";
+        mapName = maps.getFirst();
         miniGameType.setPreviousMapName(mapName);
     }
 
@@ -468,9 +468,10 @@ public abstract class MiniGame implements Listener {
     }
 
     private synchronized int requiredVotesToStop() {
+        int playersInMiniGame = getPlayersInMiniGame().size();
         return Math.max(
-                (int) Math.round(Math.max(0, Math.min(1, plugin.getConfig().getDouble("minigames.votes-to-stop.percent"))) * getPlayersInMiniGame().size()),
-                plugin.getConfig().getInt("minigames.votes-to-stop.min")
+                (int) Math.round(Math.max(0, Math.min(1, plugin.getConfig().getDouble("minigames.votes-to-stop.percent"))) * playersInMiniGame),
+                Math.min(plugin.getConfig().getInt("minigames.votes-to-stop.min"), playersInMiniGame)
         );
     }
 
@@ -480,7 +481,7 @@ public abstract class MiniGame implements Listener {
             if (players.isEmpty()) {
                 scheduleStopMiniGameAndSendReason("Koniec minigry! Napotkano błąd przy wyłanianiu zwycięzcy.", "&dKoniec minigry", "");
             } else {
-                endGameWithWinner(players.get(0));
+                endGameWithWinner(players.getFirst());
             }
             return true;
         }

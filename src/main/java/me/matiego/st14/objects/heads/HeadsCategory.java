@@ -19,6 +19,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -142,8 +144,8 @@ public enum HeadsCategory {
         return false;
     }
 
-    private @Nullable String getCategoryJson() throws IOException {
-        URL url = new URL("https://minecraft-heads.com/scripts/api.php?cat=" + apiName + "&tags=true");
+    private @Nullable String getCategoryJson() throws IOException, URISyntaxException {
+        URL url = new URI("https://minecraft-heads.com/scripts/api.php?cat=" + apiName + "&tags=true").toURL();
         HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
         httpConnection.setConnectTimeout(5000);
         httpConnection.setRequestMethod("GET");

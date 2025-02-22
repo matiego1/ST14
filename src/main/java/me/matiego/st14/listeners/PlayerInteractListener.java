@@ -57,7 +57,7 @@ public class PlayerInteractListener implements Listener {
 
             Logs.info("Gracz " + player.getName() + " wpłacił banknot o wartości " + plugin.getEconomyManager().format(amount));
 
-            player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie wpłacono pieniądze na twoje konto!"));
+            player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie wpłacono " + plugin.getEconomyManager().format(amount) + " na twoje konto."));
             player.getInventory().getItemInMainHand().setAmount(player.getInventory().getItemInMainHand().getAmount() - 1);
 
             plugin.getBanknoteManager().removeBanknote(item);
