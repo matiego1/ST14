@@ -1,10 +1,11 @@
 package me.matiego.st14.commands;
 
-import me.matiego.st14.Main;
 import me.matiego.st14.Logs;
+import me.matiego.st14.Main;
 import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.*;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -67,7 +68,7 @@ public class CoordinatesCommand implements CommandHandler.Minecraft, CommandHand
                                 .addChoice("Tak", "True")
                                 .addChoice("Nie", "False")
                 )
-                .setGuildOnly(true)
+                .setContexts(InteractionContextType.GUILD)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
     }
 

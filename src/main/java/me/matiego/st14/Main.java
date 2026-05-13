@@ -1,5 +1,6 @@
 package me.matiego.st14;
 
+import com.comphenix.protocol.ProtocolLibrary;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.neovisionaries.ws.client.DualStackMode;
 import com.neovisionaries.ws.client.WebSocketFactory;
@@ -90,14 +91,14 @@ public final class Main extends JavaPlugin implements Listener {
     public void onEnable() {
         instance = this;
         long time = Utils.now();
-        //Check Bukkit version
-        if (!Bukkit.getBukkitVersion().equals("1.21-R0.1-SNAPSHOT")) {
+        // Check Bukkit version
+        if (!Bukkit.getBukkitVersion().equals("1.21.11-R0.1-SNAPSHOT")) {
             Logs.error("Detected incompatible Bukkit version: " + Bukkit.getBukkitVersion() + ".");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
 
-        //Check if server is PaperMC
+        // Check if server is PaperMC
         try {
             Class.forName("io.papermc.paper.event.player.AsyncChatEvent");
         } catch (ClassNotFoundException e) {
@@ -106,7 +107,7 @@ public final class Main extends JavaPlugin implements Listener {
             return;
         }
 
-        //Save config file
+        // Save config file
         try {
             saveDefaultConfig();
         } catch (IllegalArgumentException e) {
@@ -115,7 +116,7 @@ public final class Main extends JavaPlugin implements Listener {
             return;
         }
 
-        //Vault plugin
+        // Vault plugin
         Plugin vault = Bukkit.getPluginManager().getPlugin("Vault");
         if (vault == null) {
             Logs.error("Vault plugin not found!");
@@ -123,7 +124,7 @@ public final class Main extends JavaPlugin implements Listener {
             return;
         }
 
-        //Open the MySQL connection
+        // Open the MySQL connection
         Logs.info("Opening the MySQL connection...");
         String username = getConfig().getString("database.username", "");
         String password = getConfig().getString("database.password", "");
@@ -139,7 +140,7 @@ public final class Main extends JavaPlugin implements Listener {
             return;
         }
 
-        //Register managers
+        // Register managers
         accountsManager = new AccountsManager(this);
         advancementsManager = new AdvancementsManager(this);
         afkManager = new AfkManager(this);
@@ -170,7 +171,7 @@ public final class Main extends JavaPlugin implements Listener {
 
         Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, getEconomyManager(), vault, ServicePriority.High);
 
-        //Register listeners
+        // Register listeners
         entityDamageByEntityListener = new EntityDamageByEntityListener(this);
         graveCreateListener = new GraveCreateListener();
         playerDeepSleepListener = new PlayerDeepSleepListener(this);
@@ -183,21 +184,18 @@ public final class Main extends JavaPlugin implements Listener {
                 new BlockDestroyListener(this),
                 new BlockFormListener(),
                 new BlockPistonExtendListener(),
-                new BlockPlaceListener(this),
+                new BlockPlaceListener(),
                 new CraftItemListener(this),
                 new EntityChangeBlockListener(),
                 entityDamageByEntityListener,
                 new EntityDeathListener(this),
                 new EntityExplodeListener(this),
-                new EntityPickupItemListener(this),
                 new EntityPortalListener(this),
                 new EntityToggleGlideListener(this),
                 new FoodLevelChangeListener(this),
                 graveCreateListener,
                 new GS4QueryListener(this),
-                new InventoryClickListener(this),
                 new InventoryCloseListener(this),
-                new InventoryOpenListener(this),
                 new PlayerAdvancementCriterionGrantListener(this),
                 new PlayerAdvancementDoneListener(this),
                 new PlayerBedEnterListener(this),
@@ -208,23 +206,18 @@ public final class Main extends JavaPlugin implements Listener {
                 new PlayerCommandSendListener(this),
                 new PlayerDeathListener(this),
                 playerDeepSleepListener,
-                new PlayerDropItemListener(this),
                 new PlayerInteractListener(this),
                 new PlayerItemFrameChangeListener(this),
-                new PlayerItemHeldListener(this),
-                new PlayerItemMendListener(this),
                 new PlayerJoinListener(this),
                 new PlayerLaunchProjectileListener(this),
                 new PlayerLoginEventListener(this),
                 playerMoveListener,
-                new PlayerPickupExperienceListener(this),
                 new PlayerPortalListener(this),
                 playerQuitListener,
                 new PlayerResourcePackStatusListener(),
                 new PlayerRespawnListener(this),
                 new PlayerSetSpawnListener(),
                 new PlayerStatisticIncrementListener(this),
-                new PlayerSwapHandItemsListener(this),
                 new PlayerTeleportListener(),
                 new ServerCommandListener(),
                 new PaperServerListPingListener(this),
@@ -237,12 +230,7 @@ public final class Main extends JavaPlugin implements Listener {
         listenersManager.registerListener("minecraft:brand", new PluginMessageReceivedListener(this));
         getDynmapManager().getClaimsMarker().registerListeners();
 
-        //Counting plugin
-        if (Bukkit.getPluginManager().getPlugin("Counting") != null) {
-            listenersManager.registerListener(new CountingMessageSendListener(this));
-        }
-
-        //Enable the Discord bot
+        // Enable the Discord bot
         Logs.info("Enabling the Discord bot...");
         RestAction.setDefaultFailure(throwable -> Logs.error("An error occurred!", throwable));
         if (jda != null) {
@@ -259,15 +247,15 @@ public final class Main extends JavaPlugin implements Listener {
         try {
             callbackThreadPool = new ForkJoinPool(Runtime.getRuntime().availableProcessors(), pool -> {
                 ForkJoinWorkerThread worker = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
-                worker.setName("Counting - JDA Callback " + worker.getPoolIndex());
+                worker.setName("ST14 - JDA Callback " + worker.getPoolIndex());
                 return worker;
             }, null, true);
             jda = JDABuilder.create(DiscordUtils.getIntents())
                     .setToken(getConfig().getString("discord.bot-token", ""))
                     .setMemberCachePolicy(MemberCachePolicy.NONE)
                     .setCallbackPool(callbackThreadPool, false)
-                    .setGatewayPool(Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("Counting - JDA Gateway").build()), true)
-                    .setRateLimitScheduler(new ScheduledThreadPoolExecutor(5, new ThreadFactoryBuilder().setNameFormat("Counting - JDA Rate Limit").build()), true)
+                    .setGatewayPool(Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("ST14 - JDA Gateway").build()), true)
+                    .setRateLimitScheduler(new ScheduledThreadPoolExecutor(5, new ThreadFactoryBuilder().setNameFormat("ST14 - JDA Rate Limit").build()), true)
                     .setWebsocketFactory(new WebSocketFactory().setDualStackMode(DualStackMode.IPV4_ONLY))
                     .setHttpClient(DiscordUtils.getHttpClient())
                     .setAutoReconnect(true)
@@ -294,7 +282,7 @@ public final class Main extends JavaPlugin implements Listener {
     }
 
     private void onDiscordBotEnable() {
-        //register commands
+        // register commands
         economyCommand = new EconomyCommand(this);
         incognitoCommand = new IncognitoCommand(this);
         miniGameCommand = new MiniGameCommand(this);
@@ -311,7 +299,6 @@ public final class Main extends JavaPlugin implements Listener {
                 new HeadsCommand(this),
                 incognitoCommand,
                 miniGameCommand,
-                new NonPremiumCommand(this),
                 new PremiumCommand(this),
                 new RankingCommand(this),
                 new SayCommand(this),
@@ -320,7 +307,7 @@ public final class Main extends JavaPlugin implements Listener {
                 tellCommand,
                 new TimeCommand(this),
                 new VersionCommand(this),
-                //Minecraft commands
+                // Minecraft commands
                 new BackpackCommand(this),
                 new HelpCommand(this),
                 new HomeCommand(this),
@@ -330,11 +317,12 @@ public final class Main extends JavaPlugin implements Listener {
                 suicideCommand,
                 tpaCommand,
                 new WorldsCommand(this),
-                //Discord commands
+                // Discord commands
                 new AllPlayersCommand(this),
                 new EconomyAdminCommand(this),
                 new FeedbackCommand(),
                 new ListCommand(this),
+                new NonPremiumCommand(this),
                 new PingCommand(),
                 new PrivateMessageCommand(),
                 new RankingMessageCommand(this),
@@ -343,7 +331,7 @@ public final class Main extends JavaPlugin implements Listener {
         listenersManager.registerListener(commandManager);
         jda.addEventListener(commandManager);
 
-        //start managers
+        // Start managers
         chatReportsManager.start();
         commandManager.setEnabled(true);
         getAfkManager().start();
@@ -353,6 +341,7 @@ public final class Main extends JavaPlugin implements Listener {
         getChatMinecraftManager().unblock();
         didYouKnowManager.start();
         getRankingsManager().start();
+        getNonPremiumManager().addPacketListener();
         Utils.registerRecipes();
         Utils.kickPlayersAtMidnightTask();
         getOfflinePlayersManager().refreshCache();
@@ -381,17 +370,17 @@ public final class Main extends JavaPlugin implements Listener {
     @Override
     public void onDisable() {
         long time = Utils.now();
-        //disable commands
+        // disable commands
         if (commandManager != null) commandManager.setEnabled(false);
-        //stop minigame
+        // stop minigame
         if (miniGamesManager != null) {
             miniGamesManager.stopMiniGame();
         }
-        //close all plugin's inventories
+        // close all plugin's inventories
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (player.getOpenInventory().getTopInventory().getHolder() instanceof GUI) player.closeInventory();
         }
-        //disable managers
+        // disable managers
         if (antyLogoutManager != null) antyLogoutManager.stop();
         if (afkManager != null) afkManager.stop();
         if (tabListManager != null) tabListManager.stop();
@@ -405,9 +394,10 @@ public final class Main extends JavaPlugin implements Listener {
             RewardForPlaying rewardForPlaying = rewardsManager.getRewardForPlaying();
             if (rewardForPlaying != null) rewardForPlaying.stop();
         }
-        //unregister all events
+        // unregister all events
         HandlerList.unregisterAll((Plugin) this);
-        //disable Discord bot
+        ProtocolLibrary.getProtocolManager().removePacketListeners(this);
+        // disable Discord bot
         if (jda != null) {
             Logs.infoWithBlock("Shutting down Discord bot...");
 
@@ -424,7 +414,7 @@ public final class Main extends JavaPlugin implements Listener {
             callbackThreadPool.shutdownNow();
             callbackThreadPool = null;
         }
-        //end all tasks
+        // end all tasks
         Bukkit.getAsyncScheduler().cancelTasks(this);
         Bukkit.getScheduler().cancelTasks(this);
         for (BukkitWorker task : Bukkit.getScheduler().getActiveWorkers()) {

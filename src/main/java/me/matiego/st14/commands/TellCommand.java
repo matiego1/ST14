@@ -5,6 +5,7 @@ import me.matiego.st14.Main;
 import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.*;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -134,7 +135,7 @@ public class TellCommand implements CommandHandler.Minecraft, CommandHandler.Dis
     public @NotNull CommandData getDiscordCommand() {
         return Commands.slash("tell", "wyślij prywatną wiadomość do gracza")
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
-                .setGuildOnly(true)
+                .setContexts(InteractionContextType.GUILD)
                 .addOptions(
                         new OptionData(OptionType.STRING, "gracz", "nick gracza", true, true),
                         new OptionData(OptionType.STRING, "wiadomosc", "wiadomość, którą chcesz wysłać", true)

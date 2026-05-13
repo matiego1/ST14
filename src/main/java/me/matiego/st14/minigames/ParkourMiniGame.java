@@ -7,7 +7,7 @@ import me.matiego.st14.objects.minigames.MiniGameType;
 import me.matiego.st14.utils.MiniGamesUtils;
 import me.matiego.st14.BossBarTimer;
 import org.bukkit.GameMode;
-import org.bukkit.GameRule;
+import org.bukkit.GameRules;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -53,11 +53,11 @@ public class ParkourMiniGame extends MiniGame {
     }
 
     protected void setUpGameRules(@NotNull World world) {
-        world.setGameRule(GameRule.KEEP_INVENTORY, true);
-        world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
-        world.setGameRule(GameRule.DO_ENTITY_DROPS, false);
-        world.setGameRule(GameRule.FALL_DAMAGE, false);
-        world.setGameRule(GameRule.FIRE_DAMAGE, false);
+        world.setGameRule(GameRules.KEEP_INVENTORY, true);
+        world.setGameRule(GameRules.IMMEDIATE_RESPAWN, true);
+        world.setGameRule(GameRules.ENTITY_DROPS, false);
+        world.setGameRule(GameRules.FALL_DAMAGE, false);
+        world.setGameRule(GameRules.FIRE_DAMAGE, false);
     }
 
     @Override

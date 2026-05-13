@@ -24,10 +24,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
-//Based on https://github.com/e-im/FreedomChat/ (abdb14a)
+//Based on https://github.com/e-im/FreedomChat/ (commit 2cd4d7e)
 @ChannelHandler.Sharable
 public class ChatPacketHandler extends MessageToByteEncoder<Packet<?>> {
     private static final int STATUS_RESPONSE_PACKET_ID = 0x00;
+    @SuppressWarnings("NullableProblems")
     private final StreamCodec<ByteBuf, Packet<? super ClientGamePacketListener>> s2cPlayPacketCodec;
 
     public ChatPacketHandler() {
@@ -100,7 +101,9 @@ public class ChatPacketHandler extends MessageToByteEncoder<Packet<?>> {
         buf.writeJsonWithCodec(CustomServerMetadata.CODEC, customStatus);
     }
 
-    private record CustomServerMetadata(Component description, Optional<ServerStatus.Players> players, Optional<ServerStatus.Version> version, Optional<ServerStatus.Favicon> favicon, boolean enforcesSecureChat, boolean preventsChatReports) {
+    private record CustomServerMetadata(Component description, Optional<ServerStatus.Players> players,
+                                       Optional<ServerStatus.Version> version, Optional<ServerStatus.Favicon> favicon,
+                                       boolean enforcesSecureChat, boolean preventsChatReports) {
         public static final Codec<CustomServerMetadata> CODEC = RecordCodecBuilder
                 .create((instance) -> instance.group(
                                 ComponentSerialization.CODEC.lenientOptionalFieldOf("description", CommonComponents.EMPTY)
@@ -120,18 +123,23 @@ public class ChatPacketHandler extends MessageToByteEncoder<Packet<?>> {
         public Component description() {
             return this.description;
         }
+
         public Optional<ServerStatus.Players> players() {
             return this.players;
         }
+
         public Optional<ServerStatus.Version> version() {
             return this.version;
         }
+
         public Optional<ServerStatus.Favicon> favicon() {
             return this.favicon;
         }
+
         public boolean enforcesSecureChat() {
             return this.enforcesSecureChat;
         }
+
         public boolean preventsChatReports() {
             return this.preventsChatReports;
         }

@@ -71,7 +71,7 @@ public class PlayerDeepSleepListener implements Listener {
         if (players.isEmpty()) return;
 
         if (players.size() == 1) {
-            Player player = players.get(0);
+            Player player = players.getFirst();
 
             Utils.broadcastMessage(
                     player,

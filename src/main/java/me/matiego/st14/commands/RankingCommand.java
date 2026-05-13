@@ -8,6 +8,7 @@ import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.*;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -128,7 +129,7 @@ public class RankingCommand implements CommandHandler.Minecraft, CommandHandler.
                                 .addChoice("Tak", "True")
                                 .addChoice("Nie", "False")
                 )
-                .setGuildOnly(true);
+                .setContexts(InteractionContextType.GUILD);
     }
 
     @Override

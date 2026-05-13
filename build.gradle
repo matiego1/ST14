@@ -1,0 +1,113 @@
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+plugins {
+    id 'java'
+    id 'com.gradleup.shadow' version '8.3.5'
+    id 'io.papermc.paperweight.userdev' version '2.0.0-beta.21'
+}
+
+group = 'me.matiego'
+version = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yy.MM.dd"))
+description = 'A plugin for the ST14 server'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+
+    maven { url = 'https://repo.papermc.io/repository/maven-public/' }
+    maven { url = 'https://m2.dv8tion.net/releases' }
+    maven { url = 'https://jitpack.io' }
+    maven { url = 'https://repo.codemc.io/repository/maven-snapshots/' }
+    maven { url = 'https://maven.enginehub.org/repo/' }
+    maven { url = 'https://repo.mikeprimm.com/' }
+    maven { url = 'https://repo.onarandombox.com/content/groups/public/' }
+    maven { url = 'https://mvn.ugandavrc.com/releases' }
+}
+
+dependencies {
+    // papermc
+    compileOnly 'net.kyori:adventure-text-serializer-ansi:4.17.0'
+    paperweight.paperDevBundle("1.21.11-R0.1-SNAPSHOT")
+
+    // JDA
+    implementation('net.dv8tion:JDA:6.4.1') {
+        exclude group: 'club.minnced', module: 'opus-java'
+    }
+
+    // Discord's webhooks
+    implementation 'club.minnced:discord-webhooks:0.8.4'
+
+    // DNS for JdaBuilderUtils class
+    implementation 'org.minidns:minidns-hla:1.0.4'
+
+    // MySQL
+    implementation 'com.zaxxer:HikariCP:5.0.1'
+
+    // Vault
+    compileOnly('com.github.MilkBowl:VaultAPI:1.7.1') {
+        exclude group: 'org.bukkit', module: 'bukkit'
+    }
+
+    // AnvilGUI
+    implementation('net.wesjd:anvilgui:1.10.11-SNAPSHOT') {
+        exclude group: 'org.bukkit', module: 'bukkit'
+    }
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    // Commons lang
+    compileOnly 'org.apache.commons:commons-lang3:3.18.0'
+
+    // GravesX
+    compileOnly 'com.ranull:GravesX:4.9.3.4-api'
+
+    // LuckPerms
+    compileOnly 'net.luckperms:api:5.4'
+
+    // WorldEdit
+    compileOnly 'com.sk89q.worldedit:worldedit-bukkit:7.2.14'
+
+    // CrashClaim (System Path dependency)
+    compileOnly files('CrashClaim-1.0.41.jar')
+
+    // Dynmap
+    compileOnly 'us.dynmap:DynmapCoreAPI:3.7-beta-6'
+
+    // Multiverse-Core
+    compileOnly 'org.mvplugins.multiverse.core:multiverse-core:5.0.0-SNAPSHOT'
+
+    // Netty
+    compileOnly 'io.netty:netty-all:5.0.0.Alpha2'
+
+    // ProtocolLib
+    compileOnly 'net.dmulloy2:ProtocolLib:5.4.0'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+processResources {
+    def props = [version: project.version, description: project.description]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('plugin.yml') {
+        expand props
+    }
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+shadowJar {
+    archiveClassifier.set('')
+}
+
+build.dependsOn shadowJar

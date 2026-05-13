@@ -5,6 +5,7 @@ import me.matiego.st14.utils.DiscordUtils;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -23,7 +24,7 @@ public class PrivateMessageCommand implements CommandHandler.Discord {
                         new OptionData(OptionType.STRING, "wiadomosc", "wiadomość do wysłania", true)
                 )
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
-                .setGuildOnly(true);
+                .setContexts(InteractionContextType.GUILD);
     }
 
     @Override

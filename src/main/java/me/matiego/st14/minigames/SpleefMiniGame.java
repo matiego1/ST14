@@ -55,10 +55,10 @@ public class SpleefMiniGame extends MiniGame {
     }
 
     protected void setUpGameRules(@NotNull World world) {
-        world.setGameRule(GameRule.KEEP_INVENTORY, true);
-        world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
-        world.setGameRule(GameRule.DO_ENTITY_DROPS, false);
-        world.setGameRule(GameRule.FALL_DAMAGE, false);
+        world.setGameRule(GameRules.KEEP_INVENTORY, true);
+        world.setGameRule(GameRules.IMMEDIATE_RESPAWN, true);
+        world.setGameRule(GameRules.ENTITY_DROPS, false);
+        world.setGameRule(GameRules.FALL_DAMAGE, false);
     }
 
     @Override

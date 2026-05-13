@@ -13,6 +13,7 @@ import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.UserSnowflake;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -394,7 +395,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                                 .addChoice("Tak", "True")
                                 .addChoice("Nie", "False")
                 )
-                .setGuildOnly(true);
+                .setContexts(InteractionContextType.GUILD);
     }
 
     @Override

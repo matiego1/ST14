@@ -50,7 +50,7 @@ public class GUI implements InventoryHolder {
         meta.lore(Arrays.asList(componentLores));
         item.setItemMeta(meta);
 
-        item.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ITEM_SPECIFICS, ItemFlag.HIDE_DESTROYS, ItemFlag.HIDE_DYE, ItemFlag.HIDE_PLACED_ON);
+        item.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_DESTROYS, ItemFlag.HIDE_DYE, ItemFlag.HIDE_PLACED_ON);
         return item;
     }
 
@@ -74,28 +74,13 @@ public class GUI implements InventoryHolder {
     }
 
     public static @NotNull String itemsToString(@NotNull List<ItemStack> items) {
-        List<String> result = new ArrayList<>();
-        for (ItemStack item : items) {
-            String base64 = Base64Utils.objectToBase64(item != null ? item : new ItemStack(Material.AIR));
-            if (base64 != null) {
-                result.add(base64);
-            }
-        }
-        return String.join("|", result);
+        String string = Base64Utils.itemStacksToBase64(items.toArray(new ItemStack[0]));
+        if (string == null) return "";
+        return string;
     }
 
     public static @NotNull List<ItemStack> stringToItems(@NotNull String string) {
-        String[] items = string.split("\\|");
-        if (items.length == 0 || items[0].isBlank()) return new ArrayList<>();
-
-        List<ItemStack> result = new ArrayList<>();
-        for (String item : items) {
-            Object object = Base64Utils.base64ToObject(item);
-            if (object instanceof ItemStack itemStack) {
-                result.add(itemStack);
-            }
-        }
-        return result;
+        return new ArrayList<>(Arrays.asList(Base64Utils.base64ToItemStacks(string)));
     }
 
 }

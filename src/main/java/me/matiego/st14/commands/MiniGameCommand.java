@@ -4,13 +4,14 @@ import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.MiniGamesManager;
-import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.objects.GUI;
+import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.objects.minigames.MiniGame;
 import me.matiego.st14.objects.minigames.MiniGameType;
 import me.matiego.st14.utils.MiniGamesUtils;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -274,7 +275,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
     public @NotNull CommandData getDiscordCommand() {
         return Commands.slash("minigame-stop", "zatrzymaj aktywną minigrę")
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
-                .setGuildOnly(true);
+                .setContexts(InteractionContextType.GUILD);
     }
 
     @Override

@@ -17,6 +17,8 @@ public class PlayerLoginEventListener implements Listener {
     }
     private final Main plugin;
 
+    // TODO: migrate to sth newer
+
     @EventHandler
     public void onPlayerLoginEvent(@NotNull PlayerLoginEvent event) {
         UUID uuid = event.getPlayer().getUniqueId();

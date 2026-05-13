@@ -4,12 +4,12 @@ import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.world.block.BaseBlock;
+import me.matiego.st14.BossBarTimer;
 import me.matiego.st14.Main;
 import me.matiego.st14.objects.minigames.MiniGame;
 import me.matiego.st14.objects.minigames.MiniGameException;
 import me.matiego.st14.objects.minigames.MiniGameType;
 import me.matiego.st14.utils.MiniGamesUtils;
-import me.matiego.st14.BossBarTimer;
 import me.matiego.st14.utils.Utils;
 import me.matiego.st14.utils.WorldEditUtils;
 import org.bukkit.*;
@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 
 public class SkywarsMiniGame extends MiniGame {
     public SkywarsMiniGame(@NotNull Main plugin, @NotNull MiniGameType miniGameType, @Nullable String mapName) {
@@ -69,13 +68,13 @@ public class SkywarsMiniGame extends MiniGame {
     }
 
     protected void setUpGameRules(@NotNull World world) {
-        world.setGameRule(GameRule.KEEP_INVENTORY, false);
-        world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
-        world.setGameRule(GameRule.DO_ENTITY_DROPS, true);
-        world.setGameRule(GameRule.FALL_DAMAGE, true);
-        world.setGameRule(GameRule.DO_FIRE_TICK, true);
-        world.setGameRule(GameRule.FIRE_DAMAGE, true);
-        world.setGameRule(GameRule.NATURAL_REGENERATION, true);
+        world.setGameRule(GameRules.KEEP_INVENTORY, false);
+        world.setGameRule(GameRules.IMMEDIATE_RESPAWN, true);
+        world.setGameRule(GameRules.ENTITY_DROPS, true);
+        world.setGameRule(GameRules.FALL_DAMAGE, true);
+        world.setGameRule(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 128);
+        world.setGameRule(GameRules.FIRE_DAMAGE, true);
+        world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, true);
     }
 
     private void setUpSkywarsWorldBorder() {
@@ -85,7 +84,7 @@ public class SkywarsMiniGame extends MiniGame {
         worldBorder.setWarningDistance(0);
         worldBorder.setDamageBuffer(0);
         worldBorder.setDamageAmount(5);
-        worldBorder.setWarningTime(10);
+        worldBorder.setWarningTimeTicks(10);
     }
 
     @Override
@@ -219,11 +218,11 @@ public class SkywarsMiniGame extends MiniGame {
             });
 
             World world = MiniGamesUtils.getMiniGamesWorld();
-            if (world != null) world.setPVP(true);
+            if (world != null) world.setGameRule(GameRules.PVP, true);
         }
 
         if (miniGameTime == totalMiniGameTime - shrinkBorderBeforeEnd) {
-            worldBorder.setSize(Math.max(1, 0.1 * mapRadius), TimeUnit.SECONDS, shrinkBorderBeforeEnd);
+            worldBorder.changeSize(Math.max(1, 0.1 * mapRadius), shrinkBorderBeforeEnd * 20L);
             getPlayersInMiniGame().forEach(player -> player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, shrinkBorderBeforeEnd * 20, 255, false, false, true)));
         }
     }

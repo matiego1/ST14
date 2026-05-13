@@ -1,13 +1,13 @@
 package me.matiego.st14.minigames;
 
+import me.matiego.st14.BossBarTimer;
 import me.matiego.st14.Main;
 import me.matiego.st14.objects.minigames.MiniGame;
 import me.matiego.st14.objects.minigames.MiniGameException;
 import me.matiego.st14.objects.minigames.MiniGameType;
 import me.matiego.st14.utils.MiniGamesUtils;
-import me.matiego.st14.BossBarTimer;
 import org.bukkit.GameMode;
-import org.bukkit.GameRule;
+import org.bukkit.GameRules;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
@@ -62,13 +62,13 @@ public class TagMiniGame extends MiniGame {
     }
 
     protected void setUpGameRules(@NotNull World world) {
-        world.setGameRule(GameRule.KEEP_INVENTORY, true);
-        world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
-        world.setGameRule(GameRule.DO_ENTITY_DROPS, false);
-        world.setGameRule(GameRule.FALL_DAMAGE, true);
-        world.setGameRule(GameRule.FIRE_DAMAGE, false);
-        world.setGameRule(GameRule.DO_FIRE_TICK, false);
-        world.setGameRule(GameRule.NATURAL_REGENERATION, false);
+        world.setGameRule(GameRules.KEEP_INVENTORY, true);
+        world.setGameRule(GameRules.IMMEDIATE_RESPAWN, true);
+        world.setGameRule(GameRules.ENTITY_DROPS, false);
+        world.setGameRule(GameRules.FALL_DAMAGE, true);
+        world.setGameRule(GameRules.FIRE_DAMAGE, false);
+        world.setGameRule(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 0);
+        world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, false);
     }
 
     @Override
@@ -96,7 +96,7 @@ public class TagMiniGame extends MiniGame {
             getPlayers().forEach(player -> timer.showBossBarToPlayer(player));
 
             World world = MiniGamesUtils.getMiniGamesWorld();
-            if (world != null) world.setPVP(true);
+            if (world != null) world.setGameRule(GameRules.PVP, true);
 
             lastChange = miniGameTime;
             setRandomTag();
@@ -124,7 +124,7 @@ public class TagMiniGame extends MiniGame {
         List<Player> players = getPlayersInMiniGame();
         if (players.isEmpty()) return;
         Collections.shuffle(players);
-        tag = players.get(0);
+        tag = players.getFirst();
     }
 
     @EventHandler(ignoreCancelled = true)

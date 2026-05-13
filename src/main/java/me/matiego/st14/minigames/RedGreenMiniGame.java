@@ -57,12 +57,12 @@ public class RedGreenMiniGame extends MiniGame {
     }
 
     protected void setUpGameRules(@NotNull World world) {
-        world.setGameRule(GameRule.KEEP_INVENTORY, true);
-        world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
-        world.setGameRule(GameRule.DO_ENTITY_DROPS, false);
-        world.setGameRule(GameRule.FALL_DAMAGE, false);
-        world.setGameRule(GameRule.FIRE_DAMAGE, false);
-        world.setGameRule(GameRule.NATURAL_REGENERATION, false);
+        world.setGameRule(GameRules.KEEP_INVENTORY, true);
+        world.setGameRule(GameRules.IMMEDIATE_RESPAWN, true);
+        world.setGameRule(GameRules.ENTITY_DROPS, false);
+        world.setGameRule(GameRules.FALL_DAMAGE, false);
+        world.setGameRule(GameRules.FIRE_DAMAGE, false);
+        world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, false);
     }
 
     @Override
@@ -73,7 +73,7 @@ public class RedGreenMiniGame extends MiniGame {
         worldBorder.setDamageAmount(world.getWorldBorder().getDamageAmount());
         worldBorder.setDamageBuffer(world.getWorldBorder().getDamageBuffer());
         worldBorder.setWarningDistance(world.getWorldBorder().getWarningDistance());
-        worldBorder.setWarningTime(world.getWorldBorder().getWarningTime());
+        worldBorder.setWarningTimeTicks(world.getWorldBorder().getWarningTimeTicks());
     }
 
     @Override

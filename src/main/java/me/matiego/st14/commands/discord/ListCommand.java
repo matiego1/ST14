@@ -1,8 +1,9 @@
 package me.matiego.st14.commands.discord;
 
-import me.matiego.st14.managers.IncognitoManager;
 import me.matiego.st14.Main;
+import me.matiego.st14.managers.IncognitoManager;
 import me.matiego.st14.objects.command.CommandHandler;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
@@ -30,7 +31,7 @@ public class ListCommand implements CommandHandler.Discord {
                                 .addChoice("Tak", "True")
                                 .addChoice("Nie", "False")
                 )
-                .setGuildOnly(true);
+                .setContexts(InteractionContextType.GUILD);
     }
 
     @Override

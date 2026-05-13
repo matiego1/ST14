@@ -22,15 +22,6 @@ public class PlayerInteractListener implements Listener {
     @EventHandler
     public void onPlayerInteract(@NotNull PlayerInteractEvent event) {
         Player player = event.getPlayer();
-
-        if (!plugin.getNonPremiumManager().isLoggedIn(player)) {
-            event.setCancelled(true);
-            event.setUseInteractedBlock(Event.Result.DENY);
-            event.setUseItemInHand(Event.Result.DENY);
-            player.sendActionBar(Utils.getComponentByString("&cMusisz się zalogować, aby to zrobić!"));
-            return;
-        }
-
         Action action = event.getAction();
         if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) return;
 

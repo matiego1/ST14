@@ -7,6 +7,7 @@ import me.matiego.st14.managers.EconomyManager;
 import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.*;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -137,7 +138,7 @@ public class SpawnCommand implements CommandHandler.Minecraft, CommandHandler.Di
                 .addOptions(
                         new OptionData(OptionType.STRING, "gracz", "Gracz, którego koordynaty mają być pokazane", true, true)
                 )
-                .setGuildOnly(true)
+                .setContexts(InteractionContextType.GUILD)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
     }
 

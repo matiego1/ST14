@@ -115,3 +115,9 @@ run/
 .paper-nms
 Graves-4.9.jar
 CrashClaim-1.0.38.jar
+/.gradle/
+/build/
+/gradlew.bat
+/gradlew
+/build.gradle
+/gradle/

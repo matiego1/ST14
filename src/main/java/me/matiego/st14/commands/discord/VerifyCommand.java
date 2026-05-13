@@ -6,16 +6,18 @@ import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.context.UserContextInteraction;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,7 +31,7 @@ public class VerifyCommand implements CommandHandler.Discord {
     public @NotNull CommandData getDiscordCommand() {
         return Commands.user("verify")
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_ROLES))
-                .setGuildOnly(true);
+                .setContexts(InteractionContextType.GUILD);
     }
 
     @Override
@@ -64,7 +66,7 @@ public class VerifyCommand implements CommandHandler.Discord {
             return 0;
         }
 
-        DiscordUtils.sendPrivateMessage(member.getUser(), member.getAsMention() + ", kliknij poniższy przycisk, aby dokończyć proces weryfikacji.", action -> action.addActionRow(Button.success("verify-account", "Akceptuję regulamin")), result -> {
+        DiscordUtils.sendPrivateMessage(member.getUser(), member.getAsMention() + ", kliknij poniższy przycisk, aby dokończyć proces weryfikacji.", action -> action.setComponents(ActionRow.of(Button.success("verify-account", "Akceptuję regulamin"))), result -> {
            switch (result) {
                case SUCCESS -> {
                    hook.sendMessage("Pomyślnie wysłano prywatną wiadomość do użytkownika. Oczekiwanie na odpowiedź...").queue();

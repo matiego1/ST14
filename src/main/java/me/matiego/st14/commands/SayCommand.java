@@ -8,6 +8,7 @@ import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -66,9 +67,8 @@ public class SayCommand implements CommandHandler.Minecraft, CommandHandler.Disc
 
     @Override
     public @NotNull CommandData getDiscordCommand() {
-        //noinspection SpellCheckingInspection
         return Commands.slash("say", "wyślij wiadomość na serwer minecraft")
-                .setGuildOnly(true)
+                .setContexts(InteractionContextType.GUILD)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
                 .addOptions(new OptionData(OptionType.STRING, "wiadomosc", "wiadomość, która ma być wysłana", true));
     }

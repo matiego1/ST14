@@ -5,17 +5,19 @@ import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.AccountsManager;
 import me.matiego.st14.managers.IncognitoManager;
-import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.objects.GUI;
+import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
@@ -32,8 +34,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.time.Instant;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 
 public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandler.Discord, Listener {
     public IncognitoCommand(@NotNull Main plugin) {
@@ -52,7 +54,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
 
     @Override
     public @NotNull CommandData getDiscordCommand() {
-        return Commands.slash("incognito", "Zarządzaj statusem incognito twojego konta minecraft").setGuildOnly(true);
+        return Commands.slash("incognito", "Zarządzaj statusem incognito twojego konta minecraft").setContexts(InteractionContextType.GUILD);
     }
 
     @Override
@@ -205,7 +207,7 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
             eb.addField("**Status incognito:**", manager.isIncognito(uuid) ? "`Włączone` :green_circle:" : "`Wyłączone` :red_circle:", false);
             eb.setFooter(DiscordUtils.getName(user, event.getMember()), DiscordUtils.getAvatar(user, event.getMember()));
             eb.setTimestamp(Instant.now());
-            hook.sendMessageEmbeds(eb.build()).addActionRow(Button.secondary("change-inc-status", "Zmień status incognito")).queue();
+            hook.sendMessageEmbeds(eb.build()).setComponents(ActionRow.of(Button.secondary("change-inc-status", "Zmień status incognito"))).queue();
         });
         return 5;
     }

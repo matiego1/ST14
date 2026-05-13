@@ -3,9 +3,10 @@ package me.matiego.st14.commands;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
-import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.objects.GUI;
+import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.Utils;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.*;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -103,7 +104,7 @@ public class DifficultyCommand implements CommandHandler.Minecraft, CommandHandl
                                 .addChoice("Tak", "True")
                                 .addChoice("Nie", "False")
                 )
-                .setGuildOnly(true);
+                .setContexts(InteractionContextType.GUILD);
     }
 
     @Override

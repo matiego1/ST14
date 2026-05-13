@@ -22,6 +22,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.UUID;
 
 public class AccountsManager {
@@ -31,15 +32,14 @@ public class AccountsManager {
     }
 
     private final String ERROR_MSG = "An error occurred while modifying values in \"st14_accounts\" table in the database.";
-    @SuppressWarnings("SpellCheckingInspection")
     private final String CODE_CHARS = "ABCDEFGHIJKLMNPQRSTUVWXYZ123456789";
     private final HashMap<String, Pair<Pair<UUID, String>, Long>> verificationCodes = new HashMap<>();
 
     public synchronized @NotNull String getNewVerificationCode(@NotNull UUID uuid, @NotNull String name) {
-        String code = RandomStringUtils.random(6, CODE_CHARS);
+        String code = RandomStringUtils.secure().next(6, CODE_CHARS);
         int x = 0;
         while (verificationCodes.get(code) != null) {
-            code = RandomStringUtils.random(6, CODE_CHARS);
+            code = RandomStringUtils.secure().next(6, CODE_CHARS);
             if (x++ > 5000) throw new RuntimeException("infinite loop");
         }
         verificationCodes.entrySet().removeIf(e -> e.getValue().getFirst().getFirst().equals(uuid));
@@ -55,7 +55,7 @@ public class AccountsManager {
     }
 
     public boolean isRequired(@NotNull UUID uuid) {
-        if (NonPremiumUtils.isNonPremiumUuid(uuid)) return false;
+        if (NonPremiumUtils.isNonPremiumUuid(uuid)) return true;
         return plugin.getConfig().getBoolean("discord.linking-required") && !plugin.getConfig().getStringList("discord.linking-required-bypass").contains(uuid.toString());
     }
 
@@ -87,7 +87,6 @@ public class AccountsManager {
     }
 
     public boolean isLinked(@NotNull UUID uuid) {
-        if (NonPremiumUtils.isNonPremiumUuid(uuid)) return true;
         return getUserByPlayer(uuid) != null;
     }
 
@@ -96,10 +95,8 @@ public class AccountsManager {
     }
 
     public boolean link(@NotNull UUID uuid, @NotNull UserSnowflake id) {
-        if (NonPremiumUtils.isNonPremiumUuid(uuid) && NonPremiumUtils.getIdByNonPremiumUuid(uuid) != id.getIdLong()) {
-            throw new IllegalArgumentException("tried to link a non-premium uuid to another Discord account");
-        }
-        if (!checkRoles(id)) return false;
+        if (NonPremiumUtils.getIdByNonPremiumUuid(uuid) != id.getIdLong()) return false;
+        if (!checkRoles(id, uuid)) return false;
         if (!modifyRole(id, true)) return false;
         try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_accounts(uuid, id) VALUES (?, ?) ON DUPLICATE KEY UPDATE uuid = ?, id = ?")) {
@@ -132,7 +129,6 @@ public class AccountsManager {
     }
 
     public boolean unlink(@NotNull UUID uuid) {
-        if (NonPremiumUtils.isNonPremiumUuid(uuid)) return false;
         UserSnowflake id = getUserByPlayer(uuid);
         if (id != null) {
             modifyRole(id, false);
@@ -164,7 +160,7 @@ public class AccountsManager {
         return false;
     }
 
-    private boolean checkRoles(@NotNull UserSnowflake id) {
+    private boolean checkRoles(@NotNull UserSnowflake id, @NotNull UUID uuid) {
         JDA jda = plugin.getJda();
         if (jda == null) return false;
 
@@ -173,6 +169,13 @@ public class AccountsManager {
 
         Member member = DiscordUtils.retrieveMember(guild, id);
         if (member == null) return false;
+
+        long nonPremiumRole = plugin.getConfig().getLong("discord.role-ids.non-premium");
+        if (DiscordUtils.hasRole(member, nonPremiumRole) && !NonPremiumUtils.isNonPremiumUuid(uuid)) {
+            try {
+                guild.removeRoleFromMember(member, Objects.requireNonNull(guild.getRoleById(nonPremiumRole))).queue(s -> {}, f -> {});
+            } catch (Exception ignored) {}
+        }
 
         if (DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.banned"))) return false;
         return DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.verified"));

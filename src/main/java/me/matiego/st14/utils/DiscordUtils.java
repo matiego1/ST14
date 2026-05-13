@@ -313,7 +313,6 @@ public class DiscordUtils {
         return member.getRoles().stream().map(ISnowflake::getIdLong).anyMatch(id -> id == role);
     }
 
-    @SuppressWarnings("deprecation")
     public static @NotNull String getAsTag(@NotNull User user) {
         return user.getDiscriminator().equals("0000") ? user.getName() : user.getAsTag();
     }

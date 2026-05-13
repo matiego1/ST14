@@ -5,9 +5,8 @@ import me.matiego.st14.Main;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
 import java.util.*;
 
 public class UpdatesManager {
@@ -23,12 +22,12 @@ public class UpdatesManager {
     public @NotNull Response checkSpigotMc(@NotNull Plugin plugin) {
         int id = Main.getInstance().getConfig().getInt("plugins-resource-id." + plugin.getName(), -1);
         if (id == -1) return Response.UNKNOWN_ID;
-        try (InputStream inputStream = new URL("https://api.spigotmc.org/legacy/update.php?resource=" + id).openStream();
+        try (InputStream inputStream = new URI("https://api.spigotmc.org/legacy/update.php?resource=" + id).toURL().openStream();
              Scanner scanner = new Scanner(inputStream)) {
             if (!scanner.hasNext()) return Response.FAILURE;
             //noinspection deprecation
             return compareVersions(plugin.getDescription().getVersion(), scanner.next());
-        } catch (IOException e) {
+        } catch (Exception e) {
             return Response.FAILURE;
         }
     }

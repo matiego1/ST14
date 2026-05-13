@@ -3,7 +3,6 @@ package me.matiego.st14.managers;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.objects.minigames.MiniGame;
-import me.matiego.st14.utils.NonPremiumUtils;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -30,10 +29,8 @@ public class TabListManager {
                     "&2[" + Utils.getWorldPrefix(player.getWorld()) + "]&f " +
                     (plugin.getAfkManager().isAfk(player) ? "&8[AFK]&f " : "") +
                     (plugin.getIncognitoManager().isIncognito(player.getUniqueId()) ? "&7[INC]&f " : "") +
-                    (NonPremiumUtils.isNonPremiumUuid(player.getUniqueId()) ? "&c" : "") +
                     (plugin.getPremiumManager().isPremium(player.getUniqueId()) ? "&e" : "") +
                     (plugin.getPremiumManager().isSuperPremium(player.getUniqueId()) ? "&6" : "") +
-                    (plugin.getNonPremiumManager().isLoggedIn(player.getUniqueId()) ? "" : "&0") +
                     player.getName()
             ));
         }

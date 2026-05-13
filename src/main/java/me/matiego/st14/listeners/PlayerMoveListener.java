@@ -26,12 +26,6 @@ public class PlayerMoveListener implements Listener {
     public void onPlayerMove(@NotNull PlayerMoveEvent event) {
         Player player = event.getPlayer();
 
-        if (!plugin.getNonPremiumManager().isLoggedIn(player)) {
-            event.setCancelled(true);
-            player.sendActionBar(Utils.getComponentByString("&cMusisz się zalogować, aby to zrobić!"));
-            return;
-        }
-
         if (!Optional.ofNullable(player.getWorldBorder())
                 .orElseGet(() -> player.getWorld().getWorldBorder())
                 .isInside(event.getTo())) {

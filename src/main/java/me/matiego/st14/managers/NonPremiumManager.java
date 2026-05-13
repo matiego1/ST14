@@ -1,5 +1,13 @@
 package me.matiego.st14.managers;
 
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.ProtocolManager;
+import com.comphenix.protocol.events.ListenerPriority;
+import com.comphenix.protocol.events.PacketAdapter;
+import com.comphenix.protocol.events.PacketEvent;
+import com.mojang.authlib.GameProfile;
+import io.netty.channel.Channel;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.objects.Pair;
@@ -7,53 +15,143 @@ import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.NonPremiumUtils;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.minecraft.network.Connection;
+import net.minecraft.network.PacketListener;
+import net.minecraft.server.network.ServerLoginPacketListenerImpl;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.UUID;
 
 public class NonPremiumManager {
     public NonPremiumManager(@NotNull Main plugin) {
         this.plugin = plugin;
     }
 
+    public static final String JOIN_NAME_PREFIX = "st14_";
+    public static final String NAME_PREFIX = "+";
+
     private final Main plugin;
-    private final HashMap<String, Pair<UUID, Long>> verificationCode = new HashMap<>();
+    private final HashMap<UUID, Long> expiration = new HashMap<>();
     private final HashMap<String, Pair<UUID, String>> playerName = new HashMap<>();
-    private final Set<UUID> loggedIn = new HashSet<>();
+
+    public void addPacketListener() {
+        ProtocolManager protocolManager = ProtocolLibrary.getProtocolManager();
+        protocolManager.addPacketListener(new PacketAdapter(plugin, ListenerPriority.HIGHEST, PacketType.Login.Client.START) {
+            @Override
+            public void onPacketReceiving(PacketEvent event) {
+                Player player = event.getPlayer();
+                String name = event.getPacket().getStrings().read(0).toLowerCase();
+
+                if (name.startsWith(JOIN_NAME_PREFIX)) {
+                    event.setCancelled(true);
+                    Logs.info("Skipping authorisation for player " + name);
+
+                    Pair<UUID, String> newName = playerName.remove(name);
+                    if (newName == null) {
+                        player.kick(Utils.getComponentByString("&cAby zagrać z konta non-premium, musisz rozpocząć sesję na serwerze Discord! Użyj komendy &l/nonpremium start"));
+                        return;
+                    }
+
+                    Long time = expiration.remove(newName.getFirst());
+                    if (time == null || Utils.now() - time > 60 * 1000) {
+                        player.kick(Utils.getComponentByString("&cTwoja sesja wygasła!"));
+                        return;
+                    }
+
+                    if (forceLoginSuccess(event, newName.getFirst(), newName.getSecond())) {
+                        sendMessageToUser(newName.getFirst(), "Dołączyłeś na serwer, miłej gry!");
+                    } else {
+                        player.kick(Utils.getComponentByString("&cNapotkano niespodziewany błąd. Spróbuj później."));
+                    }
+                }
+            }
+        });
+    }
+
+    private boolean forceLoginSuccess(@NotNull PacketEvent event, @NotNull UUID uuid, @NotNull String playerName) {
+        try {
+            GameProfile mojangProfile = new GameProfile(uuid, NAME_PREFIX + playerName);
+
+            Object tempPlayer = event.getPlayer();
+            Method getInjectorMethod = tempPlayer.getClass().getMethod("getInjector");
+            Object injector = getInjectorMethod.invoke(tempPlayer);
+
+            Channel nettyChannel = null;
+            for (Method method : injector.getClass().getMethods()) {
+                if (Channel.class.isAssignableFrom(method.getReturnType()) && method.getParameterCount() == 0) {
+                    nettyChannel = (Channel) method.invoke(injector);
+                    break;
+                }
+            }
+            if (nettyChannel == null) {
+                for (Field field : injector.getClass().getDeclaredFields()) {
+                    if (Channel.class.isAssignableFrom(field.getType())) {
+                        field.setAccessible(true);
+                        nettyChannel = (Channel) field.get(injector);
+                        break;
+                    }
+                }
+            }
+            if (nettyChannel == null) {
+                Logs.error("Could not find the Channel object");
+                return false;
+            }
+
+            Connection nmsConnection = (Connection) nettyChannel.pipeline().get("packet_handler");
+            if (nmsConnection == null) {
+                Logs.error("Could not find the Connection object");
+                return false;
+            }
+
+            PacketListener rawListener = nmsConnection.getPacketListener();
+            if (rawListener instanceof ServerLoginPacketListenerImpl loginListener) {
+                Method startVerificationMethod = ServerLoginPacketListenerImpl.class.getDeclaredMethod("startClientVerification", GameProfile.class);
+                startVerificationMethod.setAccessible(true);
+
+                startVerificationMethod.invoke(loginListener, mojangProfile);
+                return true;
+            } else {
+                Logs.error("Expected ServerLoginPacketListenerImpl object, but found: " + (rawListener == null ? "null" : rawListener.getClass().getName()));
+                return false;
+            }
+        } catch (Exception e) {
+            Logs.error("Failed to authorise the player " + playerName, e);
+        }
+        return false;
+    }
 
     public synchronized @Nullable String startLogin(@NotNull Member member, @NotNull String name) {
-        if (!DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.non-premium"))) return null;
-        UUID uuid = NonPremiumUtils.createNonPremiumUuid(member);
+        if (!name.startsWith(JOIN_NAME_PREFIX)) return null;
+        if (playerName.containsKey(name)) return null;
 
         User user = member.getUser();
-        //noinspection deprecation
         if (!user.getDiscriminator().equals("0000")) return null;
+        if (!DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.verified"))) return null;
+        if (!DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.non-premium"))) return null;
 
-        for (Map.Entry<String, Pair<UUID, String>> stringPairEntry : playerName.entrySet()) {
-            Pair<UUID, String> pair = stringPairEntry.getValue();
-            if (pair.getSecond().equals(user.getName())) {
-                endSession(pair.getFirst(), "Zmiana nicku na Discord");
-            }
-        }
+        UUID uuid = NonPremiumUtils.createNonPremiumUuid(member);
+        if (!uuid.equals(plugin.getAccountsManager().getPlayerByUser(member))) return null;
 
-        if (playerName.containsKey(name)) return null;
+        endSession(uuid, "Rozpoczęto nową sesję");
+
+        String code = RandomStringUtils.secure().nextAlphanumeric(10);
+
         playerName.put(name, new Pair<>(uuid, user.getName()));
+        expiration.put(uuid, Utils.now());
 
-        String code = RandomStringUtils.randomAlphanumeric(10);
-        int x = 0;
-        while (verificationCode.get(code) != null) {
-            code = RandomStringUtils.randomAlphanumeric(10);
-            if (x++ > 5000) return null; //infinite loop
-        }
+        Logs.info("Rozpoczęto sesję non-premium dla gracza " + DiscordUtils.getAsTag(member));
 
-        verificationCode.put(code, new Pair<>(uuid, Utils.now()));
         return code;
     }
 
@@ -61,44 +159,15 @@ public class NonPremiumManager {
         return playerName.containsKey(name);
     }
 
-    public synchronized boolean checkVerificationCode(@NotNull Player player, @NotNull String code) {
-        Pair<UUID, Long> pair = verificationCode.get(code);
-        if (pair == null) return false;
-        if (!pair.getFirst().equals(player.getUniqueId())) return false;
-        return Utils.now() - pair.getSecond() <= 5 * 60 * 1000;
-    }
-
-    public boolean isLoggedIn(@NotNull Player player) {
-        return isLoggedIn(player.getUniqueId());
-    }
-
-    public synchronized boolean isLoggedIn(@NotNull UUID uuid) {
-        if (!NonPremiumUtils.isNonPremiumUuid(uuid)) return true; //other players are logged in by default
-        return loggedIn.contains(uuid);
-    }
-
-    public synchronized void logIn(@NotNull Player player) {
-        if (!NonPremiumUtils.isNonPremiumUuid(player.getUniqueId())) return;
-        loggedIn.add(player.getUniqueId());
-        verificationCode.entrySet().removeIf(pair -> pair.getValue().getFirst().equals(player.getUniqueId()));
-        Logs.info("Gracz non-premium " + player.getName() + " pomyślnie się zalogował.");
-    }
-
     public synchronized void endSession(@NotNull UUID uuid, @NotNull String reason) {
         if (!NonPremiumUtils.isNonPremiumUuid(uuid)) return;
-        clearDataAfterSession(uuid);
-        Player player = Bukkit.getPlayer(uuid);
-        if (player != null) {
-            player.kick(Utils.getComponentByString("&cTwoja sesja została zakończona!\nPowód: " + reason));
-            sendMessageToUser(uuid, "Twoja sesja została zakończona! Powód: `" + reason + "`");
-            Logs.info("Sesja gracza non-premium "+ plugin.getOfflinePlayersManager().getEffectiveNameById(uuid) + " została zakończona.");
-        }
-    }
 
-    public synchronized void clearDataAfterSession(@NotNull UUID uuid) {
-        loggedIn.remove(uuid);
         playerName.entrySet().removeIf(e -> e.getValue().getFirst().equals(uuid));
-        verificationCode.entrySet().removeIf(pair -> pair.getValue().getFirst().equals(uuid));
+        expiration.remove(uuid);
+
+        Player player = Bukkit.getPlayer(uuid);
+        if (player == null) return;
+        player.kick(Utils.getComponentByString("&cTwoja sesja została zakończona!\nPowód: " + reason));
     }
 
     public void sendMessageToUser(@NotNull UUID uuid, @NotNull String message) {
@@ -106,11 +175,7 @@ public class NonPremiumManager {
         if (jda == null) return;
 
         jda.retrieveUserById(NonPremiumUtils.getIdByNonPremiumUuid(uuid)).queue(
-                user -> DiscordUtils.sendPrivateMessage(user, message, action -> action.addActionRow(Button.danger("end-session", "Zakończ sesję non-premium")), result -> {})
+                user -> DiscordUtils.sendPrivateMessage(user, message, action -> action.setComponents(ActionRow.of(Button.danger("end-session", "Zakończ sesję"))), result -> {})
         );
-    }
-
-    public @Nullable Pair<UUID, String> getIdAndNewName(@NotNull String name) {
-        return playerName.get(name);
     }
 }

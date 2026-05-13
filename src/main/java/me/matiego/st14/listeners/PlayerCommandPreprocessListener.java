@@ -22,12 +22,6 @@ public class PlayerCommandPreprocessListener implements Listener {
         Player player = event.getPlayer();
         String command = event.getMessage().substring(1).toLowerCase();
 
-        if (!plugin.getNonPremiumManager().isLoggedIn(player) && !command.startsWith("nonpremium")) {
-            event.setCancelled(true);
-            player.sendActionBar(Utils.getComponentByString("&cMusisz się zalogować, aby to zrobić!"));
-            return;
-        }
-
         if (command.equalsIgnoreCase("minecraft:stop")) {
             event.setCancelled(true);
             player.performCommand("st14:stop");

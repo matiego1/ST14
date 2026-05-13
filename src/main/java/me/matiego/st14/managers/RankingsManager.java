@@ -107,7 +107,7 @@ public class RankingsManager {
                                 message -> {
                                     List<MessageEmbed> embeds = message.getEmbeds();
                                     String description = String.valueOf(embed.getDescription());
-                                    if (embeds.isEmpty() || !String.valueOf(embeds.get(0).getDescription()).equalsIgnoreCase(description.substring(0, description.length() - 1))) {
+                                    if (embeds.isEmpty() || !String.valueOf(embeds.getFirst().getDescription()).equalsIgnoreCase(description.substring(0, description.length() - 1))) {
                                         message.editMessageEmbeds(eb.build()).queue();
                                     }
                                 },

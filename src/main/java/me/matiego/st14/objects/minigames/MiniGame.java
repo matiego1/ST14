@@ -240,7 +240,7 @@ public abstract class MiniGame implements Listener {
         setMapConfigPath();
         loadDataFromConfig(world);
         registerEvents();
-        world.setPVP(false);
+        world.setGameRule(GameRules.PVP, false);
         setUpGameRules(world);
         setUpWorldBorder(world);
         broadcastMiniGameStartMessage(sender);

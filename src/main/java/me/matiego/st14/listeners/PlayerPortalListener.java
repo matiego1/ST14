@@ -2,7 +2,6 @@ package me.matiego.st14.listeners;
 
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.Utils;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerPortalEvent;
@@ -17,14 +16,6 @@ public class PlayerPortalListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerPortal(@NotNull PlayerPortalEvent event) {
-        Player player = event.getPlayer();
-
-        if (!plugin.getNonPremiumManager().isLoggedIn(player)) {
-            event.setCancelled(true);
-            player.sendActionBar(Utils.getComponentByString("&cMusisz się zalogować, aby to zrobić!"));
-            return;
-        }
-
         String world = event.getFrom().getWorld().getName();
         if (event.getCause() == PlayerTeleportEvent.TeleportCause.END_PORTAL && plugin.getConfig().getStringList("allow-end-portals").contains(world)) {
             return;
@@ -33,6 +24,6 @@ public class PlayerPortalListener implements Listener {
             return;
         }
         event.setCancelled(true);
-        player.sendActionBar(Utils.getComponentByString("&cNie możesz skorzystać z tego portalu."));
+        event.getPlayer().sendActionBar(Utils.getComponentByString("&cNie możesz skorzystać z tego portalu."));
     }
 }

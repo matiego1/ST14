@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 public class NonPremiumUtils {
-    //TODO floodgate uses the same value
+    // TODO: floodgate uses the same value
     private static final long MOST_SIGNIFICANT_BITS = 0;
     public static boolean isNonPremiumUuid(@NotNull UUID uuid) {
         return uuid.getMostSignificantBits() == MOST_SIGNIFICANT_BITS;
@@ -17,7 +17,7 @@ public class NonPremiumUtils {
     }
 
     public static long getIdByNonPremiumUuid(@NotNull UUID uuid) {
-        if (!isNonPremiumUuid(uuid)) throw new IllegalArgumentException("this uuid is not non-premium uuid");
+        if (!isNonPremiumUuid(uuid)) return -1;
         return uuid.getLeastSignificantBits();
     }
 }

@@ -3,18 +3,19 @@ package me.matiego.st14.commands.discord;
 import me.matiego.st14.objects.command.CommandHandler.Discord;
 import me.matiego.st14.utils.DiscordUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.label.Label;
+import net.dv8tion.jda.api.components.textinput.TextInput;
+import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.text.TextInput;
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
-import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.interactions.modals.ModalInteraction;
+import net.dv8tion.jda.api.modals.Modal;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -24,7 +25,7 @@ import java.util.Objects;
 public class FeedbackCommand implements Discord {
     @Override
     public @NotNull CommandData getDiscordCommand() {
-        return Commands.slash("feedback", "Zgłoś błąd, napisz propozycję lub podziel się swoją opinią").setGuildOnly(true);
+        return Commands.slash("feedback", "Zgłoś błąd, napisz propozycję lub podziel się swoją opinią").setContexts(InteractionContextType.GUILD);
     }
 
     @Override
@@ -32,11 +33,11 @@ public class FeedbackCommand implements Discord {
         event.replyModal(
                 Modal.create("feedback-modal", "Wyślij twoją opinię")
                         .addComponents(
-                                ActionRow.of(TextInput.create("subject", "Temat", TextInputStyle.SHORT)
+                                Label.of("Tytuł", TextInput.create("subject", TextInputStyle.SHORT)
                                         .setRequired(true)
-                                        .setPlaceholder("zgłoszenie błędu, propozycja...")
+                                        .setPlaceholder("np. zgłoszenie błędu, propozycja, opinia")
                                         .build()),
-                                ActionRow.of(TextInput.create("description", "opis", TextInputStyle.PARAGRAPH)
+                                Label.of("Opis", TextInput.create("description", TextInputStyle.PARAGRAPH)
                                         .setRequired(true)
                                         .build())
                         )

@@ -49,10 +49,10 @@ public class MazeMiniGame extends MiniGame {
     }
 
     protected void setUpGameRules(@NotNull World world) {
-        world.setGameRule(GameRule.KEEP_INVENTORY, true);
-        world.setGameRule(GameRule.DO_ENTITY_DROPS, false);
-        world.setGameRule(GameRule.FALL_DAMAGE, false);
-        world.setGameRule(GameRule.FIRE_DAMAGE, false);
+        world.setGameRule(GameRules.KEEP_INVENTORY, true);
+        world.setGameRule(GameRules.ENTITY_DROPS, false);
+        world.setGameRule(GameRules.FALL_DAMAGE, false);
+        world.setGameRule(GameRules.FIRE_DAMAGE, false);
     }
 
     @Override

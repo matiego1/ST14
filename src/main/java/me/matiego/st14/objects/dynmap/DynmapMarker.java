@@ -2,7 +2,7 @@ package me.matiego.st14.objects.dynmap;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
-import org.dynmap.DynmapAPI;
+import org.dynmap.DynmapCommonAPI;
 import org.dynmap.markers.MarkerAPI;
 import org.dynmap.markers.MarkerSet;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +22,7 @@ public abstract class DynmapMarker {
     protected @Nullable MarkerAPI getDynmapMarkerAPI() {
         Plugin plugin = Bukkit.getPluginManager().getPlugin("dynmap");
         if (plugin == null || !plugin.isEnabled()) return null;
-        if (plugin instanceof DynmapAPI dynmapAPI) {
+        if (plugin instanceof DynmapCommonAPI dynmapAPI) {
             return dynmapAPI.getMarkerAPI();
         }
         return null;

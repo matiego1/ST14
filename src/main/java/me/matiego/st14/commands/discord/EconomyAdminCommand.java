@@ -7,6 +7,7 @@ import me.matiego.st14.managers.EconomyManager;
 import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.*;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -31,7 +32,7 @@ public class EconomyAdminCommand implements CommandHandler.Discord {
     public @NotNull CommandData getDiscordCommand() {
         return Commands.slash("economy-admin", "zarządzaj kontami graczy")
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
-                .setGuildOnly(true)
+                .setContexts(InteractionContextType.GUILD)
                 .addSubcommands(
                         new SubcommandData("get", "wyświetl bilans konta gracza")
                                 .addOptions(new OptionData(OptionType.STRING, "gracz", "nick gracza", true, true)),

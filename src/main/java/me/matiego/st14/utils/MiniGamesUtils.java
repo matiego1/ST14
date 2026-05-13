@@ -1,5 +1,7 @@
 package me.matiego.st14.utils;
 
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import org.bukkit.*;
@@ -77,13 +79,13 @@ public class MiniGamesUtils {
         World world = getMiniGamesWorld();
         if (world == null) return;
 
-        world.setGameRule(GameRule.KEEP_INVENTORY, true);
-        world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
-        world.setGameRule(GameRule.DO_ENTITY_DROPS, false);
-        world.setGameRule(GameRule.FALL_DAMAGE, false);
-        world.setGameRule(GameRule.FIRE_DAMAGE, true);
-        world.setGameRule(GameRule.NATURAL_REGENERATION, true);
-        world.setPVP(false);
+        world.setGameRule(GameRules.KEEP_INVENTORY, true);
+        world.setGameRule(GameRules.IMMEDIATE_RESPAWN, true);
+        world.setGameRule(GameRules.ENTITY_DROPS, false);
+        world.setGameRule(GameRules.FALL_DAMAGE, false);
+        world.setGameRule(GameRules.FIRE_DAMAGE, true);
+        world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, true);
+        world.setGameRule(GameRules.PVP, false);
     }
 
     public static @Nullable Location getRelativeLocationFromConfig(@NotNull Location baseLocation, @NotNull String path) {
@@ -155,7 +157,7 @@ public class MiniGamesUtils {
                 Logs.warning("invalid item: `" + string + "` (#4)");
                 return null;
             }
-            Enchantment enchantment = Registry.ENCHANTMENT.get(NamespacedKey.minecraft(enchantmentValues[0]));
+            Enchantment enchantment = getEnchantmentByName(enchantmentValues[0]);
             if (enchantment == null) {
                 Logs.warning("invalid item: `" + string + "` (#5)");
                 return null;
@@ -172,5 +174,11 @@ public class MiniGamesUtils {
         }
 
         return item;
+    }
+
+    private static @Nullable Enchantment getEnchantmentByName(@NotNull String name) {
+        NamespacedKey key = NamespacedKey.fromString(name);
+        if (key == null) return null;
+        return RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT).get(key);
     }
 }

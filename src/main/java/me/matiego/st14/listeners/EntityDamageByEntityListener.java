@@ -56,6 +56,7 @@ public class EntityDamageByEntityListener implements Listener {
         return item;
     }
 
+    @SuppressWarnings("unused")
     public @NotNull ItemStack getEgg(double damage) {
         ItemStack item = new ItemStack(Material.SNOWBALL);
 

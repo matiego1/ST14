@@ -12,13 +12,6 @@ public class MySQL {
 
     private final HikariDataSource ds;
 
-    /**
-     * Initials the database.
-     * @param url a jdbc url
-     * @param user a user
-     * @param password a password
-     * @throws SQLException thrown if connection has failed.
-     */
     public MySQL(@NotNull String url, @NotNull String user, @NotNull String password) throws SQLException {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(url);
@@ -42,18 +35,10 @@ public class MySQL {
         getConnection(); //test connection
     }
 
-    /**
-     * Closes the database connection.
-     */
     public void close() {
         ds.close();
     }
 
-    /**
-     * Returns a database connection.
-     * @return the database connection.
-     * @throws SQLException thrown if connection has failed.
-     */
     public @NotNull Connection getConnection() throws SQLException {
         return ds.getConnection();
     }

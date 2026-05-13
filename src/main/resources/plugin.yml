@@ -1,11 +1,11 @@
 name: ST14
-version: '${project.version}'
+version: '${version}'
 main: me.matiego.st14.Main
-api-version: '1.20'
+api-version: '1.21'
 author: Matiego
-description: A plugin for ST14 server
-depend: [Vault, GravesX]
-softdepend: [Counting, dynmap, CrashClaim]
+description: '${description}'
+depend: [Vault, GravesX, ProtocolLib]
+softdepend: [dynmap, CrashClaim]
 loadbefore: [Multiverse-Core]
 load: STARTUP
 commands:
@@ -87,9 +87,6 @@ commands:
   premium:
     permission: st14.premium
     usage: 'Poprawne użycie: /premium [get|remove|extend|set|reduce] <gracz> <czas*>'
-  nonpremium:
-    permission: st14.nonpremium
-    usage: 'Poprawne użycie: /nonpremium <hasło>'
   ranking:
     permission: st14.ranking
     usage: 'Poprawne użycie: /ranking [economy|minigame|time|advancements] (gracz)'

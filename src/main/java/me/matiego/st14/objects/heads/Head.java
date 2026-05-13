@@ -72,7 +72,7 @@ public class Head {
             }
 
             GameProfile profile = new GameProfile(getUuid(), profileName.toString());
-            profile.getProperties().put("textures", new Property("textures", getValue()));
+            profile.properties().put("textures", new Property("textures", getValue()));
 
             Field profileField = meta.getClass().getDeclaredField("profile");
             profileField.setAccessible(true);

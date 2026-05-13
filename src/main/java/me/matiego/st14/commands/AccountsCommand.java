@@ -4,17 +4,20 @@ import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.AccountsManager;
-import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.objects.GUI;
 import me.matiego.st14.objects.Pair;
+import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.UserSnowflake;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -22,7 +25,6 @@ import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
@@ -58,7 +60,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                         new OptionData(OptionType.STRING, "code", "twój kod weryfikacyjny", false)
                                 .setRequiredLength(6, 6)
                 )
-                .setGuildOnly(true);
+                .setContexts(InteractionContextType.GUILD);
     }
 
     @Override
@@ -98,10 +100,10 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                         return;
                     }
                     DiscordUtils.sendPrivateMessage(user, embed, action -> action
-                            .addActionRow(
+                            .setComponents(ActionRow.of(
                                     Button.danger("unlink-accounts", "Rozłącz konta")
                                             .withEmoji(Emoji.fromUnicode("U+1F4A3"))
-                            ), result -> {
+                            )), result -> {
                     });
                 } else {
                     hook.sendMessage("Napotkano niespodziewany błąd. Spróbuj ponownie.").queue();
@@ -119,10 +121,10 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
                 return;
             }
             hook.sendMessageEmbeds(embed)
-                    .addActionRow(
+                    .setComponents(ActionRow.of(
                             Button.danger("unlink-accounts", "Rozłącz konta")
                                     .withEmoji(Emoji.fromUnicode("U+1F4A3"))
-                    )
+                    ))
                     .queue();
         });
         return 3;
@@ -186,7 +188,6 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
             if (manager.isLinked(uuid)) {
                 UserSnowflake id = manager.getUserByPlayer(uuid);
                 if (id == null) {
-                    //noinspection SpellCheckingInspection
                     inv.setItem(1, GUI.createGuiItem(
                             Material.LEAD,
                             "&9Konto Discord",

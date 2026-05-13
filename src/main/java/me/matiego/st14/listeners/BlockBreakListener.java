@@ -19,14 +19,6 @@ public class BlockBreakListener implements Listener {
     }
     private final Main plugin;
 
-    @EventHandler(ignoreCancelled = true)
-    public void onBlockBreak(@NotNull BlockBreakEvent event) {
-        Player player = event.getPlayer();
-        if (plugin.getNonPremiumManager().isLoggedIn(player)) return;
-        event.setCancelled(true);
-        player.sendActionBar(Utils.getComponentByString("&cMusisz się zalogować, aby to zrobić!"));
-    }
-
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreakMonitor(@NotNull BlockBreakEvent event) {
         Player player = event.getPlayer();

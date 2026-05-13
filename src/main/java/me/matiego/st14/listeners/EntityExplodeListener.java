@@ -14,6 +14,7 @@ public class EntityExplodeListener implements Listener {
         this.plugin = plugin;
     }
     private final Main plugin;
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityExplode(@NotNull EntityExplodeEvent event) {
         AntyLogoutManager manager = plugin.getAntyLogoutManager();

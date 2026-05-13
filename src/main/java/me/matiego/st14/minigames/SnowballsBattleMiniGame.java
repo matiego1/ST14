@@ -60,13 +60,13 @@ public class SnowballsBattleMiniGame extends MiniGame {
     }
 
     protected void setUpGameRules(@NotNull World world) {
-        world.setGameRule(GameRule.KEEP_INVENTORY, true);
-        world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
-        world.setGameRule(GameRule.DO_ENTITY_DROPS, false);
-        world.setGameRule(GameRule.FALL_DAMAGE, true);
-        world.setGameRule(GameRule.FIRE_DAMAGE, false);
-        world.setGameRule(GameRule.DO_FIRE_TICK, false);
-        world.setGameRule(GameRule.NATURAL_REGENERATION, false);
+        world.setGameRule(GameRules.KEEP_INVENTORY, true);
+        world.setGameRule(GameRules.IMMEDIATE_RESPAWN, true);
+        world.setGameRule(GameRules.ENTITY_DROPS, false);
+        world.setGameRule(GameRules.FALL_DAMAGE, true);
+        world.setGameRule(GameRules.FIRE_DAMAGE, false);
+        world.setGameRule(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 0);
+        world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, false);
     }
 
     @Override
@@ -94,7 +94,7 @@ public class SnowballsBattleMiniGame extends MiniGame {
             getPlayers().forEach(player -> timer.showBossBarToPlayer(player));
 
             World world = MiniGamesUtils.getMiniGamesWorld();
-            if (world != null) world.setPVP(true);
+            if (world != null) world.setGameRule(GameRules.PVP, true);
         }
 
         tickPlayers();

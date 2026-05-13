@@ -11,6 +11,7 @@ import me.matiego.st14.objects.heads.HeadsCategory;
 import me.matiego.st14.objects.heads.HeadsGUI;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.*;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -256,7 +257,7 @@ public class HeadsCommand implements CommandHandler.Minecraft, CommandHandler.Di
     public @NotNull CommandData getDiscordCommand() {
         return Commands.slash("heads-download", "pobierz główki")
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
-                .setGuildOnly(true)
+                .setContexts(InteractionContextType.GUILD)
                 .addOptions(
                         new OptionData(OptionType.STRING, "kategoria", "nazwa kategorii", false, true)
                 );

@@ -41,7 +41,7 @@ public class SignChangeListener implements Listener {
 
     private boolean updateMarker(@NotNull Sign sign, @NotNull List<String> lines, @NotNull Player player) {
         if (lines.isEmpty()) return false;
-        if (!lines.get(0).equalsIgnoreCase("[map]")) return false;
+        if (!lines.getFirst().equalsIgnoreCase("[map]")) return false;
 
         StringBuilder textBuilder = new StringBuilder();
         for (int i = 1; i < lines.size(); i++) {
