@@ -78,7 +78,7 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private TpaCommand tpaCommand;
 
     @Getter private EntityDamageByEntityListener entityDamageByEntityListener;
-    @Getter private GraveCreateListener graveCreateListener;
+    @Getter private GravePostCreateListener gravePostCreateListener;
     @Getter private PlayerDeepSleepListener playerDeepSleepListener;
     @Getter private PlayerMoveListener playerMoveListener;
     @Getter private PlayerQuitListener playerQuitListener;
@@ -173,7 +173,7 @@ public final class Main extends JavaPlugin implements Listener {
 
         // Register listeners
         entityDamageByEntityListener = new EntityDamageByEntityListener(this);
-        graveCreateListener = new GraveCreateListener();
+        gravePostCreateListener = new GravePostCreateListener();
         playerDeepSleepListener = new PlayerDeepSleepListener(this);
         playerMoveListener = new PlayerMoveListener(this);
         playerQuitListener = new PlayerQuitListener(this);
@@ -193,7 +193,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new EntityPortalListener(this),
                 new EntityToggleGlideListener(this),
                 new FoodLevelChangeListener(this),
-                graveCreateListener,
+                gravePostCreateListener,
                 new GS4QueryListener(this),
                 new InventoryCloseListener(this),
                 new PlayerAdvancementCriterionGrantListener(this),

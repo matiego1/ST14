@@ -3,7 +3,6 @@ package me.matiego.st14.markers;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.listeners.ClaimChangeListener;
-import me.matiego.st14.listeners.ClaimCreateListener;
 import me.matiego.st14.listeners.ClaimDeleteListener;
 import me.matiego.st14.objects.dynmap.DynmapMarker;
 import me.matiego.st14.utils.Utils;
@@ -144,7 +143,6 @@ public class ClaimsMarker extends DynmapMarker {
     public void registerListeners() {
         if (Bukkit.getPluginManager().getPlugin("CrashClaim") == null) return;
         plugin.getListenersManager().registerListeners(
-                new ClaimCreateListener(plugin),
                 new ClaimChangeListener(plugin),
                 new ClaimDeleteListener(plugin)
         );

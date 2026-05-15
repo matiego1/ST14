@@ -74,6 +74,6 @@ public class PlayerJoinListener implements Listener {
             }
         });
         //send f3 brand
-        plugin.getF3BrandManager().refreshPlayerF3Brand(player);
+        plugin.getF3BrandManager().sendF3Brand(player);
     }
 }

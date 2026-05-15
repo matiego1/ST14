@@ -65,7 +65,7 @@ public class AntyLogoutManager {
 
     public void quit(@NotNull Player player) {
         if (!isInAntyLogout(player)) return;
-        plugin.getGraveCreateListener().unprotectNextGrave(player.getUniqueId());
+        plugin.getGravePostCreateListener().unprotectNextGrave(player.getUniqueId());
         player.setHealth(0);
         Utils.broadcastMessage(
                 player,

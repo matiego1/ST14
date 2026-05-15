@@ -39,7 +39,7 @@ public class SuicideCommand implements CommandHandler.Minecraft {
             return 3;
         }
 
-        plugin.getGraveCreateListener().unprotectNextGrave(player.getUniqueId());
+        plugin.getGravePostCreateListener().unprotectNextGrave(player.getUniqueId());
         player.setHealth(0);
 
         Utils.broadcastMessage(

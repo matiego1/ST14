@@ -20,7 +20,7 @@ public class AdvancementsManager {
     private final String ERROR_MSG = "An error occurred while modifying values in \"st14_advancements\" table in the database.";
 
     public void updateAmount(@NotNull Player player) {
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "execute as " + player.getUniqueId() + " run function bc_rewards:st14_score");
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "execute as " + player.getUniqueId() + " run function bacap_rewards:st14_score");
 
         Objective objective = player.getScoreboard().getObjective("st14_advancements");
         if (objective == null) {

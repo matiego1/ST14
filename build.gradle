@@ -13,12 +13,11 @@ description = 'A plugin for the ST14 server'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
 repositories {
-    mavenLocal()
     mavenCentral()
 
     maven { url = 'https://repo.papermc.io/repository/maven-public/' }
@@ -33,7 +32,6 @@ repositories {
 
 dependencies {
     // papermc
-    compileOnly 'net.kyori:adventure-text-serializer-ansi:4.17.0'
     paperweight.paperDevBundle("1.21.11-R0.1-SNAPSHOT")
 
     // JDA
@@ -61,14 +59,14 @@ dependencies {
     }
 
     // Lombok
-    compileOnly 'org.projectlombok:lombok:1.18.30'
-    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    compileOnly 'org.projectlombok:lombok:1.18.46'
+    annotationProcessor 'org.projectlombok:lombok:1.18.46'
 
     // Commons lang
     compileOnly 'org.apache.commons:commons-lang3:3.18.0'
 
     // GravesX
-    compileOnly 'com.ranull:GravesX:4.9.3.4-api'
+    compileOnly files('GravesX-4.9.11.1.jar')
 
     // LuckPerms
     compileOnly 'net.luckperms:api:5.4'
@@ -76,8 +74,8 @@ dependencies {
     // WorldEdit
     compileOnly 'com.sk89q.worldedit:worldedit-bukkit:7.2.14'
 
-    // CrashClaim (System Path dependency)
-    compileOnly files('CrashClaim-1.0.41.jar')
+    // CrashClaim
+    compileOnly files('CrashClaim-1.0.42.jar')
 
     // Dynmap
     compileOnly 'us.dynmap:DynmapCoreAPI:3.7-beta-6'
