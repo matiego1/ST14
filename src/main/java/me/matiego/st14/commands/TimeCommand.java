@@ -166,7 +166,7 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
     }
 
     private @NotNull String formatDiscord(long date) {
-        if (date <= 0) return "Ostatnio online przed <t:1684533600:D>";
+        if (date <= 0) return "Ostatnio online: dawno temu";
         if (Utils.now() - date <= 5) return "Gracz jest online";
         return "Ostatnio online: <t:" + (date / 1000) + ":R>";
     }
@@ -185,7 +185,7 @@ public class TimeCommand implements CommandHandler.Discord, CommandHandler.Minec
         return result + "&6]";
     }
     private @NotNull String formatMinecraft(long date) {
-        if (date <= 0) return "przed 20 maja 2023 roku";
+        if (date <= 0) return "dawno temu";
         date = Utils.now() - date;
         if (date <= 5 * 1000) return "&aGracz jest online";
         return Utils.parseMillisToString(date, false) + " temu";

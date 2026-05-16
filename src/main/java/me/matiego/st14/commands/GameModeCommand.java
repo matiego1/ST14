@@ -26,11 +26,13 @@ import java.util.stream.Collectors;
 
 public class GameModeCommand implements CommandHandler.Minecraft, CommandHandler.Discord {
     public GameModeCommand(@NotNull Main plugin) {
+        this.plugin = plugin;
         command = plugin.getCommand("gamemode");
         if (command == null) {
             Logs.warning("The command /gamemode does not exist in the plugin.yml file and cannot be registered.");
         }
     }
+    private final Main plugin;
     private final PluginCommand command;
 
     @Override
@@ -116,25 +118,22 @@ public class GameModeCommand implements CommandHandler.Minecraft, CommandHandler
         boolean ephemeral = event.getOption("incognito", "False", OptionMapping::getAsString).equals("True");
 
         String playerName = event.getOption("gracz", OptionMapping::getAsString);
-        if (playerName == null) {
-            event.reply("Zły nick.").setEphemeral(ephemeral).queue();
-            return 3;
-        }
+        if (playerName == null) return 10;
 
         Player player = Bukkit.getPlayerExact(playerName);
-        if (player == null) {
-            event.reply("Zły nick.").setEphemeral(ephemeral).queue();
+        if (player == null || plugin.getIncognitoManager().isIncognito(player.getUniqueId())) {
+            event.reply("Ten gracz nie jest online").setEphemeral(ephemeral).queue();
             return 3;
         }
 
-        String difficulty = switch (player.getGameMode()) {
+        String gamemode = switch (player.getGameMode()) {
             case CREATIVE -> "kreatywny";
             case SURVIVAL -> "przetrwania";
             case ADVENTURE -> "przygodowy";
             case SPECTATOR -> "obserwatora";
         };
 
-        event.reply("Tryb gry gracza **" + player.getName() + "** to **" + difficulty + "**.").setEphemeral(ephemeral).queue();
+        event.reply("Tryb gry gracza **" + player.getName() + "** to **" + gamemode + "**.").setEphemeral(ephemeral).queue();
         return 5;
     }
 
@@ -143,6 +142,7 @@ public class GameModeCommand implements CommandHandler.Minecraft, CommandHandler
         if (!event.getName().equals(getDiscordCommand().getName())) return;
         if (!event.getFocusedOption().getName().equals("gracz")) return;
         event.replyChoices(Bukkit.getOnlinePlayers().stream()
+                .filter(p -> !plugin.getIncognitoManager().isIncognito(p.getUniqueId()))
                 .map(Player::getName)
                 .filter(name -> name.toLowerCase().startsWith(event.getFocusedOption().getValue().toLowerCase()))
                 .map(name -> new Command.Choice(name, name))

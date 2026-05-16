@@ -14,7 +14,6 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.recipe.CraftingBookCategory;
 import org.bukkit.plugin.IllegalPluginAccessException;
@@ -177,14 +176,7 @@ public class Utils {
     }
 
     public static void registerRecipes() {
-        //Name tag
-        ShapedRecipe nameTag = new ShapedRecipe(new NamespacedKey(Main.getInstance(), "name_tag"), new ItemStack(Material.NAME_TAG));
-        nameTag.shape("  S", " P ", "P  ");
-        nameTag.setIngredient('S', Material.STRING);
-        nameTag.setIngredient('P', Material.PAPER);
-        nameTag.setCategory(CraftingBookCategory.MISC);
-        Bukkit.addRecipe(nameTag);
-        //Wool to strings
+        // Wool to strings
         ShapelessRecipe woolToStrings = new ShapelessRecipe(new NamespacedKey(Main.getInstance(), "wool_to_strings"), new ItemStack(Material.STRING, 4));
         woolToStrings.addIngredient(Material.WHITE_WOOL);
         woolToStrings.setCategory(CraftingBookCategory.MISC);

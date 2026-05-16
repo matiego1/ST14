@@ -12,7 +12,6 @@ import net.dv8tion.jda.api.interactions.commands.*;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
@@ -200,14 +199,11 @@ public class PremiumCommand implements CommandHandler.Minecraft, CommandHandler.
         boolean ephemeral = event.getOption("incognito", "False", OptionMapping::getAsString).equals("True");
 
         String playerName = event.getOption("gracz", OptionMapping::getAsString);
-        if (playerName == null) {
-            event.reply("Zły nick.").setEphemeral(ephemeral).queue();
-            return 3;
-        }
+        if (playerName == null) return 10;
 
         UUID uuid = plugin.getOfflinePlayersManager().getIdByName(playerName);
         if (uuid == null) {
-            event.reply("Zły nick.").setEphemeral(ephemeral).queue();
+            event.reply("Zły nick").setEphemeral(ephemeral).queue();
             return 3;
         }
 
@@ -234,8 +230,7 @@ public class PremiumCommand implements CommandHandler.Minecraft, CommandHandler.
     public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteraction event) {
         if (!event.getName().equals(getDiscordCommand().getName())) return;
         if (!event.getFocusedOption().getName().equals("gracz")) return;
-        event.replyChoices(Bukkit.getOnlinePlayers().stream()
-                .map(Player::getName)
+        event.replyChoices(plugin.getOfflinePlayersManager().getNames().stream()
                 .filter(name -> name.toLowerCase().startsWith(event.getFocusedOption().getValue().toLowerCase()))
                 .map(name -> new Command.Choice(name, name))
                 .collect(Collectors.toList())
