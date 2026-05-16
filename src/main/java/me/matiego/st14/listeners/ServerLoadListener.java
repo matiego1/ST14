@@ -23,7 +23,6 @@ public class ServerLoadListener implements Listener {
             return;
         }
 
-        // Set spawnChunkRadius gamerule - MultiverseCore keeps resetting this
-        Bukkit.getScheduler().runTaskLater(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "gamerule spawnChunkRadius 4"), 20);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "gamerule send_command_feedback true"), 20);
     }
 }

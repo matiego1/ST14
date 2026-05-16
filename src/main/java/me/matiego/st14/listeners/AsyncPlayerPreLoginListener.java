@@ -4,6 +4,7 @@ import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.IncognitoManager;
+import me.matiego.st14.managers.PremiumManager;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
@@ -31,7 +32,7 @@ public class AsyncPlayerPreLoginListener implements Listener {
     @EventHandler
     public void onAsyncPlayerPreLogin(@NotNull AsyncPlayerPreLoginEvent event) {
         UUID uuid = event.getUniqueId();
-        //check vanilla whitelist & bans
+        // check vanilla whitelist & bans
         if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) return;
         if (Bukkit.hasWhitelist() && Bukkit.getWhitelistedPlayers().stream()
                 .map(OfflinePlayer::getUniqueId)
@@ -43,67 +44,85 @@ public class AsyncPlayerPreLoginListener implements Listener {
                 .anyMatch(uuid::equals)) {
             return;
         }
-        //check bans
+
+        // check bans
         if (plugin.getBansManager().isBanned(uuid)) {
             disallow(event, plugin.getBansManager().getKickMessage(plugin.getBansManager().getBan(uuid)));
             return;
         }
-        //check real time
+
+        // check real time
         int seconds = LocalDateTime.now().toLocalTime().toSecondOfDay();
         if (seconds >= 24 * 60 * 60 - 7 || seconds <= 3) {
             disallow(event, "&cNa serwer możesz ponownie dołączyć 3 sekundy po północy. Przepraszamy.");
             return;
         }
 
-        //check player's nick length
-        if (event.getName().length() > 36) {
-            disallow(event, "&cTwój nick jest za długi! Może mieć maksymalnie 36 znaków.");
+        // check player's nick length
+        if (event.getName().length() > 16) {
+            disallow(event, "&cTwój nick jest za długi! Może mieć maksymalnie 16 znaków.");
             return;
         }
-        //check if Discord bot is online
+
+        // check if Discord bot is online
         JDA jda = plugin.getJda();
         if (jda == null) {
             disallow(event, Prefix.DISCORD + "&cBot na Discord jest offline! Nie możesz dołączyć do serwera.");
             return;
         }
-        //check tps
+
+        // check tps
         if (Utils.getTps() < 15.0 && !plugin.getPremiumManager().isSuperPremium(uuid)) {
             disallow(event, "&cSerwer jest przeciążony - TPS spadły poniżej 15\nSpróbuj dołączyć później\n&7Przepraszamy");
             return;
         }
-        //check if player has linked account
-        if (!plugin.getAccountsManager().isRequired(uuid)) return;
-        UserSnowflake id = plugin.getAccountsManager().getUserByPlayer(uuid);
-        if (id == null) {
-            String code = plugin.getAccountsManager().getNewVerificationCode(uuid, event.getName());
-            disallow(event, Prefix.DISCORD + "\n" +
-                    "Nie połączyłeś konta Discord z twoim kontem minecraft!\n\n" +
-                    "Użyj komendy &9/accounts &bna Discord\n" +
-                    "z kodem &9" + code + "&b\n\n" +
-                    "(" + plugin.getConfig().getString("discord.invite-link", "---") + ")\n\n" +
-                    "&cUWAGA! &bKod będzie ważny tylko 5 minut.");
-            return;
+
+        // check if player has linked account
+        if (plugin.getAccountsManager().isRequired(uuid)) {
+            UserSnowflake id = plugin.getAccountsManager().getUserByPlayer(uuid);
+            if (id == null) {
+                String code = plugin.getAccountsManager().getNewVerificationCode(uuid, event.getName());
+                disallow(event, Prefix.DISCORD + "\n" +
+                        "Nie połączyłeś konta Discord z twoim kontem minecraft!\n\n" +
+                        "Użyj komendy &9/accounts &bna Discord\n" +
+                        "z kodem &9" + code + "&b\n\n" +
+                        "(" + plugin.getConfig().getString("discord.invite-link", "---") + ")\n\n" +
+                        "&cUWAGA! &bKod będzie ważny tylko 5 minut.");
+                return;
+            }
+            Guild guild = jda.getGuildById(plugin.getConfig().getLong("discord.guild-id"));
+            if (guild == null) {
+                Logs.warning("A guild id in the config file is not correct.");
+                return;
+            }
+            Member member = DiscordUtils.retrieveMember(guild, id);
+            if (member == null) {
+                disallow(event, Prefix.DISCORD + "Wygląda na to, że nie ma cię na naszym serwerze Discord! Dołącz do niego, aby grać na tym serwerze.");
+                return;
+            }
+            if (!DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.player")) ||
+                    !DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.verified"))) {
+                plugin.getAccountsManager().unlink(uuid);
+                disallow(event, Prefix.DISCORD + "Twoje konto zostało rozłączone przed administratora. Dołącz ponownie, aby je połączyć.");
+            }
         }
-        Guild guild = jda.getGuildById(plugin.getConfig().getLong("discord.guild-id"));
-        if (guild == null) {
-            Logs.warning("A guild id in the config file is not correct.");
-            return;
-        }
-        Member member = DiscordUtils.retrieveMember(guild, id);
-        if (member == null) {
-            disallow(event, Prefix.DISCORD + "Wygląda na to, że nie ma cię na naszym serwerze Discord! Dołącz do niego, aby grać na tym serwerze.");
-            return;
-        }
-        if (!DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.player")) ||
-                !DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.verified"))) {
-            plugin.getAccountsManager().unlink(uuid);
-            disallow(event, Prefix.DISCORD + "Twoje konto zostało rozłączone przed administratora. Dołącz ponownie, aby je połączyć.");
-        }
-        //refresh player name - at the end to prevent random player nicknames from being refreshed
+
+        // refresh player name - at the end to prevent random player nicknames from being refreshed
         plugin.getOfflinePlayersManager().refresh(uuid, event.getName());
     }
     private void disallow(@NotNull AsyncPlayerPreLoginEvent event, @NotNull String msg) {
         event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Utils.getComponentByString(msg));
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onAsyncPlayerPreLoginHighest(@NotNull AsyncPlayerPreLoginEvent event) {
+        if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.KICK_FULL) return;
+
+        UUID uuid = event.getUniqueId();
+        PremiumManager manager = plugin.getPremiumManager();
+        if (manager.isPremium(uuid) && manager.makeSpaceForPlayer(uuid)) {
+            event.allow();
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

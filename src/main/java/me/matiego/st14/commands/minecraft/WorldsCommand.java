@@ -71,7 +71,7 @@ public class WorldsCommand implements CommandHandler.Minecraft {
         }
 
         player.openInventory(inv);
-        return 10;
+        return 6;
     }
 
     @Override

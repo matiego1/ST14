@@ -6,6 +6,8 @@ import me.matiego.st14.managers.NonPremiumManager;
 import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.NonPremiumUtils;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.InteractionHook;
@@ -37,7 +39,7 @@ public class NonPremiumCommand implements CommandHandler.Discord {
                         new SubcommandData("start", "Zacznij nową sesję")
                                 .addOptions(
                                         new OptionData(OptionType.STRING, "name", "nick, z którym dołączysz do serwera", true)
-                                                .setRequiredLength(10, 36)
+                                                .setRequiredLength(10, 16)
                                 )
                 );
     }
@@ -79,7 +81,7 @@ public class NonPremiumCommand implements CommandHandler.Discord {
                     hook.sendMessage("Nick musi zaczynać się od `" + NonPremiumManager.JOIN_NAME_PREFIX + "`. Ten nick służy tylko do dołączenia na serwer, później zostanie zmieniony!").queue();
                     return 3;
                 }
-                if (!manager.isNameUnique(name)) {
+                if (manager.isNameUsed(name)) {
                     hook.sendMessage("Ktoś już używa tego nicku! Wymyśl inny.").queue();
                     return 3;
                 }
@@ -113,7 +115,7 @@ public class NonPremiumCommand implements CommandHandler.Discord {
                         
                         **UWAGA!** Przez następną minutę **każdy** gracz z wybranym nickiem może dołączyć na serwer za ciebie! Wybierz skomplikowany nick, aby temu zapobiec.
                         """.formatted(name, NonPremiumManager.NAME_PREFIX + member.getUser().getName())
-                ).queue();
+                ).setComponents(ActionRow.of(Button.danger("end-session", "Zakończ sesję"))).queue();
                 return 3;
             }
         }
@@ -126,7 +128,7 @@ public class NonPremiumCommand implements CommandHandler.Discord {
 
         plugin.getNonPremiumManager().endSession(NonPremiumUtils.createNonPremiumUuid(event.getUser()), "Sesja zakończona przez użytkownika");
 
-        event.reply("Pomyślnie zakończono sesję, jeśli jakaś była aktywna.").queue();
+        event.reply("Pomyślnie zakończono sesję, jeśli jakaś była aktywna.").setEphemeral(true).queue();
         return 0;
     }
 }

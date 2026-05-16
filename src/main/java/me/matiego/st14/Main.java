@@ -210,7 +210,6 @@ public final class Main extends JavaPlugin implements Listener {
                 new PlayerItemFrameChangeListener(this),
                 new PlayerJoinListener(this),
                 new PlayerLaunchProjectileListener(this),
-                new PlayerLoginEventListener(this),
                 playerMoveListener,
                 new PlayerPortalListener(this),
                 playerQuitListener,

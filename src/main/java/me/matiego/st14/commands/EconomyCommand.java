@@ -205,7 +205,8 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                             return List.of(AnvilGUI.ResponseAction.replaceInputText("Brak środków"));
                         }
 
-                        finishTransfer(player, amount);
+                        double finalAmount = amount;
+                        Bukkit.getScheduler().runTaskLater(plugin, () -> finishTransfer(player, finalAmount), 3);
                         return List.of(AnvilGUI.ResponseAction.close());
                     })
                     .open(player);
@@ -344,7 +345,6 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                 .text("Wpisz tutaj...")
                 .itemLeft(GUI.createGuiItem(Material.PAPER, "&9Podaj nick odbiorcy...", "&bKliknij &9ESC&b, aby wyjść", "&bKliknij przedmiot po prawej, aby zaakceptować"))
                 .plugin(plugin)
-                .interactableSlots(AnvilGUI.Slot.OUTPUT)
                 .onClick((anvilSlot, state) -> {
                     if (anvilSlot != AnvilGUI.Slot.OUTPUT) return Collections.emptyList();
 

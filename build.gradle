@@ -1,9 +1,11 @@
+import io.papermc.paperweight.userdev.ReobfArtifactConfiguration
+
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 plugins {
     id 'java'
-    id 'com.gradleup.shadow' version '8.3.5'
+    id 'com.gradleup.shadow' version '9.4.1'
     id 'io.papermc.paperweight.userdev' version '2.0.0-beta.21'
 }
 
@@ -13,7 +15,7 @@ description = 'A plugin for the ST14 server'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -23,11 +25,11 @@ repositories {
     maven { url = 'https://repo.papermc.io/repository/maven-public/' }
     maven { url = 'https://m2.dv8tion.net/releases' }
     maven { url = 'https://jitpack.io' }
-    maven { url = 'https://repo.codemc.io/repository/maven-snapshots/' }
     maven { url = 'https://maven.enginehub.org/repo/' }
     maven { url = 'https://repo.mikeprimm.com/' }
     maven { url = 'https://repo.onarandombox.com/content/groups/public/' }
     maven { url = 'https://mvn.ugandavrc.com/releases' }
+    maven { url = 'https://mvn.wesjd.net/' }
 }
 
 dependencies {
@@ -40,6 +42,7 @@ dependencies {
     }
 
     // Discord's webhooks
+    //noinspection VulnerableLibrariesLocal
     implementation 'club.minnced:discord-webhooks:0.8.4'
 
     // DNS for JdaBuilderUtils class
@@ -54,9 +57,7 @@ dependencies {
     }
 
     // AnvilGUI
-    implementation('net.wesjd:anvilgui:1.10.11-SNAPSHOT') {
-        exclude group: 'org.bukkit', module: 'bukkit'
-    }
+    implementation('net.wesjd:anvilgui:1.10.11-SNAPSHOT')
 
     // Lombok
     compileOnly 'org.projectlombok:lombok:1.18.46'
@@ -105,7 +106,16 @@ processResources {
 }
 
 shadowJar {
-    archiveClassifier.set('')
+    archiveClassifier.set('all')
+    relocate 'net.wesjd.anvilgui', 'me.matiego.st14.anvilgui'
 }
 
-build.dependsOn shadowJar
+paperweight {
+    reobfArtifactConfiguration = ReobfArtifactConfiguration.getREOBF_PRODUCTION()
+}
+
+tasks.assemble {
+    dependsOn tasks.reobfJar
+}
+
+build.dependsOn tasks.named('reobfJar')

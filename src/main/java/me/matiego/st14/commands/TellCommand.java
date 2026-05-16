@@ -36,7 +36,9 @@ public class TellCommand implements CommandHandler.Minecraft, CommandHandler.Dis
     private final HashMap<UUID, UUID> reply = new HashMap<>();
 
     public synchronized @Nullable Player getReply(@NotNull UUID uuid) {
-        Player result = Bukkit.getPlayer(reply.get(uuid));
+        UUID resultUuid = reply.get(uuid);
+        if (resultUuid == null) return null;
+        Player result = Bukkit.getPlayer(resultUuid);
         if (result == null) reply.remove(uuid);
         return result;
     }

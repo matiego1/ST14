@@ -62,6 +62,6 @@ public class BackpackCommand implements CommandHandler.Minecraft, Listener {
 
             Utils.sync(() -> player.openInventory(inv));
         });
-        return 8;
+        return 3;
     }
 }

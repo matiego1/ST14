@@ -46,7 +46,7 @@ public class BanCommand implements CommandHandler.Minecraft, CommandHandler.Disc
 
     @Override
     public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
-        if (args.length == 0) return -1;
+        if (args.length < 2) return -1;
 
         UUID uuid = plugin.getOfflinePlayersManager().getIdByName(args[1]);
         if (uuid == null) {
@@ -232,7 +232,7 @@ public class BanCommand implements CommandHandler.Minecraft, CommandHandler.Disc
                     if (manager.setBan(new Ban(
                             uuid,
                             event.getOption("powod", OptionMapping::getAsString),
-                            time
+                            Utils.now() + time
                     ))) {
                         hook.sendMessage("Pomyślnie zbanowano gracza").queue();
                     } else {

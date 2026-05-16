@@ -45,13 +45,12 @@ public class PlayerInteractListener implements Listener {
                 player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Napotkano niespodziewany błąd. Spróbuj później."));
                 return;
             }
+            plugin.getBanknoteManager().removeBanknote(item);
 
             Logs.info("Gracz " + player.getName() + " wpłacił banknot o wartości " + plugin.getEconomyManager().format(amount));
 
             player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie wpłacono " + plugin.getEconomyManager().format(amount) + " na twoje konto."));
             player.getInventory().getItemInMainHand().setAmount(player.getInventory().getItemInMainHand().getAmount() - 1);
-
-            plugin.getBanknoteManager().removeBanknote(item);
         });
     }
 }

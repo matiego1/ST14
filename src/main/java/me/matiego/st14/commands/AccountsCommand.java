@@ -240,6 +240,7 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
         Objects.requireNonNull(item); //already checked in GUI#checkInventory()
 
         if (slot == 7) {
+            player.closeInventory();
             player.sendMessage(Utils.getComponentByString(Prefix.DISCORD + "Link z zaproszeniem na nasz serwer Discord: " + plugin.getConfig().getString("discord.invite-link", "&cBRAK")));
         } else if (slot == 1) {
             player.closeInventory();

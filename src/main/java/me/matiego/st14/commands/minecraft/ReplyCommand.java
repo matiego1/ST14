@@ -50,6 +50,11 @@ public class ReplyCommand implements CommandHandler.Minecraft {
 
         manager.putReply(sender.getUniqueId(), receiver.getUniqueId());
 
+        if (receiver.equals(sender)) {
+            receiver.sendMessage(Utils.getComponentByString("&6[&cJa&6]:&r " + msg));
+            return 0;
+        }
+
         sender.sendMessage(Utils.getComponentByString("&6[&cJa &6->&c " + receiver.getName() + "&6]:&r " + msg));
         receiver.sendMessage(Utils.getComponentByString("&6[&c" + sender.getName() + " &6->&c Ja&6]:&r " + msg));
 

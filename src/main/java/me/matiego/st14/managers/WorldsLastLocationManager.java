@@ -32,7 +32,7 @@ public class WorldsLastLocationManager {
             ResultSet result = stmt.executeQuery();
             if (!result.next()) return world.getSpawnLocation();
 
-            World worldLoc = Bukkit.getWorld(result.getString("world_loc"));
+            World worldLoc = Bukkit.getWorld(UUID.fromString(result.getString("world_loc")));
             if (worldLoc == null) return world.getSpawnLocation();
 
             return new Location(
@@ -43,7 +43,7 @@ public class WorldsLastLocationManager {
                     result.getFloat("yaw"),
                     result.getFloat("pitch")
             );
-        } catch (SQLException e) {
+        } catch (SQLException | IllegalArgumentException e) {
             Logs.error(ERROR_MSG, e);
         }
         return world.getSpawnLocation();

@@ -95,7 +95,7 @@ public class AccountsManager {
     }
 
     public boolean link(@NotNull UUID uuid, @NotNull UserSnowflake id) {
-        if (NonPremiumUtils.getIdByNonPremiumUuid(uuid) != id.getIdLong()) return false;
+        if (NonPremiumUtils.isNonPremiumUuid(uuid) && NonPremiumUtils.getIdByNonPremiumUuid(uuid) != id.getIdLong()) return false;
         if (!checkRoles(id, uuid)) return false;
         if (!modifyRole(id, true)) return false;
         try (Connection conn = plugin.getMySQLConnection();

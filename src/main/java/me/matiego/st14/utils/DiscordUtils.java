@@ -156,7 +156,8 @@ public class DiscordUtils {
                 CacheFlag.STICKER,
                 CacheFlag.CLIENT_STATUS,
                 CacheFlag.ONLINE_STATUS,
-                CacheFlag.SCHEDULED_EVENTS
+                CacheFlag.SCHEDULED_EVENTS,
+                CacheFlag.SOUNDBOARD_SOUNDS
         );
     }
 
@@ -248,7 +249,7 @@ public class DiscordUtils {
         action.queue(
                 success -> result.accept(PrivateMessageResult.SUCCESS),
                 failure -> {
-                    if (failure instanceof ErrorResponseException e && e.getErrorResponse() == ErrorResponse.CANNOT_SEND_TO_USER) {
+                    if (failure instanceof ErrorResponseException e && (e.getErrorResponse() == ErrorResponse.CANNOT_SEND_TO_USER || e.getErrorCode() == 50278)) {
                         long now = Utils.now();
                         if (now - privateMessages.getOrDefault(user.getIdLong(), 0L) >= 15 * 60 * 1000L) {
                             Logs.warning("User " + DiscordUtils.getAsTag(user) + " doesn't allow private messages.");
@@ -294,7 +295,7 @@ public class DiscordUtils {
     }
 
     public static @NotNull String escapeFormatting(@NotNull String string) {
-        final String[] chars = new String[]{"*", ":", "|", "~", "_", ">", "@", "#", "`"};
+        final String[] chars = new String[]{"*", ":", "|", "~", "_", ">", "@", "#", "`", "-"};
         for (String c : chars) {
             string = string.replace(c, "\\" + c);
         }
