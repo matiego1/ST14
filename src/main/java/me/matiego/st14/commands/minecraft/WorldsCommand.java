@@ -3,9 +3,9 @@ package me.matiego.st14.commands.minecraft;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
-import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.objects.GUI;
 import me.matiego.st14.objects.Pair;
+import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -48,13 +48,6 @@ public class WorldsCommand implements CommandHandler.Minecraft {
             return 0;
         }
 
-        World world = player.getWorld();
-        World.Environment env = world.getEnvironment();
-        if (env == World.Environment.NETHER || env == World.Environment.THE_END) {
-            player.sendMessage(Utils.getComponentByString(Prefix.WORLDS + "&dNie możesz się teleportować z netheru i endu"));
-            return 5;
-        }
-
         List<Pair<World, Material>> worlds = new ArrayList<>();
         for (World w : Bukkit.getWorlds()) {
             Material m = null;
@@ -89,10 +82,20 @@ public class WorldsCommand implements CommandHandler.Minecraft {
         String name = getItemName(event.getCurrentItem());
         event.getInventory().close();
 
+        World world = player.getWorld();
+        World.Environment env = world.getEnvironment();
+        if (env == World.Environment.NETHER) {
+            World normalWorld = Bukkit.getWorld(world.getName().replace("_nether", ""));
+            if (normalWorld != null) world = normalWorld;
+        } else if (env ==  World.Environment.THE_END) {
+            World normalWorld = Bukkit.getWorld(world.getName().replace("_the_end", ""));
+            if (normalWorld != null) world = normalWorld;
+        }
+
         World target = null;
-        for (World world : Bukkit.getWorlds()) {
-            if (Utils.getWorldName(world).equals(name)) {
-                target = world;
+        for (World w : Bukkit.getWorlds()) {
+            if (Utils.getWorldName(w).equals(name)) {
+                target = w;
                 break;
             }
         }
@@ -100,7 +103,7 @@ public class WorldsCommand implements CommandHandler.Minecraft {
             player.sendMessage(Utils.getComponentByString(Prefix.WORLDS + "&dNapotkano niespodziewany błąd. Spróbuj ponownie."));
             return;
         }
-        if (target.equals(player.getWorld())) {
+        if (target.equals(world)) {
             player.sendMessage(Utils.getComponentByString(Prefix.WORLDS + "&dJuż jesteś w tym świecie."));
             return;
         }
@@ -116,7 +119,7 @@ public class WorldsCommand implements CommandHandler.Minecraft {
 
         player.sendMessage(Utils.getComponentByString(Prefix.WORLDS + "Zostaniesz przeteleportowany za 5 sekund. Nie ruszaj się!"));
 
-        plugin.getWorldsLastLocationManager().setLastLocation(player.getUniqueId(), player.getLocation());
+        plugin.getWorldsLastLocationManager().setLastLocation(player.getUniqueId(), world, player.getLocation());
         Location loc = plugin.getWorldsLastLocationManager().getLastLocation(player.getUniqueId(), target);
 
         Utils.async(() -> {

@@ -154,7 +154,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
             Utils.async(() -> inv.setItem(4, GUI.createGuiItem(Material.DIAMOND, "&9Saldo konta", "&b" + plugin.getEconomyManager().format(plugin.getEconomyManager().getBalance(player)))));
 
             inv.setItem(6, GUI.createGuiItem(Material.VILLAGER_SPAWN_EGG, "&9Sprzedaj przedmioty", "&cJuż wkrótce!"));
-            inv.setItem(7, GUI.createGuiItem(Material.VILLAGER_SPAWN_EGG, "&9Kup status premium", "&cJuż wkrótce!"));
+            inv.setItem(7, GUI.createGuiItem(Material.VILLAGER_SPAWN_EGG, "&9Kup status premium", "&bUzyskaj priorytetowy dostęp do serwera"));
             inv.setItem(8, GUI.createGuiItem(Material.CREEPER_HEAD, "&9Kup główkę"));
             player.openInventory(inv);
             return 3;

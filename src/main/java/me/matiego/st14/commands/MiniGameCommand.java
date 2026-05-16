@@ -127,7 +127,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
 
         if (manager.getActiveMiniGame() != null) {
             player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Jakaś minigra jest już rozpoczęta."));
-            return 5;
+            return 3;
         }
 
         Inventory inv = GUI.createInventory(18, Prefix.MINI_GAMES + "Wybierz minigrę");
