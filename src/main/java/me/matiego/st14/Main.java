@@ -194,6 +194,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new EntityToggleGlideListener(this),
                 new FoodLevelChangeListener(this),
                 gravePostCreateListener,
+                new GraveTeleportListener(this),
                 new GS4QueryListener(this),
                 new InventoryCloseListener(this),
                 new PlayerAdvancementCriterionGrantListener(this),

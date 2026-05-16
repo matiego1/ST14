@@ -122,6 +122,7 @@ public class WorldsCommand implements CommandHandler.Minecraft {
         plugin.getWorldsLastLocationManager().setLastLocation(player.getUniqueId(), world, player.getLocation());
         Location loc = plugin.getWorldsLastLocationManager().getLastLocation(player.getUniqueId(), target);
 
+        World targetFinal = target;
         Utils.async(() -> {
             try {
                 String msg = switch (plugin.getTeleportsManager().teleport(player, loc, 5, () -> hasPermission(player, loc.getWorld())).get()) {
@@ -138,8 +139,8 @@ public class WorldsCommand implements CommandHandler.Minecraft {
                             player,
                             Prefix.WORLDS,
                             "Przeteleportowano pomyślnie.",
-                            "Gracz &1" + player.getName() + "&3 przeszedł do świata &1" + Utils.getWorldName(loc.getWorld()) + "&3!",
-                            "Gracz **" + player.getName() + "** przeszedł do świata **" + Utils.getWorldName(loc.getWorld()) + "**!"
+                            "Gracz &1" + player.getName() + "&3 przeszedł do świata &1" + Utils.getWorldName(targetFinal) + "&3!",
+                            "Gracz **" + player.getName() + "** przeszedł do świata **" + Utils.getWorldName(targetFinal) + "**!"
                     );
                     return;
                 }
