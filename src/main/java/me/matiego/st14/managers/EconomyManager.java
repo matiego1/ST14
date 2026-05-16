@@ -286,6 +286,7 @@ public class EconomyManager implements net.milkbowl.vault.economy.Economy {
      */
     @Override
     public @NotNull EconomyResponse withdrawPlayer(@NotNull OfflinePlayer player, double amount) {
+        amount = Utils.round(amount, 2);
         try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("UPDATE st14_economy SET money = money - ? WHERE uuid = ? AND money >= ?")) {
             stmt.setDouble(1, amount);
@@ -349,6 +350,7 @@ public class EconomyManager implements net.milkbowl.vault.economy.Economy {
      */
     @Override
     public @NotNull EconomyResponse depositPlayer(@NotNull OfflinePlayer player, double amount) {
+        amount = Utils.round(amount, 2);
         try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_economy(uuid, money) VALUES(?, ?) ON DUPLICATE KEY UPDATE money = money + ?;")) {
             stmt.setString(1, player.getUniqueId().toString());

@@ -41,7 +41,8 @@ public class GraveTeleportListener implements Listener {
             return;
         }
 
-        cost *= l1.distance(l2) / 16;
+        cost = Utils.round(cost * l1.distance(l2) / 16, 2);
+        if (cost <= 0) return;
 
         EconomyManager economy = plugin.getEconomyManager();
         double balance = economy.getBalance(player);
@@ -70,7 +71,8 @@ public class GraveTeleportListener implements Listener {
             return;
         }
 
-        cost *= l1.distance(l2) / 16;
+        cost = Utils.round(cost * l1.distance(l2) / 16, 2);
+        if (cost <= 0) return;
 
         EconomyManager economy = plugin.getEconomyManager();
         EconomyResponse response = economy.withdrawPlayer(player, cost);
