@@ -8,6 +8,7 @@ import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public class PluginMessageReceivedListener implements PluginMessageListener {
     public PluginMessageReceivedListener(@NotNull Main plugin) {
@@ -20,7 +21,9 @@ public class PluginMessageReceivedListener implements PluginMessageListener {
         if (!channel.equalsIgnoreCase("minecraft:brand")) return;
         String brand = new String(message, StandardCharsets.UTF_8).substring(1).toLowerCase();
 
-        if (plugin.getConfig().getStringList("brands.allowed").stream()
+        List<String> allowedBrands = plugin.getConfig().getStringList("brands.allowed");
+        if (allowedBrands.contains("ALL")) return;
+        if (allowedBrands.stream()
                 .map(String::toLowerCase)
                 .anyMatch(b -> b.equals(brand.toLowerCase()))) return;
 
