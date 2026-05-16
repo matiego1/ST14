@@ -60,7 +60,7 @@ public class GraveTeleportListener implements Listener {
         if (player == null || grave == null) return;
 
         Location l1 = grave.getLocationDeath();
-        Location l2 = player.getLocation();
+        Location l2 = event.getFrom();
 
         double cost = plugin.getConfig().getDouble("graves-teleport-cost", 0);
         if (cost <= 0) return;
