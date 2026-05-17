@@ -68,12 +68,12 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
 
                     MiniGame miniGame = manager.getActiveMiniGame();
                     if (miniGame == null) {
-                        player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "&cŻadna minigra nie jest rozpoczęta."));
+                        player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Żadna minigra nie jest rozpoczęta."));
                         return 3;
                     }
 
                     if (miniGame.getPlayerStatus(player) != MiniGame.PlayerStatus.IN_MINI_GAME) {
-                        player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "&cNie bierzesz udziału w toczącej się minigrze."));
+                        player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Nie bierzesz udziału w toczącej się minigrze."));
                         return 3;
                     }
 

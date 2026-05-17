@@ -181,7 +181,6 @@ public final class Main extends JavaPlugin implements Listener {
                 new AsyncChatListener(this),
                 new AsyncPlayerPreLoginListener(this),
                 new BlockBreakListener(this),
-                new BlockDestroyListener(this),
                 new BlockFormListener(),
                 new BlockPistonExtendListener(),
                 new BlockPlaceListener(),
@@ -216,13 +215,13 @@ public final class Main extends JavaPlugin implements Listener {
                 playerQuitListener,
                 new PlayerResourcePackStatusListener(),
                 new PlayerRespawnListener(this),
+                new PlayerServerFullCheckListener(this),
                 new PlayerSetSpawnListener(),
                 new PlayerStatisticIncrementListener(this),
                 new PlayerTeleportListener(),
                 new ServerCommandListener(),
                 new PaperServerListPingListener(this),
                 new ServerLoadListener(this),
-                new SignChangeListener(this),
                 new StructureGrowListener(),
                 new VehicleMoveListener(this)
 

@@ -31,6 +31,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -154,7 +156,14 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
             Utils.async(() -> inv.setItem(4, GUI.createGuiItem(Material.DIAMOND, "&9Saldo konta", "&b" + plugin.getEconomyManager().format(plugin.getEconomyManager().getBalance(player)))));
 
             inv.setItem(6, GUI.createGuiItem(Material.VILLAGER_SPAWN_EGG, "&9Sprzedaj przedmioty", "&cJuż wkrótce!"));
-            inv.setItem(7, GUI.createGuiItem(Material.VILLAGER_SPAWN_EGG, "&9Kup status premium", "&bUzyskaj priorytetowy dostęp do serwera"));
+
+            ItemStack item = GUI.createGuiItem(Material.POTION, "&9Kup status premium", "&bUzyskaj priorytetowy dostęp do serwera");
+            PotionMeta meta = (PotionMeta) item.getItemMeta();
+            meta.setBasePotionType(PotionType.SWIFTNESS);
+            meta.clearCustomEffects();
+            item.setItemMeta(meta);
+            inv.setItem(7, item);
+
             inv.setItem(8, GUI.createGuiItem(Material.CREEPER_HEAD, "&9Kup główkę"));
             player.openInventory(inv);
             return 3;
@@ -294,7 +303,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                         } catch (Exception ignored) {}
 
                         if (time <= 0) {
-                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cWprowadziłeś zły czas, na który chcesz kupić status premium. Przykładowe czasy: 5h, 30d, 1d12h. Minimalny czas: 1h."));
+                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Wprowadziłeś zły czas, na który chcesz kupić status premium. Przykładowe czasy: 5h, 5h30m, 1d. Minimalny czas: 1h."));
                             return List.of(AnvilGUI.ResponseAction.close());
                         }
 
@@ -308,7 +317,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
 
                         EconomyManager economy = plugin.getEconomyManager();
                         if (!economy.has(player, amount)) {
-                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cAby przedłużyć status premium o " + Utils.parseMillisToString(time, false) + " potrzebujesz " + economy.format(amount)) + ", a masz " + economy.getBalance(player));
+                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cAby przedłużyć status premium o " + Utils.parseMillisToString(time, false) + " potrzebujesz " + economy.format(amount) + ", a masz " + economy.format(economy.getBalance(player))));
                             return List.of(AnvilGUI.ResponseAction.close());
                         }
 
@@ -320,7 +329,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
 
                         if (premium.extend(player.getUniqueId(), time)) {
                             long remaining = premium.getRemainingTime(player.getUniqueId());
-                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Pomyślnie przedłużono twój status premium o " + Utils.parseMillisToString(time, false) + (remaining > 0 ? ". Pozostało: " + Utils.parseMillisToString(remaining, false) : "")));
+                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Pomyślnie przedłużono twój status premium o &6" + Utils.parseMillisToString(time, false) + "&b za &6" + economy.format(amount)));
 
                             Logs.info("Gracz " + player.getName() + " przedłużył status premium o `" + Utils.parseMillisToString(time, false) + "` za `" + economy.format(amount) + "`" + (remaining > 0 ? ". Pozostało: " + Utils.parseMillisToString(remaining, false) : ""));
                         } else {

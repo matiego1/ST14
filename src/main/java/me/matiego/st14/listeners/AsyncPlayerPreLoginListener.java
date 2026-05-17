@@ -4,7 +4,6 @@ import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.IncognitoManager;
-import me.matiego.st14.managers.PremiumManager;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
@@ -32,6 +31,7 @@ public class AsyncPlayerPreLoginListener implements Listener {
     @EventHandler
     public void onAsyncPlayerPreLogin(@NotNull AsyncPlayerPreLoginEvent event) {
         UUID uuid = event.getUniqueId();
+
         // check vanilla whitelist & bans
         if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) return;
         if (Bukkit.hasWhitelist() && Bukkit.getWhitelistedPlayers().stream()
@@ -79,50 +79,46 @@ public class AsyncPlayerPreLoginListener implements Listener {
 
         // check if player has linked account
         if (plugin.getAccountsManager().isRequired(uuid)) {
-            UserSnowflake id = plugin.getAccountsManager().getUserByPlayer(uuid);
-            if (id == null) {
-                String code = plugin.getAccountsManager().getNewVerificationCode(uuid, event.getName());
-                disallow(event, Prefix.DISCORD + "\n" +
-                        "Nie połączyłeś konta Discord z twoim kontem minecraft!\n\n" +
-                        "Użyj komendy &9/accounts &bna Discord\n" +
-                        "z kodem &9" + code + "&b\n\n" +
-                        "(" + plugin.getConfig().getString("discord.invite-link", "---") + ")\n\n" +
-                        "&cUWAGA! &bKod będzie ważny tylko 5 minut.");
-                return;
-            }
-            Guild guild = jda.getGuildById(plugin.getConfig().getLong("discord.guild-id"));
-            if (guild == null) {
-                Logs.warning("A guild id in the config file is not correct.");
-                return;
-            }
-            Member member = DiscordUtils.retrieveMember(guild, id);
-            if (member == null) {
-                disallow(event, Prefix.DISCORD + "Wygląda na to, że nie ma cię na naszym serwerze Discord! Dołącz do niego, aby grać na tym serwerze.");
-                return;
-            }
-            if (!DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.player")) ||
-                    !DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.verified"))) {
-                plugin.getAccountsManager().unlink(uuid);
-                disallow(event, Prefix.DISCORD + "Twoje konto zostało rozłączone przed administratora. Dołącz ponownie, aby je połączyć.");
-            }
+            if (!checkAccount(event, uuid, jda)) return;
         }
 
         // refresh player name - at the end to prevent random player nicknames from being refreshed
         plugin.getOfflinePlayersManager().refresh(uuid, event.getName());
     }
-    private void disallow(@NotNull AsyncPlayerPreLoginEvent event, @NotNull String msg) {
-        event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Utils.getComponentByString(msg));
+
+    private boolean checkAccount(@NotNull AsyncPlayerPreLoginEvent event, @NotNull UUID uuid, @NotNull JDA jda) {
+        UserSnowflake id = plugin.getAccountsManager().getUserByPlayer(uuid);
+        if (id == null) {
+            String code = plugin.getAccountsManager().getNewVerificationCode(uuid, event.getName());
+            disallow(event, Prefix.DISCORD + "\n" +
+                    "Nie połączyłeś konta Discord z twoim kontem minecraft!\n\n" +
+                    "Użyj komendy &9/accounts &bna Discord\n" +
+                    "z kodem &9" + code + "&b\n\n" +
+                    "(" + plugin.getConfig().getString("discord.invite-link", "---") + ")\n\n" +
+                    "&cUWAGA! &bKod będzie ważny tylko 5 minut.");
+            return false;
+        }
+        Guild guild = jda.getGuildById(plugin.getConfig().getLong("discord.guild-id"));
+        if (guild == null) {
+            Logs.warning("A guild id in the config file is not correct.");
+            return true;
+        }
+        Member member = DiscordUtils.retrieveMember(guild, id);
+        if (member == null) {
+            disallow(event, Prefix.DISCORD + "Wygląda na to, że nie ma cię na naszym serwerze Discord! Dołącz do niego, aby grać na tym serwerze.");
+            return false;
+        }
+        if (!DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.player")) ||
+                !DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.verified"))) {
+            plugin.getAccountsManager().unlink(uuid);
+            disallow(event, Prefix.DISCORD + "Twoje konto zostało rozłączone przed administratora. Dołącz ponownie, aby je połączyć.");
+            return false;
+        }
+        return true;
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onAsyncPlayerPreLoginHighest(@NotNull AsyncPlayerPreLoginEvent event) {
-        if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.KICK_FULL) return;
-
-        UUID uuid = event.getUniqueId();
-        PremiumManager manager = plugin.getPremiumManager();
-        if (manager.isPremium(uuid) && manager.makeSpaceForPlayer(uuid)) {
-            event.allow();
-        }
+    private void disallow(@NotNull AsyncPlayerPreLoginEvent event, @NotNull String msg) {
+        event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Utils.getComponentByString(msg));
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

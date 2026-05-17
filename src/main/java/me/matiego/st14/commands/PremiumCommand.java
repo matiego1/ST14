@@ -8,10 +8,9 @@ import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.InteractionHook;
-import net.dv8tion.jda.api.interactions.commands.*;
+import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
@@ -22,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class PremiumCommand implements CommandHandler.Minecraft, CommandHandler.Discord {
     public PremiumCommand(@NotNull Main plugin) {
@@ -61,6 +59,11 @@ public class PremiumCommand implements CommandHandler.Minecraft, CommandHandler.
             return 5;
         }
 
+        if (!isAdmin(sender)) {
+            sender.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cBrak uprawnień!"));
+            return 3;
+        }
+
         if (args.length < 2) return -1;
 
         UUID uuid = plugin.getOfflinePlayersManager().getIdByName(args[1]);
@@ -83,11 +86,6 @@ public class PremiumCommand implements CommandHandler.Minecraft, CommandHandler.
                 }
             });
             return getCooldown(sender, 5);
-        }
-
-        if (!isAdmin(sender)) {
-            sender.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cBrak uprawnień!"));
-            return 3;
         }
 
         if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
@@ -184,56 +182,34 @@ public class PremiumCommand implements CommandHandler.Minecraft, CommandHandler.
 
     @Override
     public @NotNull CommandData getDiscordCommand() {
-        return Commands.slash("premium", "Sprawdź status premium gracza")
-                .addOptions(
-                        new OptionData(OptionType.STRING, "gracz", "nick gracza, którego status premium chcesz sprawdzić", true, true),
-                        new OptionData(OptionType.STRING, "incognito", "czy wiadomość ma być widoczna tylko dla ciebie", false)
-                                .addChoice("Tak", "True")
-                                .addChoice("Nie", "False")
-                )
+        return Commands.slash("premium", "Sprawdź swój status premium")
                 .setContexts(InteractionContextType.GUILD);
     }
 
     @Override
     public int onSlashCommandInteraction(@NotNull SlashCommandInteraction event) {
-        boolean ephemeral = event.getOption("incognito", "False", OptionMapping::getAsString).equals("True");
+        event.deferReply(true).queue();
+        InteractionHook hook = event.getHook();
 
-        String playerName = event.getOption("gracz", OptionMapping::getAsString);
-        if (playerName == null) return 10;
-
-        UUID uuid = plugin.getOfflinePlayersManager().getIdByName(playerName);
+        UUID uuid = plugin.getAccountsManager().getPlayerByUser(event.getUser());
         if (uuid == null) {
-            event.reply("Zły nick").setEphemeral(ephemeral).queue();
+            hook.sendMessage("Twoje konto nie jest jeszcze połączone z kontem minecraft! Aby je połączyć, użyj komendy `/accounts` w grze.").queue();
             return 3;
         }
-
-        event.deferReply(ephemeral).queue();
-        InteractionHook hook = event.getHook();
 
         PremiumManager manager = plugin.getPremiumManager();
         Utils.async(() -> {
             if (manager.isSuperPremium(uuid)) {
-                hook.sendMessage("Gracz **" + playerName + "** jest graczem super premium.").queue();
+                hook.sendMessage("Jesteś graczem super premium.").queue();
                 return;
             }
             long time = manager.getRemainingTime(uuid);
             if (time > 0) {
-                hook.sendMessage("Graczowi **" + playerName + "** pozostało " + Utils.parseMillisToString(time, false) + " do wygaśnięcia statusu premium.").queue();
+                hook.sendMessage("Pozostało Ci `" + Utils.parseMillisToString(time, false) + "` do wygaśnięcia statusu premium.").queue();
             } else {
-                hook.sendMessage("Ten gracz nie jest graczem premium.").queue();
+                hook.sendMessage("Nie jesteś graczem premium.").queue();
             }
         });
         return 5;
-    }
-
-    @Override
-    public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteraction event) {
-        if (!event.getName().equals(getDiscordCommand().getName())) return;
-        if (!event.getFocusedOption().getName().equals("gracz")) return;
-        event.replyChoices(plugin.getOfflinePlayersManager().getNames().stream()
-                .filter(name -> name.toLowerCase().startsWith(event.getFocusedOption().getValue().toLowerCase()))
-                .map(name -> new Command.Choice(name, name))
-                .collect(Collectors.toList())
-        ).queue();
     }
 }

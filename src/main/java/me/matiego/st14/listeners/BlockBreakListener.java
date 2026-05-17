@@ -33,9 +33,5 @@ public class BlockBreakListener implements Listener {
                 Logs.warning("block-break-warn regex syntax is invalid", e);
             }
         });
-
-        if (material.contains("SIGN")) {
-            plugin.getDynmapManager().getSignsMarker().deleteMarker(block.getLocation());
-        }
     }
 }

@@ -6,10 +6,7 @@ import me.matiego.st14.Prefix;
 import me.matiego.st14.objects.time.GameTime;
 import me.matiego.st14.objects.time.PlayerTime;
 import me.matiego.st14.utils.Utils;
-import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
-import org.bukkit.Sound;
-import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
@@ -18,10 +15,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class PremiumManager {
@@ -31,7 +25,7 @@ public class PremiumManager {
     }
 
     private final String ERROR_MSG = "An error occurred while modifying values in \"st14_premium\" table in the database.";
-    private final Set<UUID> playersToKick = new HashSet<>();
+    private final HashMap<UUID, UUID> playersToKick = new HashMap<>();
 
     public boolean isSuperPremium(@NotNull UUID uuid) {
         return plugin.getConfig().getStringList("premium.super-premium-players").contains(uuid.toString());
@@ -60,11 +54,16 @@ public class PremiumManager {
 
     public boolean extend(@NotNull UUID uuid, @Range(from = 1, to = Long.MAX_VALUE) long time) {
         if (isSuperPremium(uuid)) return false;
+
+        long now = Utils.now();
+
         try (Connection conn = plugin.getMySQLConnection();
-             PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_premium(uuid, time) VALUES (?, ?) ON DUPLICATE KEY UPDATE uuid = uuid, time = time + ?")) {
+             PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_premium(uuid, time) VALUES (?, ?) ON DUPLICATE KEY UPDATE time = IF(time >= ?, time + ?, ?)")) {
             stmt.setString(1, uuid.toString());
-            stmt.setLong(2, Utils.now() + time);
-            stmt.setLong(3, time);
+            stmt.setLong(2, now + time);
+            stmt.setLong(3, now);
+            stmt.setLong(4, time);
+            stmt.setLong(5, now + time);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             Logs.error(ERROR_MSG, e);
@@ -75,7 +74,7 @@ public class PremiumManager {
     public boolean reduce(@NotNull UUID uuid, @Range(from = 1, to = Long.MAX_VALUE) long time) {
         if (isSuperPremium(uuid)) return false;
         try (Connection conn = plugin.getMySQLConnection();
-             PreparedStatement stmt = conn.prepareStatement("UPDATE st14_premium SET time = time - ? WHERE uuid = ?")) {
+             PreparedStatement stmt = conn.prepareStatement("UPDATE st14_premium SET time = GREATEST(0, time - ?) WHERE uuid = ?")) {
             stmt.setLong(1, time);
             stmt.setString(2, uuid.toString());
             return stmt.executeUpdate() > 0;
@@ -89,7 +88,7 @@ public class PremiumManager {
         time += Utils.now();
         if (isSuperPremium(uuid)) return false;
         try (Connection conn = plugin.getMySQLConnection();
-             PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_premium(uuid, time) VALUES (?, ?) ON DUPLICATE KEY UPDATE uuid = uuid, time = ?")) {
+             PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_premium(uuid, time) VALUES (?, ?) ON DUPLICATE KEY UPDATE time = ?")) {
             stmt.setString(1, uuid.toString());
             stmt.setLong(2, time);
             stmt.setLong(3, time);
@@ -104,7 +103,7 @@ public class PremiumManager {
         try (Connection conn = plugin.getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("DELETE FROM st14_premium WHERE uuid = ?")) {
             stmt.setString(1, uuid.toString());
-            return stmt.executeUpdate() > 0;
+            return stmt.execute();
         } catch (SQLException e) {
             Logs.error(ERROR_MSG, e);
         }
@@ -112,9 +111,11 @@ public class PremiumManager {
     }
 
     public boolean makeSpaceForPlayer(@NotNull UUID uuid) {
+        if (playersToKick.containsValue(uuid)) return true;
+
         int priority = getPriority(uuid);
         List<Player> players = Bukkit.getOnlinePlayers().stream()
-                .filter(p -> !playersToKick.contains(p.getUniqueId()))
+                .filter(p -> !playersToKick.containsKey(p.getUniqueId()))
                 .filter(p -> !p.getUniqueId().equals(uuid))
                 .filter(p -> getPriority(p.getUniqueId()) < priority)
                 .collect(Collectors.toList());
@@ -131,16 +132,14 @@ public class PremiumManager {
             }
         }
         if (result == null) return false;
-        kickPlayer(result);
+        kickPlayer(result, uuid);
         return true;
     }
 
-    private void kickPlayer(@NotNull Player player) {
-        playersToKick.add(player.getUniqueId());
+    private void kickPlayer(@NotNull Player player, @NotNull UUID premiumPlayer) {
+        playersToKick.put(player.getUniqueId(), premiumPlayer);
 
         player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Za 10 sekund zostaniesz wyrzucony z serwera, żeby zrobić miejsce innemu graczowi."));
-        player.showTitle(Title.title(Utils.getComponentByString("&6UWAGA!"), Utils.getComponentByString("&ePRZECZYTAJ CZAT")));
-        player.playSound(player, Sound.ENTITY_CREEPER_PRIMED, SoundCategory.NEUTRAL, 5, 1);
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (!player.isOnline()) {
@@ -148,7 +147,7 @@ public class PremiumManager {
                 return;
             }
 
-            player.kick(Utils.getComponentByString(Prefix.PREMIUM + "Zostałeś wyrzucony z serwera, żeby zrobić miejsce graczowi z wyższym priorytetem. Wybór padł na ciebie, ponieważ grałeś dzisiaj najdłużej."));
+            player.kick(Utils.getComponentByString(Prefix.PREMIUM + "\nZostałeś wyrzucony z serwera, żeby zrobić miejsce graczowi z wyższym priorytetem.\nWybór padł na ciebie, ponieważ grałeś dzisiaj najdłużej."));
             playersToKick.remove(player.getUniqueId());
 
             Utils.broadcastMessage(

@@ -1,7 +1,6 @@
 package me.matiego.st14.listeners;
 
 import me.matiego.st14.Main;
-import me.matiego.st14.utils.NonPremiumUtils;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.entities.UserSnowflake;
@@ -35,24 +34,29 @@ public class PlayerJoinListener implements Listener {
 
         // claims
         plugin.getDynmapManager().getClaimsMarker().refreshPlayerClaims(player);
+
         // load player times
         if (!plugin.getTimeManager().join(player)) {
             player.kick(Utils.getComponentByString("&cNapotkano niespodziewany błąd przy ładowaniu twoich czasów. Spróbuj ponownie."));
             return;
         }
+
         // load rewards
         Utils.async(() -> {
             if (!plugin.getRewardsManager().getRewardForPlaying().loadToCache(uuid)) {
                 player.sendMessage(Utils.getComponentByString("&cNapotkano niespodziewany błąd! Aby dostawać pieniądze za granie, dołącz ponownie."));
             }
         });
+
         // incognito
         plugin.getPlayerQuitListener().cancelDisableIncognitoTask(uuid);
         if (plugin.getIncognitoManager().isIncognito(uuid)) {
             player.sendMessage(Utils.getComponentByString(Prefix.INCOGNITO + "Jesteś incognito!"));
         }
+
         // afk
         plugin.getAfkManager().move(player);
+
         // premium
         Utils.async(() -> {
             long time = plugin.getPremiumManager().getRemainingTime(uuid);
@@ -62,15 +66,14 @@ public class PlayerJoinListener implements Listener {
                 player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Jesteś graczem premium! Twój status premium wygaśnie za &6" + Utils.parseMillisToString(time, false) + "&d."));
             }
         });
+
         // join messages
         event.joinMessage(Utils.getComponentByString("&eGracz " + player.getName() + " dołączył do gry"));
         plugin.getChatMinecraftManager().sendJoinMessage(player);
+
         // handle minigame
         plugin.getMiniGamesManager().onPlayerJoin(player);
-        // non-premium
-        if (NonPremiumUtils.isNonPremiumUuid(uuid)) {
-            player.sendMessage(Utils.getComponentByString("&e&lSystem umożliwiający grę graczom non-premium jest w wersji testowej. Zgłaszaj wszystkie napotkane błędy!"));
-        }
+
         // unlock recipes
         Bukkit.recipeIterator().forEachRemaining(recipe -> {
             if (recipe instanceof Keyed keyed) {
@@ -79,6 +82,7 @@ public class PlayerJoinListener implements Listener {
                 }
             }
         });
+
         // send f3 brand
         plugin.getF3BrandManager().sendF3Brand(player);
     }

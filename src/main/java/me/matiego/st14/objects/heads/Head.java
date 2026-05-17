@@ -1,19 +1,19 @@
 package me.matiego.st14.objects.heads;
 
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
+import com.destroystokyo.paper.profile.PlayerProfile;
+import com.destroystokyo.paper.profile.ProfileProperty;
 import lombok.Getter;
 import me.matiego.st14.Logs;
 import me.matiego.st14.objects.GUI;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -71,12 +71,9 @@ public class Head {
                 }
             }
 
-            GameProfile profile = new GameProfile(getUuid(), profileName.toString());
-            profile.properties().put("textures", new Property("textures", getValue()));
-
-            Field profileField = meta.getClass().getDeclaredField("profile");
-            profileField.setAccessible(true);
-            profileField.set(meta, profile);
+            PlayerProfile profile = Bukkit.createProfile(getUuid(), profileName.toString());
+            profile.setProperty(new ProfileProperty("textures", getValue()));
+            meta.setPlayerProfile(profile);
         } catch (Exception e) {
             Logs.error("An error occurred while creating a custom player head.", e);
 

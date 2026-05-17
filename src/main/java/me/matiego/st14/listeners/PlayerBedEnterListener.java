@@ -2,6 +2,8 @@ package me.matiego.st14.listeners;
 
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.Utils;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerBedEnterEvent;
@@ -15,11 +17,15 @@ public class PlayerBedEnterListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerBedEnter(@NotNull PlayerBedEnterEvent event) {
+        //noinspection deprecation
         if (event.getBedEnterResult() != PlayerBedEnterEvent.BedEnterResult.OK) return;
 
-        double amount = Math.max(0, plugin.getConfig().getDouble("bed-enter.cost", 5));
-        if (amount <= 0) return;
+        Player player = event.getPlayer();
 
-        event.getPlayer().sendActionBar(Utils.getComponentByString("&aZa przespaną noc zostanie pobrane " + plugin.getEconomyManager().format(amount)));
+        double amount = plugin.getConfig().getDouble("bed-enter.cost", 5);
+        if (amount <= 0) return;
+        if (!plugin.getConfig().getStringList("bed-enter.worlds").contains(player.getWorld().getName())) return;
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> event.getPlayer().sendActionBar(Utils.getComponentByString("&aZa przespaną noc zostanie pobrane " + plugin.getEconomyManager().format(amount))), 3);
     }
 }
