@@ -56,6 +56,7 @@ public class TabListManager {
             if (log10) {
                 Logs.warning("TPS są powyżej 10, ale spadły poniżej 15!");
                 log10 = false;
+                log15 = true;
             } else if (!log15) {
                 log15 = true;
                 Logs.warning("TPS spadły poniżej 15!");

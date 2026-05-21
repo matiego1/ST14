@@ -12,21 +12,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 public enum MiniGameType {
-    TAG(TagMiniGame.class, "Berek", Material.NAME_TAG, 10 * 60),
-    HIDE_AND_SEEK(null, "Chowany", Material.TALL_GRASS, 15 * 60),
-    SNOWBALLS_BATTLE(SnowballsBattleMiniGame.class, "Bitwa na śnieżki", Material.SNOWBALL, 15 * 60),
-    TNT_RUN(TNTRunMiniGame.class, "TNT Run", Material.TNT, 15 * 60),
-    SPLEEF(SpleefMiniGame.class, "Spleef", Material.STONE_SHOVEL, 15 * 60),
-    BOWS(null, "Łuki", Material.BOW, 15 * 60),
-    RED_GREEN(RedGreenMiniGame.class, "Czerwone-Zielone", Material.SPECTRAL_ARROW, 15 * 60),
-    MAZE(MazeMiniGame.class, "Labirynt", Material.BRICKS, 15 * 60),
-    PVP(PvPMiniGame.class, "PvP", Material.WOODEN_SWORD, 15 * 60),
-    SKYWARS(SkywarsMiniGame.class, "Skywars", Material.ENDER_EYE, 20 * 60),
-    PARKOUR(ParkourMiniGame.class, "Parkour", Material.POTION, 25 * 60),
-    BLOCKED_IN_COMBAT(null, "Blocked in combat", Material.STONE, 30 * 60),
-    UHC(null, "UHC", Material.GOLDEN_APPLE, 30 * 60),
-    MANHUNT(null, "Manhunt", Material.DIAMOND_SWORD, 30 * 60),
-    DEATH_SWAP(null, "Death Swap", Material.ENDER_PEARL, 30 * 60);
+    ELYTRA(null, "Tor elytry", Material.ELYTRA, 10),
+    TAG(TagMiniGame.class, "Berek", Material.NAME_TAG, 10),
+    DEATH_HUNT(null, "Death Hunt", Material.WATER_BUCKET, 10),
+
+    HIDE_AND_SEEK(null, "Chowany", Material.TALL_GRASS, 15),
+    SNOWBALLS_BATTLE(SnowballsBattleMiniGame.class, "Bitwa na śnieżki", Material.SNOWBALL, 15),
+    TNT_RUN(TNTRunMiniGame.class, "TNT Run", Material.TNT, 15),
+    SPLEEF(SpleefMiniGame.class, "Spleef", Material.STONE_SHOVEL, 15),
+    BOWS(null, "Łuki", Material.BOW, 15),
+    RED_GREEN(RedGreenMiniGame.class, "Czerwone-Zielone", Material.SPECTRAL_ARROW, 15),
+    MAZE(MazeMiniGame.class, "Labirynt", Material.BRICKS, 15),
+    PVP(PvPMiniGame.class, "PvP", Material.WOODEN_SWORD, 15),
+    SUMO(null, "Sumo", Material.PANDA_SPAWN_EGG, 15),
+    BEDROCK_COLUMN(null, "Wieże z bedrock'a", Material.BEDROCK, 15),
+
+    ITEM_RACE(null, "Item race", Material.SHULKER_BOX, 20),
+    SKYWARS(SkywarsMiniGame.class, "Skywars", Material.ENDER_EYE, 20),
+    PARKOUR(ParkourMiniGame.class, "Parkour", Material.POTION, 20),
+    BLOCKED_IN_COMBAT(null, "Blocked in combat", Material.STONE, 20),
+    UHC(null, "UHC", Material.GOLDEN_APPLE, 20),
+    MANHUNT(null, "Manhunt", Material.DIAMOND_SWORD, 20),
+    DEATH_SWAP(null, "Death Swap", Material.ENDER_PEARL, 20);
+
 
     private final Class<? extends MiniGame> handler;
     @Getter private final String name;
@@ -34,11 +42,11 @@ public enum MiniGameType {
     @Getter private final int gameTimeInSeconds;
     @Getter @Setter private String previousMapName;
 
-    MiniGameType(@Nullable Class<? extends MiniGame> handler, @NotNull String name, @NotNull Material guiMaterial, int gameTimeInSeconds) {
+    MiniGameType(@Nullable Class<? extends MiniGame> handler, @NotNull String name, @NotNull Material guiMaterial, int gameTimeInMinutes) {
         this.handler = handler;
         this.name = name;
         this.guiMaterial = guiMaterial;
-        this.gameTimeInSeconds = gameTimeInSeconds;
+        this.gameTimeInSeconds = gameTimeInMinutes * 60;
     }
 
     public boolean isMiniGameEnabled() {

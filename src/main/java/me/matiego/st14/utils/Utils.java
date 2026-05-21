@@ -32,10 +32,6 @@ import java.util.regex.Pattern;
 public class Utils {
     public static final Pattern STRING_TO_MILLIS = Pattern.compile("([1-9][0-9]{0,3}d)?(([1-9]|1[0-9]|2[0-3])h)?(([1-9]|[1-5][0-9])m)?(([1-9]|[1-5][0-9])s)?");
 
-    /**
-     * Runs the given task async.
-     * @param task the task
-     */
     public static void async(@NotNull Runnable task) {
         try {
             Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), task);
@@ -45,10 +41,6 @@ public class Utils {
         }
     }
 
-    /**
-     * Runs the given task sync.
-     * @param task the task
-     */
     public static void sync(@NotNull Runnable task) {
         try {
             Bukkit.getScheduler().runTask(Main.getInstance(), task);
@@ -245,5 +237,14 @@ public class Utils {
 
     public static int getRandomNumber(int minInclusive, int maxInclusive) {
         return ThreadLocalRandom.current().nextInt(minInclusive, maxInclusive + 1);
+    }
+
+    public static <K, V> HashMap<K, V> createLimitedSizeMap(int maxEntries) {
+        return new LinkedHashMap<>() {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+                return size() > maxEntries;
+            }
+        };
     }
 }

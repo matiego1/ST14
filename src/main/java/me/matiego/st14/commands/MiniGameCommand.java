@@ -130,7 +130,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
             return 3;
         }
 
-        Inventory inv = GUI.createInventory(18, Prefix.MINI_GAMES + "Wybierz minigrę");
+        Inventory inv = GUI.createInventory(getNumberOfSlots(MiniGameType.values().length), Prefix.MINI_GAMES + "Wybierz minigrę");
         for (MiniGameType type : MiniGameType.values()) {
             String[] lores;
             if (type.isMiniGameEnabled()) {
@@ -225,7 +225,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
                 return;
             }
 
-            Inventory inv = GUI.createInventory(Math.min(54, ((maps.size() / 9) + 1) * 9), Prefix.MINI_GAMES + "Wybierz mapę");
+            Inventory inv = GUI.createInventory(getNumberOfSlots(maps.size()), Prefix.MINI_GAMES + "Wybierz mapę");
             for (String map : maps.subList(0, Math.min(maps.size(), 53))) {
                 inv.addItem(GUI.createGuiItem(Material.PAPER, "&9" + map, "&eKliknij, aby rozpocząć minigrę na tej mapie!"));
             }
@@ -237,6 +237,12 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
 
         if (item.getType() == Material.ARROW) displayName = null;
         startMiniGame(player, displayName);
+    }
+
+    private int getNumberOfSlots(int number) {
+        if (number > 54) return 54;
+        if (number % 9 == 0) return number;
+        return ((number / 9) + 1) * 9;
     }
 
     private void startMiniGame(@NotNull Player player, @Nullable String mapName) {
