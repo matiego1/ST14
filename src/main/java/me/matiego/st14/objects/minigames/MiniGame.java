@@ -423,7 +423,11 @@ public abstract class MiniGame implements Listener {
 
         if (lobby) {
             if (isInMiniGame(player)) {
-                runTaskLater(() -> player.teleportAsync(spectatorSpawn), 3);
+                runTaskLater(() -> {
+                    if (lobby && isInMiniGame(player)) {
+                        player.teleportAsync(spectatorSpawn);
+                    }
+                }, 3);
             }
             return;
         }

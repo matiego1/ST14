@@ -44,6 +44,7 @@ public class SpleefMiniGame extends MiniGame {
         return GameMode.SPECTATOR;
     }
 
+    @Override
     protected void loadDataFromConfig(@NotNull World world) throws MiniGameException {
         baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
         if (baseLocation == null) throw new MiniGameException("cannot load base location");
@@ -54,6 +55,7 @@ public class SpleefMiniGame extends MiniGame {
         if (spectatorSpawn == null) throw new MiniGameException("cannot load spectator spawn location");
     }
 
+    @Override
     protected void setUpGameRules(@NotNull World world) {
         world.setGameRule(GameRules.KEEP_INVENTORY, true);
         world.setGameRule(GameRules.IMMEDIATE_RESPAWN, true);

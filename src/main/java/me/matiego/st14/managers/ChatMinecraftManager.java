@@ -55,6 +55,9 @@ public class ChatMinecraftManager extends ListenerAdapter {
             Logs.error("An error occurred while unblocking the chat-minecraft channel.");
             return;
         }
+
+        if (!chn.getGuild().getPublicRole().hasPermission(chn, Permission.VIEW_CHANNEL)) return;
+
         try {
             try {
                 chn.getManager().sync().queue();

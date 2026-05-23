@@ -12,20 +12,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public enum MiniGameType {
-    ELYTRA(null, "Tor elytry", Material.ELYTRA, 10),
+    ELYTRA(ElytraMiniGame.class, "Wyścigi elytrą", Material.ELYTRA, 10),
     TAG(TagMiniGame.class, "Berek", Material.NAME_TAG, 10),
     DEATH_HUNT(null, "Death Hunt", Material.WATER_BUCKET, 10),
 
     HIDE_AND_SEEK(null, "Chowany", Material.TALL_GRASS, 15),
     SNOWBALLS_BATTLE(SnowballsBattleMiniGame.class, "Bitwa na śnieżki", Material.SNOWBALL, 15),
-    TNT_RUN(TNTRunMiniGame.class, "TNT Run", Material.TNT, 15),
+    TNT_RUN(TNTRunMiniGame.class, "TNT run", Material.TNT, 15),
     SPLEEF(SpleefMiniGame.class, "Spleef", Material.STONE_SHOVEL, 15),
-    BOWS(null, "Łuki", Material.BOW, 15),
     RED_GREEN(RedGreenMiniGame.class, "Czerwone-Zielone", Material.SPECTRAL_ARROW, 15),
     MAZE(MazeMiniGame.class, "Labirynt", Material.BRICKS, 15),
     PVP(PvPMiniGame.class, "PvP", Material.WOODEN_SWORD, 15),
-    SUMO(null, "Sumo", Material.PANDA_SPAWN_EGG, 15),
-    BEDROCK_COLUMN(null, "Wieże z bedrock'a", Material.BEDROCK, 15),
+    SUMO(SumoMiniGame.class, "Sumo", Material.PANDA_SPAWN_EGG, 15),
+    RANDOM_ITEMS(RandomItemsMiniGame.class, "Losowe itemy", Material.BEDROCK, 15),
 
     ITEM_RACE(null, "Item race", Material.SHULKER_BOX, 20),
     SKYWARS(SkywarsMiniGame.class, "Skywars", Material.ENDER_EYE, 20),
