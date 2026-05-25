@@ -21,8 +21,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -62,7 +60,7 @@ public class RandomItemsMiniGame extends MiniGame {
         if (baseLocation == null) throw new MiniGameException("cannot load base location");
 
         mapRadius = Math.max(5, plugin.getConfig().getInt(mapConfigPath + "radius", mapRadius));
-        giveItemInterval = Math.max(0, plugin.getConfig().getInt(configPath + "give-item-interval", giveItemInterval));
+        giveItemInterval = Math.max(5, plugin.getConfig().getInt(configPath + "give-item-interval", giveItemInterval));
         shrinkBorderBeforeEnd = Math.max(0, plugin.getConfig().getInt(configPath + "shrink-border-before-end", shrinkBorderBeforeEnd));
         if (totalMiniGameTime < shrinkBorderBeforeEnd) throw new MiniGameException("incorrect game times");
 
@@ -94,6 +92,7 @@ public class RandomItemsMiniGame extends MiniGame {
                 Material.TEST_BLOCK,
                 Material.TEST_INSTANCE_BLOCK
         ));
+        generateItemsList();
     }
 
     private void generateItemsList() {
@@ -182,6 +181,7 @@ public class RandomItemsMiniGame extends MiniGame {
         for (Player player : players) {
             player.setRespawnLocation(spectatorSpawn, true);
             timer.showBossBarToPlayer(player);
+            player.setWorldBorder(worldBorder);
             if (i >= spawns.size()) {
                 changePlayerStatus(player, PlayerStatus.SPECTATOR);
                 player.teleportAsync(spectatorSpawn);
@@ -195,23 +195,25 @@ public class RandomItemsMiniGame extends MiniGame {
                 i++;
             }
         }
-
-        runTaskTimer(this::giveRandomItemToPlayers, 10 * 20, giveItemInterval * 20L);
-    }
-
-    private void giveRandomItemToPlayers() {
-        getPlayersInMiniGame().forEach(player -> {
-            if (!MiniGamesUtils.isInAnyMiniGameWorld(player)) return;
-            player.give(items.removeLast());
-        });
     }
 
     @Override
     protected void miniGameTick() {
         if (miniGameTime == totalMiniGameTime - shrinkBorderBeforeEnd) {
             worldBorder.changeSize(Math.max(1, 0.1 * mapRadius), shrinkBorderBeforeEnd * 20L);
-            getPlayersInMiniGame().forEach(player -> player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, shrinkBorderBeforeEnd * 20, 255, false, false, true)));
         }
+
+        if (miniGameTime == 1 || miniGameTime % giveItemInterval == 0) {
+            giveRandomItemToPlayers();
+        }
+    }
+
+    private void giveRandomItemToPlayers() {
+        getPlayersInMiniGame().forEach(player -> {
+            if (!MiniGamesUtils.isInAnyMiniGameWorld(player)) return;
+            if (items.isEmpty()) generateItemsList();
+            player.give(items.removeLast());
+        });
     }
 
     @EventHandler(ignoreCancelled = true)

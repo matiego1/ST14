@@ -147,7 +147,7 @@ public class SkywarsMiniGame extends MiniGame {
         Collections.shuffle(items);
 
         int itemsAmount = (int) Math.min(max, Math.max(min, Math.ceil(ThreadLocalRandom.current().nextGaussian()) + Math.floor((max + min) / 2d) - plugin.getConfig().getInt(configPath + "chests." + type + ".subtract-from-mean", 0)));
-        items = items.subList(0, itemsAmount);
+        items = items.subList(0, Math.min(items.size(), itemsAmount));
 
         while (items.size() < 27) {
             items.add(new ItemStack(Material.AIR));
@@ -184,6 +184,7 @@ public class SkywarsMiniGame extends MiniGame {
                 changePlayerStatus(player, PlayerStatus.SPECTATOR);
                 player.teleportAsync(spectatorSpawn);
                 MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
+                player.setWorldBorder(worldBorder);
                 sendMessage("Gracz " + player.getName() + " obserwuję minigrę, ponieważ nie starczyło dla niego miejsca.");
             } else {
                 changePlayerStatus(player, PlayerStatus.IN_MINI_GAME);

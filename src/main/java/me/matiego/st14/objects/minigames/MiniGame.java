@@ -443,6 +443,7 @@ public abstract class MiniGame implements Listener {
         runTaskLater(() -> {
             MiniGamesUtils.healPlayer(player, getSpectatorGameMode());
             player.teleportAsync(spectatorSpawn);
+            player.setWorldBorder(worldBorder);
             player.getInventory().addItem(new ItemStack(Material.SPYGLASS));
         }, 3);
     }

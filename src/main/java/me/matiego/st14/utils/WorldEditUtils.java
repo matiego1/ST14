@@ -2,6 +2,7 @@ package me.matiego.st14.utils;
 
 import com.sk89q.jnbt.CompoundTag;
 import com.sk89q.jnbt.ListTag;
+import com.sk89q.jnbt.StringTag;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
@@ -14,12 +15,12 @@ import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.session.ClipboardHolder;
 import com.sk89q.worldedit.world.block.BaseBlock;
+import me.matiego.st14.Logs;
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.Map;
 
 public class WorldEditUtils {
 
@@ -44,31 +45,26 @@ public class WorldEditUtils {
         }
     }
 
-    //https://github.com/MagmaGuy/BetterStructures/blob/ee4a998588e2925faa33b5e72b97b1bf4f4d141b/src/main/java/com/magmaguy/betterstructures/schematics/SchematicContainer.java#L153
+    // https://github.com/MagmaGuy/BetterStructures/blob/dde7144544cbc077d9a561d79522b17a56838331/src/main/java/com/magmaguy/betterstructures/util/WorldEditUtils.java#L114
     public static @NotNull String getSignLine(@NotNull BaseBlock baseBlock, int line) {
-        CompoundTag nbt = baseBlock.getNbtData();
-        if (nbt == null) return "";
-
-        String string = "";
-        try {
-            string = getCleanSignLine(nbt.getString("Text" + line));
-        } catch (Exception ignored) {}
-        if (!string.isEmpty()) return string;
+        CompoundTag data = baseBlock.getNbtData();
+        if (data == null) return "";
 
         try {
-            string = getCleanSignLine(((ListTag) ((Map<?, ?>) baseBlock.getNbtData().getValue().get("front_text").getValue()).get("messages")).getString(line - 1));
-        } catch (Exception ignored) {}
-        if (!string.isEmpty()) return string;
+            CompoundTag frontText = (CompoundTag) data.getValue().get("front_text");
+            ListTag messages = (ListTag) frontText.getValue().get("messages");
+            Object object = messages.getValue().get(line - 1);
+            if (object instanceof CompoundTag compoundTag) {
+                object = compoundTag.getValue().get("text");
+            }
+            String text = ((StringTag) object).getValue();
 
-        try {
-            string = getCleanSignLine(((ListTag) ((Map<?, ?>) baseBlock.getNbtData().getValue().get("back_text").getValue()).get("messages")).getString(line));
-        } catch (Exception ignored) {}
+            if (text.contains("\"text\":")) text = text.split("text\":\"")[1].split("\"")[0];
+            return text.replaceAll("\"", "");
 
-        return string;
-    }
-
-    private static @NotNull String getCleanSignLine(@NotNull String jsonLine) {
-        if (jsonLine.split(":").length < 2) return "";
-        return jsonLine.split(":", 2)[1].replace("\"", "").replace("}", "");
+        } catch (Exception e) {
+            Logs.warning("Unexpected sign format: " + data, e);
+        }
+        return "";
     }
 }
