@@ -41,6 +41,11 @@ public class SumoMiniGame extends MiniGame {
     }
 
     @Override
+    protected boolean shouldPasteMap() {
+        return true;
+    }
+
+    @Override
     protected void loadDataFromConfig(@NotNull World world) throws MiniGameException {
         baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
         if (baseLocation == null) throw new MiniGameException("cannot load base location");
@@ -51,7 +56,7 @@ public class SumoMiniGame extends MiniGame {
         if (spectatorSpawn == null) throw new MiniGameException("cannot load spectator spawn location");
         mapRadius = Math.max(5, plugin.getConfig().getInt(mapConfigPath + "map-radius", mapRadius));
 
-        prepareTime = Math.max(0, plugin.getConfig().getInt(configPath + "prepare-time", prepareTime));
+        prepareTime = Math.max(1, plugin.getConfig().getInt(configPath + "prepare-time", prepareTime));
         shrinkBorderBeforeEnd = Math.max(0, plugin.getConfig().getInt(configPath + "shrink-border-before-end", shrinkBorderBeforeEnd));
     }
 
@@ -118,7 +123,7 @@ public class SumoMiniGame extends MiniGame {
     public void onEntityDamageByEntity(@NotNull EntityDamageByEntityEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
         if (!isInMiniGame(player)) return;
-        event.setCancelled(true);
+        event.setDamage(0);
     }
 
     @EventHandler(ignoreCancelled = true)
