@@ -41,8 +41,8 @@ public class SumoMiniGame extends MiniGame {
     }
 
     @Override
-    protected boolean shouldPasteMap() {
-        return true;
+    protected @NotNull MapType getMapType() {
+        return MapType.PASTED_MAP;
     }
 
     @Override
@@ -57,6 +57,7 @@ public class SumoMiniGame extends MiniGame {
         mapRadius = Math.max(5, plugin.getConfig().getInt(mapConfigPath + "map-radius", mapRadius));
 
         prepareTime = Math.max(1, plugin.getConfig().getInt(configPath + "prepare-time", prepareTime));
+        if (prepareTime > totalMiniGameTime) throw new MiniGameException("incorrect game times");
         shrinkBorderBeforeEnd = Math.max(0, plugin.getConfig().getInt(configPath + "shrink-border-before-end", shrinkBorderBeforeEnd));
     }
 
@@ -86,7 +87,7 @@ public class SumoMiniGame extends MiniGame {
 
     @Override
     protected @NotNull BossBarTimer getBossBarTimer() {
-        return new BossBarTimer(plugin, totalMiniGameTime, "&eKoniec minigry");
+        return new BossBarTimer(plugin, prepareTime, "&eRozpoczęcie walki");
     }
 
     @Override
@@ -103,6 +104,12 @@ public class SumoMiniGame extends MiniGame {
     @Override
     protected void miniGameTick() {
         if (miniGameTime == prepareTime) {
+            timer.stopTimerAndHideBossBar();
+            timer = new BossBarTimer(plugin, totalMiniGameTime - prepareTime, "&eKoniec minigry");
+            timer.startTimer();
+
+            getPlayers().forEach(player -> timer.showBossBarToPlayer(player));
+
             World world = MiniGamesUtils.getMiniGamesWorld();
             if (world != null) world.setGameRule(GameRules.PVP, true);
         }

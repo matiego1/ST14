@@ -2,6 +2,7 @@ package me.matiego.st14.objects.minigames;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.minigames.*;
 import org.bukkit.Material;
@@ -72,7 +73,9 @@ public enum MiniGameType {
         if (handler == null) return null;
         try {
             return handler.getConstructor(Main.class, MiniGameType.class, String.class).newInstance(plugin, this, mapName);
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Logs.error("Failed to get a constructor of a minigame class", e);
+        }
         return null;
     }
 

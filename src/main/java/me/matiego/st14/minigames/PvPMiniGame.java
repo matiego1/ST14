@@ -6,6 +6,7 @@ import me.matiego.st14.objects.minigames.MiniGame;
 import me.matiego.st14.objects.minigames.MiniGameException;
 import me.matiego.st14.objects.minigames.MiniGameType;
 import me.matiego.st14.utils.MiniGamesUtils;
+import org.apache.commons.lang3.NotImplementedException;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -25,6 +26,7 @@ import java.util.List;
 public class PvPMiniGame extends MiniGame {
     public PvPMiniGame(@NotNull Main plugin, @NotNull MiniGameType miniGameType, @Nullable String mapName) {
         super(plugin, miniGameType, mapName);
+        if (true) throw new NotImplementedException(); // TODO: to przecież musi być PASTED_MAP, a nie normalna
     }
 
     private final List<Location> spawns = new ArrayList<>();
@@ -43,21 +45,26 @@ public class PvPMiniGame extends MiniGame {
         return GameMode.ADVENTURE;
     }
 
-    protected void loadDataFromConfig(@NotNull World world) throws MiniGameException {
-//        baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
-//        if (baseLocation == null) throw new MiniGameException("cannot load base location");
+    @Override
+    protected @NotNull MapType getMapType() {
+        return MapType.PASTED_MAP;
+    }
 
-        spectatorSpawn = MiniGamesUtils.getLocationFromConfig(world, mapConfigPath + "spectator-spawn");
-        if (spectatorSpawn == null) throw new MiniGameException("cannot load spectator spawn location");
-        for (String spawn : plugin.getConfig().getStringList(mapConfigPath + "spawns")) {
-            spawns.add(MiniGamesUtils.getLocationFromString(world, spawn));
-        }
-        if (spawns.size() < 2) throw new MiniGameException("not enough spawns found");
+    protected void loadDataFromConfig(@NotNull World world) throws MiniGameException {
+        baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
+        if (baseLocation == null) throw new MiniGameException("cannot load base location");
+
+//        spectatorSpawn = MiniGamesUtils.getLocationFromConfig(world, mapConfigPath + "spectator-spawn");
+//        if (spectatorSpawn == null) throw new MiniGameException("cannot load spectator spawn location");
+//        for (String spawn : plugin.getConfig().getStringList(mapConfigPath + "spawns")) {
+//            spawns.add(MiniGamesUtils.getLocationFromString(world, spawn));
+//        }
+//        if (spawns.size() < 2) throw new MiniGameException("not enough spawns found");
 
         mapRadius = Math.max(5, plugin.getConfig().getInt(mapConfigPath + "radius", mapRadius));
         prepareTime = Math.max(0, plugin.getConfig().getInt(configPath + "prepare-time", prepareTime));
+        if (prepareTime > totalMiniGameTime) throw new MiniGameException("incorrect game times");
         shrinkBorderBeforeEnd = Math.max(0, plugin.getConfig().getInt(configPath + "shrink-border-before-end", shrinkBorderBeforeEnd));
-        if (totalMiniGameTime < prepareTime + shrinkBorderBeforeEnd) throw new MiniGameException("incorrect game times");
 
         List<String> itemsNames = plugin.getConfig().getStringList(mapConfigPath + "items");
         if (itemsNames.isEmpty()) {
@@ -140,10 +147,7 @@ public class PvPMiniGame extends MiniGame {
             timer = new BossBarTimer(plugin, totalMiniGameTime - prepareTime, "&eKoniec minigry");
             timer.startTimer();
 
-            getPlayers().forEach(player -> {
-                timer.showBossBarToPlayer(player);
-                player.setWorldBorder(worldBorder);
-            });
+            getPlayers().forEach(player -> timer.showBossBarToPlayer(player));
 
             World world = MiniGamesUtils.getMiniGamesWorld();
             if (world != null) world.setGameRule(GameRules.PVP, true);

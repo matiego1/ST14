@@ -40,6 +40,12 @@ public class MazeMiniGame extends MiniGame {
         return GameMode.ADVENTURE;
     }
 
+    @Override
+    protected @NotNull MapType getMapType() {
+        // TODO: zmienić na PASTED_MAP i zrobić losowe generowanie labiryntu
+        return MapType.NORMAL_MAP;
+    }
+
     protected void loadDataFromConfig(@NotNull World world) throws MiniGameException {
         spawn = MiniGamesUtils.getLocationFromConfig(world, mapConfigPath + "spawn");
         if (spawn == null) throw new MiniGameException("cannot load spawn location");

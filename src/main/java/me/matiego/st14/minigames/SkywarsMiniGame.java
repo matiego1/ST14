@@ -51,8 +51,8 @@ public class SkywarsMiniGame extends MiniGame {
     }
 
     @Override
-    protected boolean shouldPasteMap() {
-        return true;
+    protected @NotNull MapType getMapType() {
+        return MapType.PASTED_MAP;
     }
 
     protected void loadDataFromConfig(@NotNull World world) throws MiniGameException {

@@ -42,6 +42,11 @@ public class ParkourMiniGame extends MiniGame {
         return GameMode.ADVENTURE;
     }
 
+    @Override
+    protected @NotNull MapType getMapType() {
+        return MapType.NORMAL_MAP;
+    }
+
     protected void loadDataFromConfig(@NotNull World world) throws MiniGameException {
 //        baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
 //        if (baseLocation == null) throw new MiniGameException("cannot load base location");

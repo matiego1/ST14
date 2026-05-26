@@ -50,8 +50,8 @@ public class RandomItemsMiniGame extends MiniGame {
     }
 
     @Override
-    protected boolean shouldPasteMap() {
-        return true;
+    protected @NotNull MapType getMapType() {
+        return MapType.PASTED_MAP;
     }
 
     @Override
@@ -212,7 +212,7 @@ public class RandomItemsMiniGame extends MiniGame {
         getPlayersInMiniGame().forEach(player -> {
             if (!MiniGamesUtils.isInAnyMiniGameWorld(player)) return;
             if (items.isEmpty()) generateItemsList();
-            player.give(items.removeLast());
+            player.getInventory().addItem(items.removeLast());
         });
     }
 

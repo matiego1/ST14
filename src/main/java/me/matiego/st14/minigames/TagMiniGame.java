@@ -50,6 +50,10 @@ public class TagMiniGame extends MiniGame {
         return GameMode.ADVENTURE;
     }
 
+    @Override
+    protected @NotNull MapType getMapType() {
+        return MapType.NORMAL_MAP;
+    }
 
     protected void loadDataFromConfig(@NotNull World world) throws MiniGameException {
         spawn = MiniGamesUtils.getLocationFromConfig(world, mapConfigPath + "spawn");

@@ -42,7 +42,8 @@ public class MultiverseCoreUtils {
                     RegenWorldOptions options = RegenWorldOptions.world(mvWorld)
                             .seed(seed)
                             .keepGameRule(true)
-                            .keepWorldBorder(true);
+                            .keepWorldBorder(true)
+                            .keepWorldConfig(true);
                     worldManager.regenWorld(options)
                             .onSuccess(() -> future.complete(null))
                             .onFailure(reason -> future.complete(reason.getFailureMessage().formatted()));

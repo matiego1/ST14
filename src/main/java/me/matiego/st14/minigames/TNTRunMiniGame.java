@@ -39,6 +39,11 @@ public class TNTRunMiniGame extends MiniGame {
         return GameMode.SPECTATOR;
     }
 
+    @Override
+    protected @NotNull MapType getMapType() {
+        return MapType.PASTED_MAP;
+    }
+
     protected void loadDataFromConfig(@NotNull World world) throws MiniGameException {
         baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
         if (baseLocation == null) throw new MiniGameException("cannot load base location");
@@ -54,11 +59,6 @@ public class TNTRunMiniGame extends MiniGame {
         world.setGameRule(GameRules.IMMEDIATE_RESPAWN, true);
         world.setGameRule(GameRules.ENTITY_DROPS, false);
         world.setGameRule(GameRules.FALL_DAMAGE, false);
-    }
-
-    @Override
-    protected boolean shouldPasteMap() {
-        return true;
     }
 
     @Override

@@ -10,6 +10,7 @@ import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.utils.MiniGamesUtils;
+import me.matiego.st14.utils.MultiverseCoreUtils;
 import me.matiego.st14.utils.Utils;
 import me.matiego.st14.utils.WorldEditUtils;
 import net.kyori.adventure.title.Title;
@@ -28,9 +29,11 @@ import org.jetbrains.annotations.Range;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public abstract class MiniGame implements Listener {
+    @SneakyThrows
     public MiniGame(@NotNull Main plugin, @NotNull MiniGameType miniGameType, @Nullable String mapName) {
         this.plugin = plugin;
         this.miniGameType = miniGameType;
@@ -112,6 +115,12 @@ public abstract class MiniGame implements Listener {
 
     protected abstract @NotNull String getMiniGameName();
     protected abstract @NotNull GameMode getSpectatorGameMode();
+    protected abstract @NotNull MapType getMapType();
+    public enum MapType {
+        SURVIVAL,
+        PASTED_MAP,
+        NORMAL_MAP
+    }
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="player status">
@@ -192,7 +201,10 @@ public abstract class MiniGame implements Listener {
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="map utils">
+    @SneakyThrows
     protected @Nullable File getRandomMapFile() {
+        if (getMapType() != MapType.PASTED_MAP) throw new MiniGameException("cannot get a map file in this minigame");
+
         File dir = new File(plugin.getDataFolder(), "mini-games");
         if (!dir.exists()) {
             //noinspection ResultOfMethodCallIgnored
@@ -214,6 +226,7 @@ public abstract class MiniGame implements Listener {
     }
 
     protected @NotNull Clipboard pasteMap(@NotNull World world, @NotNull File file) throws Exception {
+        if (getMapType() != MapType.PASTED_MAP) throw new MiniGameException("cannot paste a map in this minigame");
         if (!file.exists()) throw new NullPointerException("map file does not exist");
 
         return WorldEditUtils.pasteSchematic(
@@ -223,7 +236,36 @@ public abstract class MiniGame implements Listener {
         );
     }
 
-    //TODO: refresh minigame world
+    @SneakyThrows
+    protected @Nullable String getRandomSeed() {
+        if (getMapType() != MapType.SURVIVAL) throw new MiniGameException("cannot get a seed in this minigame");
+
+        if (mapConfigPath == null) return null;
+
+        List<String> seeds = plugin.getConfig().getStringList(mapConfigPath + "seeds");
+        if (seeds.isEmpty()) return null;
+
+        int i = Utils.getRandomNumber(0, seeds.size() - 1);
+        return seeds.get(i);
+    }
+
+    @SneakyThrows
+    protected @NotNull CompletableFuture<Boolean> regenSurvivalWorld(@NotNull World surivalWorld, @Nullable World world, @NotNull String seed) {
+        if (getMapType() != MapType.SURVIVAL) throw new MiniGameException("cannot regen a survival world in this minigame");
+
+        surivalWorld.getPlayers().forEach(player -> {
+            if (world != null && player.teleport(world.getSpawnLocation())) return;
+            player.kick(Utils.getComponentByString(Prefix.MINI_GAMES + "Nie udało się Ciebie przenieść przed regeneracją świata. Dołącz ponownie."));
+        });
+
+        return MultiverseCoreUtils.regenWorld(surivalWorld, seed)
+                .thenApply(msg -> {
+                    if (msg == null) return true;
+                    Logs.error("Failed to regenerate a survival minigame world: " + msg);
+                    return false;
+                });
+    }
+
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="minigame start logic">
@@ -234,15 +276,23 @@ public abstract class MiniGame implements Listener {
         isMiniGameStarted = true;
         lobby = true;
 
-        World world = MiniGamesUtils.getMiniGamesWorld();
+        World world;
+        if (getMapType() == MapType.SURVIVAL) {
+            world = MiniGamesUtils.getMiniGamesSurvivalWorld();
+        } else {
+            world = MiniGamesUtils.getMiniGamesWorld();
+        }
         if (world == null) throw new MiniGameException("cannot load world");
 
         setMapConfigPath();
         loadDataFromConfig(world);
         registerEvents();
-        world.setGameRule(GameRules.PVP, false);
-        setUpGameRules(world);
-        setUpWorldBorder(world);
+        if (getMapType() != MapType.SURVIVAL) {
+            world.setGameRule(GameRules.LOCATOR_BAR, false);
+            world.setGameRule(GameRules.PVP, false);
+            setUpGameRules(world);
+            setUpWorldBorder(world);
+        }
         broadcastMiniGameStartMessage(sender);
 
         for (Player player : players) {
@@ -253,18 +303,40 @@ public abstract class MiniGame implements Listener {
 
         long begin = Utils.now();
         Utils.async(() -> {
-            if (shouldPasteMap()) {
-                Utils.sync(() -> sendActionBar("&eGenerowanie areny..."));
-                try {
-                    File file = getRandomMapFile();
-                    if (file == null) throw new NullPointerException("map file is null");
-                    manipulatePastedMap(world, pasteMap(world, file));
-                } catch (Exception e) {
-                    Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy generowaniu areny. Minigra anulowana.", "&dStart anulowany", ""));
-                    Logs.error("An error occurred while pasting a map for the minigame", e);
-                    return;
+            switch (getMapType()) {
+                case SURVIVAL -> {
+                    Utils.sync(() -> sendActionBar("&eGenerowanie świata..."));
+                    try {
+                        String seed = getRandomSeed();
+                        if (seed == null) throw new NullPointerException("map seed is null");
+
+                        World mainWorld = MiniGamesUtils.getMiniGamesWorld();
+                        regenSurvivalWorld(world, mainWorld, seed).get();
+
+                        world.setGameRule(GameRules.PVP, false);
+                        world.setGameRule(GameRules.LOCATOR_BAR, false);
+                        setUpGameRules(world);
+                        setUpWorldBorder(world);
+                    } catch (Exception e) {
+                        Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy generowaniu świata. Minigra anulowana.", "&dStart anulowany", ""));
+                        Logs.error("Failed to generate a survival world for the minigame", e);
+                        return;
+                    }
+                    Utils.sync(() -> sendActionBar("&eWygenerowano świat w " + Utils.parseMillisToString(Utils.now() - begin, true)));
                 }
-                Utils.sync(() -> sendActionBar("&eWygenerowano arenę w " + Utils.parseMillisToString(Utils.now() - begin, true)));
+                case PASTED_MAP -> {
+                    Utils.sync(() -> sendActionBar("&eGenerowanie areny..."));
+                    try {
+                        File file = getRandomMapFile();
+                        if (file == null) throw new NullPointerException("map file is null");
+                        manipulatePastedMap(world, pasteMap(world, file));
+                    } catch (Exception e) {
+                        Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy generowaniu areny. Minigra anulowana.", "&dStart anulowany", ""));
+                        Logs.error("An error occurred while pasting a map for the minigame", e);
+                        return;
+                    }
+                    Utils.sync(() -> sendActionBar("&eWygenerowano arenę w " + me.matiego.st14.utils.Utils.parseMillisToString(Utils.now() - begin, true)));
+                }
             }
 
             try {
@@ -285,9 +357,6 @@ public abstract class MiniGame implements Listener {
     protected abstract void loadDataFromConfig(@NotNull World world) throws MiniGameException;
     protected abstract void setUpGameRules(@NotNull World world);
     protected void setUpWorldBorder(@NotNull World world) {}
-    protected boolean shouldPasteMap() {
-        return false;
-    }
     protected void manipulatePastedMap(@NotNull World world, @NotNull Clipboard clipboard) throws MiniGameException {}
     protected @NotNull Location getLobbySpawn() {
         return spectatorSpawn;
@@ -384,12 +453,13 @@ public abstract class MiniGame implements Listener {
         runTaskLater(() -> {
             if (lobby) {
                 MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
+                player.teleportAsync(getLobbySpawn());
             } else {
                 MiniGamesUtils.healPlayer(player, getSpectatorGameMode());
-                player.getInventory().addItem(new ItemStack(Material.SPYGLASS));
+                if (getSpectatorGameMode() != GameMode.SPECTATOR) player.getInventory().addItem(new ItemStack(Material.SPYGLASS));
+                player.teleportAsync(spectatorSpawn);
             }
 
-            player.teleportAsync(spectatorSpawn);
         }, 3);
     }
 
@@ -425,7 +495,7 @@ public abstract class MiniGame implements Listener {
             if (isInMiniGame(player)) {
                 runTaskLater(() -> {
                     if (lobby && isInMiniGame(player)) {
-                        player.teleportAsync(spectatorSpawn);
+                        player.teleportAsync(getLobbySpawn());
                     }
                 }, 3);
             }
@@ -444,7 +514,7 @@ public abstract class MiniGame implements Listener {
             MiniGamesUtils.healPlayer(player, getSpectatorGameMode());
             player.teleportAsync(spectatorSpawn);
             player.setWorldBorder(worldBorder);
-            player.getInventory().addItem(new ItemStack(Material.SPYGLASS));
+            if (getSpectatorGameMode() != GameMode.SPECTATOR) player.getInventory().addItem(new ItemStack(Material.SPYGLASS));
         }, 3);
     }
     //</editor-fold>
