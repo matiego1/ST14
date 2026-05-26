@@ -33,7 +33,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public abstract class MiniGame implements Listener {
-    @SneakyThrows
     public MiniGame(@NotNull Main plugin, @NotNull MiniGameType miniGameType, @Nullable String mapName) {
         this.plugin = plugin;
         this.miniGameType = miniGameType;
@@ -298,7 +297,7 @@ public abstract class MiniGame implements Listener {
         for (Player player : players) {
             changePlayerStatus(player, PlayerStatus.SPECTATOR);
             MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
-            player.setWorldBorder(worldBorder);
+            if (getMapType() == MapType.NORMAL_MAP) player.setWorldBorder(worldBorder);
         }
 
         long begin = Utils.now();
@@ -317,6 +316,8 @@ public abstract class MiniGame implements Listener {
                         world.setGameRule(GameRules.LOCATOR_BAR, false);
                         setUpGameRules(world);
                         setUpWorldBorder(world);
+                        spectatorSpawn = world.getSpawnLocation();
+                        
                     } catch (Exception e) {
                         Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy generowaniu świata. Minigra anulowana.", "&dStart anulowany", ""));
                         Logs.error("Failed to generate a survival world for the minigame", e);
@@ -335,7 +336,7 @@ public abstract class MiniGame implements Listener {
                         Logs.error("An error occurred while pasting a map for the minigame", e);
                         return;
                     }
-                    Utils.sync(() -> sendActionBar("&eWygenerowano arenę w " + me.matiego.st14.utils.Utils.parseMillisToString(Utils.now() - begin, true)));
+                    Utils.sync(() -> sendActionBar("&eWygenerowano arenę w " + Utils.parseMillisToString(Utils.now() - begin, true)));
                 }
             }
 
@@ -350,13 +351,25 @@ public abstract class MiniGame implements Listener {
                 return;
             }
 
+            getPlayers().forEach(player -> player.setWorldBorder(worldBorder));
+
             Utils.sync(() -> startCountdown(10));
         });
     }
 
     protected abstract void loadDataFromConfig(@NotNull World world) throws MiniGameException;
     protected abstract void setUpGameRules(@NotNull World world);
-    protected void setUpWorldBorder(@NotNull World world) {}
+    protected void setUpWorldBorder(@NotNull World world) {
+        if (getMapType() == MapType.SURVIVAL) {
+            worldBorder = Bukkit.createWorldBorder();
+            worldBorder.setCenter(spectatorSpawn);
+            worldBorder.setSize(plugin.getConfig().getInt(mapConfigPath + "size", 500));
+            worldBorder.setWarningDistance(0);
+            worldBorder.setDamageBuffer(0);
+            worldBorder.setDamageAmount(5);
+            worldBorder.setWarningTimeTicks(10);
+        }
+    }
     protected void manipulatePastedMap(@NotNull World world, @NotNull Clipboard clipboard) throws MiniGameException {}
     protected @NotNull Location getLobbySpawn() {
         return spectatorSpawn;
@@ -456,7 +469,7 @@ public abstract class MiniGame implements Listener {
                 player.teleportAsync(getLobbySpawn());
             } else {
                 MiniGamesUtils.healPlayer(player, getSpectatorGameMode());
-                if (getSpectatorGameMode() != GameMode.SPECTATOR) player.getInventory().addItem(new ItemStack(Material.SPYGLASS));
+                player.getInventory().addItem(new ItemStack(Material.SPYGLASS));
                 player.teleportAsync(spectatorSpawn);
             }
 
@@ -514,7 +527,7 @@ public abstract class MiniGame implements Listener {
             MiniGamesUtils.healPlayer(player, getSpectatorGameMode());
             player.teleportAsync(spectatorSpawn);
             player.setWorldBorder(worldBorder);
-            if (getSpectatorGameMode() != GameMode.SPECTATOR) player.getInventory().addItem(new ItemStack(Material.SPYGLASS));
+            player.getInventory().addItem(new ItemStack(Material.SPYGLASS));
         }, 3);
     }
     //</editor-fold>

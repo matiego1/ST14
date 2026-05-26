@@ -122,7 +122,6 @@ public class RandomItemsMiniGame extends MiniGame {
     protected void manipulatePastedMap(@NotNull World world, @NotNull Clipboard clipboard) throws MiniGameException {
         loadSpawns(world, clipboard);
         if (spawns.size() < 2) throw new MiniGameException("not enough spawns found");
-        setUpRandomItemsWorldBorder();
 
         Utils.sync(() -> spectatorSpawn.getNearbyEntitiesByType(Item.class, mapRadius).forEach(Entity::remove));
     }
@@ -156,7 +155,8 @@ public class RandomItemsMiniGame extends MiniGame {
         }
     }
 
-    private void setUpRandomItemsWorldBorder() {
+    @Override
+    protected void setUpWorldBorder(@NotNull World world) {
         worldBorder = Bukkit.createWorldBorder();
         worldBorder.setCenter(spectatorSpawn);
         worldBorder.setSize(mapRadius);
@@ -181,7 +181,6 @@ public class RandomItemsMiniGame extends MiniGame {
         for (Player player : players) {
             player.setRespawnLocation(spectatorSpawn, true);
             timer.showBossBarToPlayer(player);
-            player.setWorldBorder(worldBorder);
             if (i >= spawns.size()) {
                 changePlayerStatus(player, PlayerStatus.SPECTATOR);
                 player.teleportAsync(spectatorSpawn);

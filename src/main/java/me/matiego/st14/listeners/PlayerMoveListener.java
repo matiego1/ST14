@@ -3,6 +3,8 @@ package me.matiego.st14.listeners;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.bossbar.BossBar;
+import org.bukkit.Location;
+import org.bukkit.WorldBorder;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -22,15 +24,18 @@ public class PlayerMoveListener implements Listener {
     private final Main plugin;
     private final HashMap<UUID, BossBar> positionBossBars = new HashMap<>();
 
+    private final long MAX_DISTANCE_OUTSIDE = 20;
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerMove(@NotNull PlayerMoveEvent event) {
         Player player = event.getPlayer();
 
-        if (!Optional.ofNullable(player.getWorldBorder())
-                .orElseGet(() -> player.getWorld().getWorldBorder())
-                .isInside(event.getTo())) {
+        WorldBorder worldBorder = Optional.ofNullable(player.getWorldBorder())
+                .orElseGet(() -> player.getWorld().getWorldBorder());
+        double distance = MAX_DISTANCE_OUTSIDE + worldBorder.getSize() / 2;
+        if (distanceMax(worldBorder.getCenter(), event.getTo()) >= distance) {
             event.setCancelled(true);
-            player.sendActionBar(Utils.getComponentByString("&cNie możesz wyjść po za granicę świata!"));
+            player.sendActionBar(Utils.getComponentByString("&cNie możesz wyjść tak daleko po za granicę świata!"));
             return;
         }
 
@@ -54,6 +59,12 @@ public class PlayerMoveListener implements Listener {
                 }
             }
         }
+    }
+
+    private double distanceMax(@NotNull Location l1, @NotNull Location l2) {
+        double x = Math.abs(l1.getX() - l2.getX());
+        double z = Math.abs(l1.getZ() - l2.getZ());
+        return Math.max(x, z);
     }
 
     public void removeBossBarForPlayer(@NotNull Player player) {

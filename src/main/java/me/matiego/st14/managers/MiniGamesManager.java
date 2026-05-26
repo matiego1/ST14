@@ -15,6 +15,7 @@ import net.luckperms.api.node.Node;
 import net.luckperms.api.node.NodeEqualityPredicate;
 import net.luckperms.api.util.Tristate;
 import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
@@ -115,6 +116,9 @@ public class MiniGamesManager {
         MiniGame miniGame = getActiveMiniGame();
         if (miniGame == null) return;
         if (!miniGame.isInMiniGame(player)) return;
+
+        World survivalWorld = MiniGamesUtils.getMiniGamesSurvivalWorld();
+        if (survivalWorld != null && player.getWorld().getUID().equals(survivalWorld.getUID())) MiniGamesUtils.teleportToLobby(player);
 
         try {
             miniGame.onPlayerQuit(player);

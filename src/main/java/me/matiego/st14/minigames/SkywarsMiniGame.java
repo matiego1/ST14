@@ -80,7 +80,6 @@ public class SkywarsMiniGame extends MiniGame {
         Utils.sync(() -> sendActionBar("&eGenerowanie skrzynek..."));
         loadSpawnsAndGenerateChests(world, clipboard);
         if (spawns.size() < 2) throw new MiniGameException("not enough spawns found");
-        setUpSkywarsWorldBorder();
 
         Utils.sync(() -> spectatorSpawn.getNearbyEntitiesByType(Item.class, mapRadius).forEach(Entity::remove));
     }
@@ -158,7 +157,8 @@ public class SkywarsMiniGame extends MiniGame {
         return items;
     }
 
-    private void setUpSkywarsWorldBorder() {
+    @Override
+    protected void setUpWorldBorder(@NotNull World world) {
         worldBorder = Bukkit.createWorldBorder();
         worldBorder.setCenter(spectatorSpawn);
         worldBorder.setSize(mapRadius);
@@ -184,7 +184,6 @@ public class SkywarsMiniGame extends MiniGame {
                 changePlayerStatus(player, PlayerStatus.SPECTATOR);
                 player.teleportAsync(spectatorSpawn);
                 MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
-                player.setWorldBorder(worldBorder);
                 sendMessage("Gracz " + player.getName() + " obserwuję minigrę, ponieważ nie starczyło dla niego miejsca.");
             } else {
                 changePlayerStatus(player, PlayerStatus.IN_MINI_GAME);

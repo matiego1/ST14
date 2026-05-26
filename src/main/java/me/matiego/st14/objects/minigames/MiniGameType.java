@@ -30,10 +30,11 @@ public enum MiniGameType {
     ITEM_RACE(null, "Item race", Material.SHULKER_BOX, 20),
     SKYWARS(SkywarsMiniGame.class, "Skywars", Material.ENDER_EYE, 20),
     PARKOUR(ParkourMiniGame.class, "Parkour", Material.POTION, 20),
-    BLOCKED_IN_COMBAT(null, "Blocked in combat", Material.STONE, 20),
-    UHC(null, "UHC", Material.GOLDEN_APPLE, 20),
-    MANHUNT(null, "Manhunt", Material.DIAMOND_SWORD, 20),
-    DEATH_SWAP(null, "Death Swap", Material.ENDER_PEARL, 20);
+
+    BLOCKED_IN_COMBAT(null, "Blocked in combat", Material.STONE, 30),
+    UHC(UHCMiniHame.class, "UHC", Material.GOLDEN_APPLE, 30),
+    MANHUNT(null, "Manhunt", Material.DIAMOND_SWORD, 30),
+    DEATH_SWAP(null, "Death Swap", Material.ENDER_PEARL, 30);
 
 
     private final Class<? extends MiniGame> handler;
