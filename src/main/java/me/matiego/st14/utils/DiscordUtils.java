@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
-import me.matiego.st14.objects.FixedSizeMap;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
@@ -32,10 +31,7 @@ import org.minidns.record.Record;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -214,7 +210,7 @@ public class DiscordUtils {
         return attachment.getProxy().download().get();
     }
 
-    private static final FixedSizeMap<Long, Long> privateMessages = new FixedSizeMap<>(100);
+    private static final HashMap<Long, Long> privateMessages = Utils.createLimitedSizeMap(100);
 
     public static void sendPrivateMessage(@NotNull User user, @NotNull String message) {
         sendPrivateMessage(user, message, action -> {}, result -> {});

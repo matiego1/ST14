@@ -2,8 +2,8 @@ package me.matiego.st14.managers;
 
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
-import me.matiego.st14.objects.FixedSizeMap;
 import me.matiego.st14.objects.GUI;
+import me.matiego.st14.utils.Utils;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,6 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,7 +23,7 @@ public class BackpackManager {
     }
 
     private final Main plugin;
-    private final FixedSizeMap<UUID, String> cache = new FixedSizeMap<>(50);
+    private final HashMap<UUID, String> cache = Utils.createLimitedSizeMap(50);
     private final String ERROR_MSG = "An error occurred while modifying values in \"st14_backpack\" table in the database.";
 
     public @Nullable List<ItemStack> loadBackpack(@NotNull UUID uuid) {

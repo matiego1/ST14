@@ -2,7 +2,6 @@ package me.matiego.st14.listeners;
 
 import io.papermc.paper.event.player.PlayerItemFrameChangeEvent;
 import me.matiego.st14.Main;
-import me.matiego.st14.objects.FixedSizeMap;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -14,13 +13,14 @@ import org.bukkit.event.Listener;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.UUID;
 
 public class PlayerItemFrameChangeListener implements Listener {
     public PlayerItemFrameChangeListener(@NotNull Main plugin) {
         INVISIBLE_ITEM_FRAME = new NamespacedKey(plugin, "invisible_item_frame");
     }
-    private final FixedSizeMap<UUID, Long> lastItemFrameRotation = new FixedSizeMap<>(100);
+    private final HashMap<UUID, Long> lastItemFrameRotation = Utils.createLimitedSizeMap(100);
     private final NamespacedKey INVISIBLE_ITEM_FRAME;
 
     @EventHandler(ignoreCancelled = true)

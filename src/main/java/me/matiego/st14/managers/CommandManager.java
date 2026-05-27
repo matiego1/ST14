@@ -5,7 +5,6 @@ import lombok.Setter;
 import lombok.Synchronized;
 import me.matiego.st14.Logs;
 import me.matiego.st14.objects.command.CommandHandler;
-import me.matiego.st14.objects.FixedSizeMap;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
@@ -65,8 +64,8 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
 
     private final HashMap<String, CommandHandler.Discord> discordCommands = new HashMap<>();
     private final HashMap<String, CommandHandler.Minecraft> minecraftCommands = new HashMap<>();
-    private final FixedSizeMap<String, Long> minecraftCooldown = new FixedSizeMap<>(100);
-    private final FixedSizeMap<String, Long> discordCooldown = new FixedSizeMap<>(100);
+    private final HashMap<String, Long> minecraftCooldown = Utils.createLimitedSizeMap(100);
+    private final HashMap<String, Long> discordCooldown = Utils.createLimitedSizeMap(100);
 
     @Getter (onMethod_ = {@Synchronized})
     @Setter (onMethod_ = {@Synchronized})

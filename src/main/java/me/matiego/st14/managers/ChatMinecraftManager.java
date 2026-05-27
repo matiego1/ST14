@@ -3,9 +3,8 @@ package me.matiego.st14.managers;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
-import me.matiego.st14.objects.bans.Ban;
-import me.matiego.st14.objects.FixedSizeMap;
 import me.matiego.st14.objects.Pair;
+import me.matiego.st14.objects.bans.Ban;
 import me.matiego.st14.objects.time.GameTime;
 import me.matiego.st14.objects.time.PlayerTime;
 import me.matiego.st14.utils.DiscordUtils;
@@ -25,6 +24,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
+import java.util.HashMap;
 import java.util.UUID;
 
 public class ChatMinecraftManager extends ListenerAdapter {
@@ -34,7 +34,7 @@ public class ChatMinecraftManager extends ListenerAdapter {
     }
 
     private final String DISALLOWED_CHARS = "[^\\p{L}\\p{M}\\p{N}\\p{P}\\p{Z}\\p{Cf}\\p{Cs}\\s]";
-    private final FixedSizeMap<UUID, Pair<Long, Integer>> joinCooldown = new FixedSizeMap<>(100);
+    private final HashMap<UUID, Pair<Long, Integer>> joinCooldown = Utils.createLimitedSizeMap(100);
 
     public void block() {
         TextChannel chn = DiscordUtils.getChatMinecraftChannel();
