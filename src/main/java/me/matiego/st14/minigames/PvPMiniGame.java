@@ -46,7 +46,7 @@ public class PvPMiniGame extends MiniGame {
     }
 
     @Override
-    protected @NotNull MapType getMapType() {
+    public @NotNull MapType getMapType() {
         return MapType.PASTED_MAP;
     }
 

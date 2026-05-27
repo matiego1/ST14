@@ -114,7 +114,7 @@ public abstract class MiniGame implements Listener {
 
     protected abstract @NotNull String getMiniGameName();
     protected abstract @NotNull GameMode getSpectatorGameMode();
-    protected abstract @NotNull MapType getMapType();
+    public abstract @NotNull MapType getMapType();
     public enum MapType {
         SURVIVAL,
         PASTED_MAP,
@@ -290,8 +290,8 @@ public abstract class MiniGame implements Listener {
             world.setGameRule(GameRules.LOCATOR_BAR, false);
             world.setGameRule(GameRules.PVP, false);
             setUpGameRules(world);
-            setUpWorldBorder(world);
         }
+        if (getMapType() == MapType.NORMAL_MAP) setUpWorldBorder(world);
         broadcastMiniGameStartMessage(sender);
 
         for (Player player : players) {
@@ -300,61 +300,78 @@ public abstract class MiniGame implements Listener {
             if (getMapType() == MapType.NORMAL_MAP) player.setWorldBorder(worldBorder);
         }
 
-        long begin = Utils.now();
-        Utils.async(() -> {
-            switch (getMapType()) {
-                case SURVIVAL -> {
-                    Utils.sync(() -> sendActionBar("&eGenerowanie świata..."));
-                    try {
-                        String seed = getRandomSeed();
-                        if (seed == null) throw new NullPointerException("map seed is null");
+        long beginning = Utils.now();
+        switch (getMapType()) {
+            case NORMAL_MAP -> finishStartingMiniGame(players);
+            case PASTED_MAP -> Utils.async(() -> {
+                Utils.sync(() -> sendActionBar("&eGenerowanie areny..."));
+                try {
+                    File file = getRandomMapFile();
+                    if (file == null) throw new NullPointerException("map file is null");
+                    manipulatePastedMap(world, pasteMap(world, file));
 
-                        World mainWorld = MiniGamesUtils.getMiniGamesWorld();
-                        regenSurvivalWorld(world, mainWorld, seed).get();
-
-                        world.setGameRule(GameRules.PVP, false);
-                        world.setGameRule(GameRules.LOCATOR_BAR, false);
-                        setUpGameRules(world);
-                        setUpWorldBorder(world);
-                        spectatorSpawn = world.getSpawnLocation();
-                        
-                    } catch (Exception e) {
-                        Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy generowaniu świata. Minigra anulowana.", "&dStart anulowany", ""));
-                        Logs.error("Failed to generate a survival world for the minigame", e);
-                        return;
-                    }
-                    Utils.sync(() -> sendActionBar("&eWygenerowano świat w " + Utils.parseMillisToString(Utils.now() - begin, true)));
-                }
-                case PASTED_MAP -> {
-                    Utils.sync(() -> sendActionBar("&eGenerowanie areny..."));
-                    try {
-                        File file = getRandomMapFile();
-                        if (file == null) throw new NullPointerException("map file is null");
-                        manipulatePastedMap(world, pasteMap(world, file));
-                    } catch (Exception e) {
-                        Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy generowaniu areny. Minigra anulowana.", "&dStart anulowany", ""));
-                        Logs.error("An error occurred while pasting a map for the minigame", e);
-                        return;
-                    }
-                    Utils.sync(() -> sendActionBar("&eWygenerowano arenę w " + Utils.parseMillisToString(Utils.now() - begin, true)));
-                }
-            }
-
-            try {
-                if (!MiniGamesUtils.teleportPlayers(players.stream().toList(), getLobbySpawn()).get()) {
-                    Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", ""));
+                    setUpWorldBorder(world);
+                } catch (Exception e) {
+                    Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy generowaniu areny. Minigra anulowana.", "&dStart anulowany", ""));
+                    Logs.error("An error occurred while pasting a map for the minigame", e);
                     return;
                 }
-            } catch (Exception e) {
-                Utils.sync(() -> scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", ""));
-                Logs.error("An error occurred while teleporting players", e);
-                return;
+                Utils.sync(() -> {
+                    sendActionBar("&eWygenerowano arenę w " + Utils.parseMillisToString(Utils.now() - beginning, true));
+                    finishStartingMiniGame(players);
+                });
+            });
+            case SURVIVAL -> {
+                sendActionBar("&eGenerowanie świata...");
+                try {
+                    String seed = getRandomSeed();
+                    if (seed == null) throw new NullPointerException("map seed is null");
+
+                    World mainWorld = MiniGamesUtils.getMiniGamesWorld();
+                    regenSurvivalWorld(world, mainWorld, seed).thenAccept(success -> Utils.sync(() -> onWorldRegenComplete(success, beginning, players)));
+                } catch (Exception e) {
+                    scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy generowaniu świata. Minigra anulowana.", "&dStart anulowany", "");
+                    Logs.error("Failed to generate a survival world for the minigame", e);
+                }
             }
+        }
+    }
 
-            getPlayers().forEach(player -> player.setWorldBorder(worldBorder));
+    private void onWorldRegenComplete(boolean success, long beginning, @NotNull Set<Player> players) {
+        World world = MiniGamesUtils.getMiniGamesSurvivalWorld();
+        if (!success || world == null) {
+            scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy generowaniu świata. Minigra anulowana.", "&dStart anulowany", "");
+            return;
+        }
 
-            Utils.sync(() -> startCountdown(10));
-        });
+        spectatorSpawn = world.getSpawnLocation();
+        setUpWorldBorder(world);
+        world.setGameRule(GameRules.PVP, false);
+        world.setGameRule(GameRules.LOCATOR_BAR, false);
+        setUpGameRules(world);
+
+        sendActionBar("&eWygenerowano świat w " + Utils.parseMillisToString(Utils.now() - beginning, true));
+
+        runTaskLater(() -> finishStartingMiniGame(players), 100);
+    }
+
+    private void finishStartingMiniGame(@NotNull Set<Player> players) {
+        try {
+            MiniGamesUtils.teleportPlayers(players.stream().toList(), getLobbySpawn()).thenAccept(success -> {
+                if (success) {
+                    getPlayers().forEach(player -> player.setWorldBorder(worldBorder));
+
+                    int countdownTime = 10;
+                    if (getMapType() == MapType.SURVIVAL) countdownTime = 15;
+                    startCountdown(countdownTime);
+                } else {
+                    scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", "");
+                }
+            });
+        } catch (Exception e) {
+            scheduleStopMiniGameAndSendReason("Napotkano niespodziewany błąd przy teleportowaniu graczy. Minigra anulowana.", "&dStart anulowany", "");
+            Logs.error("An error occurred while teleporting players", e);
+        }
     }
 
     protected abstract void loadDataFromConfig(@NotNull World world) throws MiniGameException;
@@ -371,11 +388,10 @@ public abstract class MiniGame implements Listener {
         }
     }
     protected void manipulatePastedMap(@NotNull World world, @NotNull Clipboard clipboard) throws MiniGameException {}
-    protected @NotNull Location getLobbySpawn() {
+    protected synchronized @NotNull Location getLobbySpawn() {
         return spectatorSpawn;
     }
 
-    @SuppressWarnings("SameParameterValue - it will be easier to change the countdownTimeInSeconds value in the future")
     @SneakyThrows(MiniGameException.class)
     protected synchronized void startCountdown(int countdownTimeInSeconds) {
         sendMessage("&dRozpoczynanie minigry za...");
@@ -465,12 +481,12 @@ public abstract class MiniGame implements Listener {
 
         runTaskLater(() -> {
             if (lobby) {
-                MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
-                player.teleportAsync(getLobbySpawn());
+                player.teleportAsync(getLobbySpawn()).thenRun(() -> runTaskLater(() -> MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE), 3));
             } else {
-                MiniGamesUtils.healPlayer(player, getSpectatorGameMode());
-                player.getInventory().addItem(new ItemStack(Material.SPYGLASS));
-                player.teleportAsync(spectatorSpawn);
+                player.teleportAsync(spectatorSpawn).thenRun(() -> runTaskLater(() -> {
+                    MiniGamesUtils.healPlayer(player, getSpectatorGameMode());
+                    player.getInventory().addItem(new ItemStack(Material.SPYGLASS));
+                }, 3));
             }
 
         }, 3);

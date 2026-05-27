@@ -51,7 +51,7 @@ public class TagMiniGame extends MiniGame {
     }
 
     @Override
-    protected @NotNull MapType getMapType() {
+    public @NotNull MapType getMapType() {
         return MapType.NORMAL_MAP;
     }
 

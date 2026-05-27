@@ -43,7 +43,7 @@ public class ElytraMiniGame extends MiniGame {
     }
 
     @Override
-    protected @NotNull MapType getMapType() {
+    public @NotNull MapType getMapType() {
         return MapType.NORMAL_MAP;
     }
 

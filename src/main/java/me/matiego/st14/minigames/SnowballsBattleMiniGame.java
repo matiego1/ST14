@@ -1,11 +1,11 @@
 package me.matiego.st14.minigames;
 
+import me.matiego.st14.BossBarTimer;
 import me.matiego.st14.Main;
 import me.matiego.st14.objects.minigames.MiniGame;
 import me.matiego.st14.objects.minigames.MiniGameException;
 import me.matiego.st14.objects.minigames.MiniGameType;
 import me.matiego.st14.utils.MiniGamesUtils;
-import me.matiego.st14.BossBarTimer;
 import org.bukkit.*;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -48,7 +48,7 @@ public class SnowballsBattleMiniGame extends MiniGame {
     }
 
     @Override
-    protected @NotNull MapType getMapType() {
+    public @NotNull MapType getMapType() {
         return MapType.NORMAL_MAP;
     }
 

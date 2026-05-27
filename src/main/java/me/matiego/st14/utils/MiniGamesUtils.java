@@ -70,9 +70,10 @@ public class MiniGamesUtils {
         for (Player player : players) {
             results.add(player.teleportAsync(location));
         }
-        CompletableFuture<Boolean> success = new CompletableFuture<>();
-        Utils.async(() -> success.complete(results.stream().allMatch(CompletableFuture::join)));
-        return success;
+
+        return CompletableFuture
+                .allOf(results.toArray(new CompletableFuture[0]))
+                .thenApply(v -> results.stream().allMatch(CompletableFuture::join));
     }
 
     public static void setLobbyRules() {

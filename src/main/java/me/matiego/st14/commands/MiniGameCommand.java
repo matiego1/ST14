@@ -272,6 +272,11 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
             return;
         }
 
+        if (miniGame.getMapType() == MiniGame.MapType.SURVIVAL && Utils.getTps() < 17) {
+            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Nie możesz grać teraz w tę minigrę, bo TPS spadły poniżej 17. Spróbuj później."));
+            return;
+        }
+
         if (!plugin.getMiniGamesManager().startMiniGame(miniGame, players, player)) {
             player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Napotkano niespodziewany błąd przy uruchamianiu minigry."));
         }
