@@ -182,4 +182,10 @@ public class MiniGamesUtils {
         if (key == null) return null;
         return RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT).get(key);
     }
+
+    public static void spreadPlayers(@NotNull Location center, int radius) {
+        String command = "execute in minecraft:%s run spreadplayers %s %s 20 %s false @a[distance=0..]"
+                .formatted(center.getWorld().getName(), center.getX(), center.getZ(), radius);
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+    }
 }

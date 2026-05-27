@@ -1,13 +1,20 @@
 package me.matiego.st14.minigames;
 
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.extent.clipboard.Clipboard;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.world.block.BaseBlock;
 import me.matiego.st14.BossBarTimer;
 import me.matiego.st14.Main;
 import me.matiego.st14.objects.minigames.MiniGame;
 import me.matiego.st14.objects.minigames.MiniGameException;
 import me.matiego.st14.objects.minigames.MiniGameType;
 import me.matiego.st14.utils.MiniGamesUtils;
-import org.apache.commons.lang3.NotImplementedException;
+import me.matiego.st14.utils.Utils;
+import me.matiego.st14.utils.WorldEditUtils;
 import org.bukkit.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -26,7 +33,6 @@ import java.util.List;
 public class PvPMiniGame extends MiniGame {
     public PvPMiniGame(@NotNull Main plugin, @NotNull MiniGameType miniGameType, @Nullable String mapName) {
         super(plugin, miniGameType, mapName);
-        if (true) throw new NotImplementedException(); // TODO: to przecież musi być PASTED_MAP, a nie normalna
     }
 
     private final List<Location> spawns = new ArrayList<>();
@@ -54,13 +60,6 @@ public class PvPMiniGame extends MiniGame {
         baseLocation = MiniGamesUtils.getLocationFromConfig(world, configPath + "base-location");
         if (baseLocation == null) throw new MiniGameException("cannot load base location");
 
-//        spectatorSpawn = MiniGamesUtils.getLocationFromConfig(world, mapConfigPath + "spectator-spawn");
-//        if (spectatorSpawn == null) throw new MiniGameException("cannot load spectator spawn location");
-//        for (String spawn : plugin.getConfig().getStringList(mapConfigPath + "spawns")) {
-//            spawns.add(MiniGamesUtils.getLocationFromString(world, spawn));
-//        }
-//        if (spawns.size() < 2) throw new MiniGameException("not enough spawns found");
-
         mapRadius = Math.max(5, plugin.getConfig().getInt(mapConfigPath + "radius", mapRadius));
         prepareTime = Math.max(0, plugin.getConfig().getInt(configPath + "prepare-time", prepareTime));
         if (prepareTime > totalMiniGameTime) throw new MiniGameException("incorrect game times");
@@ -84,6 +83,43 @@ public class PvPMiniGame extends MiniGame {
         world.setGameRule(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 128);
         world.setGameRule(GameRules.FIRE_DAMAGE, true);
         world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, true);
+    }
+
+    @Override
+    protected void manipulatePastedMap(@NotNull World world, @NotNull Clipboard clipboard) throws MiniGameException {
+        loadSpawns(world, clipboard);
+        if (spawns.size() < 2) throw new MiniGameException("not enough spawns found");
+
+        Utils.sync(() -> spectatorSpawn.getNearbyEntitiesByType(Item.class, mapRadius).forEach(Entity::remove));
+    }
+
+    private void loadSpawns(@NotNull World world, @NotNull Clipboard clipboard) {
+        spawns.clear();
+
+        for (int x = 0; x <= clipboard.getDimensions().getX(); x++) {
+            for (int y = 0; y <= clipboard.getDimensions().getY(); y++) {
+                for (int z = 0; z <= clipboard.getDimensions().getZ(); z++) {
+
+                    BlockVector3 blockLocation = BlockVector3.at(x, y, z).add(clipboard.getMinimumPoint());
+                    Material blockMaterial = BukkitAdapter.adapt(clipboard.getBlock(blockLocation).getBlockType());
+                    if (blockMaterial == null || !blockMaterial.toString().contains("SIGN")) continue;
+
+                    BaseBlock baseBlock = clipboard.getFullBlock(blockLocation);
+                    if (baseBlock == null) continue;
+
+                    String line1 = WorldEditUtils.getSignLine(baseBlock, 1).toLowerCase();
+                    if (line1.contains("[spectator]")) {
+                        Location loc = new Location(world, baseLocation.getBlockX() + x + 0.5, baseLocation.getBlockY() + y - 1, baseLocation.getBlockZ() + z + 0.5);
+                        Utils.sync(() -> loc.getBlock().setType(Material.AIR));
+                        spectatorSpawn = loc;
+                    } else if (line1.contains("[spawn]")) {
+                        Location loc = new Location(world, baseLocation.getBlockX() + x + 0.5, baseLocation.getBlockY() + y - 1, baseLocation.getBlockZ() + z + 0.5);
+                        Utils.sync(() -> loc.getBlock().setType(Material.AIR));
+                        spawns.add(loc);
+                    }
+                }
+            }
+        }
     }
 
     @Override

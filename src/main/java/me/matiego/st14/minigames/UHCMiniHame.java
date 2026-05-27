@@ -6,7 +6,6 @@ import me.matiego.st14.objects.minigames.MiniGame;
 import me.matiego.st14.objects.minigames.MiniGameException;
 import me.matiego.st14.objects.minigames.MiniGameType;
 import me.matiego.st14.utils.MiniGamesUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.GameRules;
 import org.bukkit.World;
@@ -58,7 +57,7 @@ public class UHCMiniHame extends MiniGame {
         world.setGameRule(GameRules.FALL_DAMAGE, true);
         world.setGameRule(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 128);
         world.setGameRule(GameRules.FIRE_DAMAGE, true);
-        world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, true);
+        world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, false);
         world.setGameRule(GameRules.ADVANCE_TIME, false);
         world.setGameRule(GameRules.ADVANCE_WEATHER, false);
     }
@@ -70,10 +69,6 @@ public class UHCMiniHame extends MiniGame {
 
     @Override
     protected void manipulatePlayersToStartGameWith(@NotNull List<Player> players) {
-        String command = "execute in minecraft:%s run spreadplayers %s %s 20 %s false @a[distance=0..]"
-                .formatted(spectatorSpawn.getWorld().getName(), spectatorSpawn.getX(), spectatorSpawn.getZ(), mapSize / 2);
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
-
         players.forEach(player -> {
             changePlayerStatus(player, PlayerStatus.IN_MINI_GAME);
             MiniGamesUtils.healPlayer(player, GameMode.SURVIVAL);
@@ -82,8 +77,10 @@ public class UHCMiniHame extends MiniGame {
 
             player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 30, 5));
             player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * 30, 5));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 5 * 30, 5));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 20 * 5, 5));
         });
+
+        MiniGamesUtils.spreadPlayers(spectatorSpawn, mapSize / 2);
     }
 
     @Override
