@@ -2,7 +2,6 @@ package me.matiego.st14.objects.minigames.maze;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.matiego.st14.utils.Utils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
@@ -45,12 +44,10 @@ public class MazeCell {
     public void setEndCellFloor(@NotNull Location baseCell) {
         Location cell = getCellLocation(baseCell);
 
-        Utils.sync(() -> {
-            setBlock(cell, 0, -1, 0, Material.DIAMOND_BLOCK);
-            setBlock(cell, 0, -1, 1, Material.DIAMOND_BLOCK);
-            setBlock(cell, 1, -1, 0, Material.DIAMOND_BLOCK);
-            setBlock(cell, 1, -1, 1, Material.DIAMOND_BLOCK);
-        });
+        setBlock(cell, 0, -1, 0, Material.DIAMOND_BLOCK);
+        setBlock(cell, 0, -1, 1, Material.DIAMOND_BLOCK);
+        setBlock(cell, 1, -1, 0, Material.DIAMOND_BLOCK);
+        setBlock(cell, 1, -1, 1, Material.DIAMOND_BLOCK);
     }
 
     public void buildWalls(@NotNull Location baseCell) {

@@ -1,6 +1,7 @@
 package me.matiego.st14.objects.minigames.maze;
 
 import lombok.Getter;
+import me.matiego.st14.utils.Utils;
 import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -118,11 +119,13 @@ public class MazeGenerator {
     }
 
     public void build(@NotNull Location baseCell) {
-        endCell.setEndCellFloor(baseCell);
-        for (int x = 0; x < sizeX; x++) {
-            for (int z = 0; z < sizeZ; z++) {
-                grid[x][z].buildWalls(baseCell);
+        Utils.sync(() -> {
+            endCell.setEndCellFloor(baseCell);
+            for (int x = 0; x < sizeX; x++) {
+                for (int z = 0; z < sizeZ; z++) {
+                    grid[x][z].buildWalls(baseCell);
+                }
             }
-        }
+        });
     }
 }
