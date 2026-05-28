@@ -23,7 +23,7 @@ public class MazeCell {
 
     public @NotNull Location getCellLocation(@NotNull Location baseCell) {
         Location loc = baseCell.clone();
-        loc.add(4 * x, 0, 4 * z);
+        loc.add(3 * x, 0, 3 * z);
         return loc;
     }
 
@@ -53,7 +53,7 @@ public class MazeCell {
     public void buildWalls(@NotNull Location baseCell) {
         Location cell = getCellLocation(baseCell);
 
-        for (int height = 1; height <= cellHeight; height++) {
+        for (int height = 0; height < cellHeight; height++) {
             if (isEast()) {
                 setBlock(cell, 2, height, 0, Material.STONE_BRICKS);
                 setBlock(cell, 2, height, 1, Material.STONE_BRICKS);
