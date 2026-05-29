@@ -59,6 +59,7 @@ public class MySQL {
         if (!RankingsManager.createTable()) return false;
         if (!AdvancementsManager.createTable()) return false;
         if (!HeadsManager.createTable()) return false;
+        if (!DeathsManager.createTable()) return false;
         return WorldsLastLocationManager.createTable();
     }
 }
