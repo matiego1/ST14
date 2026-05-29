@@ -25,7 +25,7 @@ public class CountingRewardsHandler implements WebSocket.Listener {
     @Override
     public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
         if (statusCode == UNAUTHORIZED_CODE) {
-            Logs.error("WebSocket is closed. (Code: " + statusCode + "; Reason: " + reason + ") Fix the config.yml file, and use a \"/countingmc reload\" command or restart the server.");
+            Logs.error("WebSocket is closed. (Code: " + statusCode + "; Reason: " + reason + ")");
             return null;
         }
 

@@ -121,7 +121,7 @@ public class CountingRewardsManager {
                         }
 
                         if (e instanceof IllegalArgumentException || e instanceof SSLException) {
-                            Logs.error("Failed to connect to WebSocket! Fix the config.yml file, and use a \"/countingmc reload\" command or restart the server.", e);
+                            Logs.error("Failed to connect to WebSocket", e);
                             close();
                             result.complete(null);
                             return null;
