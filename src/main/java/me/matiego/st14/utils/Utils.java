@@ -247,4 +247,20 @@ public class Utils {
             }
         };
     }
+
+    public static long powExact(long a, long b) {
+        try {
+            long r = 1;
+            while (b > 0) {
+                if (b % 2 == 1) {
+                    r = Math.multiplyExact(r, a);
+                }
+                a = Math.multiplyExact(a, a);
+                b /= 2;
+            }
+            return r;
+        } catch (ArithmeticException e) {
+            return Long.MAX_VALUE;
+        }
+    }
 }

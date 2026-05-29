@@ -51,6 +51,7 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private ChatMinecraftManager chatMinecraftManager;
     private ChatReportsManager chatReportsManager;
     @Getter private CommandManager commandManager;
+    @Getter private CountingRewardsManager countingRewardsManager;
     @Getter private DeathsManager deathsManager;
     private DidYouKnowManager didYouKnowManager;
     @Getter private DynmapManager dynmapManager;
@@ -151,6 +152,7 @@ public final class Main extends JavaPlugin implements Listener {
         bansManager = new BansManager(this);
         chatMinecraftManager = new ChatMinecraftManager(this);
         chatReportsManager = new ChatReportsManager();
+        countingRewardsManager = new CountingRewardsManager(this);
         deathsManager = new DeathsManager(this);
         didYouKnowManager = new DidYouKnowManager(this);
         dynmapManager = new DynmapManager(this);
@@ -346,6 +348,11 @@ public final class Main extends JavaPlugin implements Listener {
         Utils.registerRecipes();
         Utils.kickPlayersAtMidnightTask();
         getOfflinePlayersManager().refreshCache();
+        try {
+            getCountingRewardsManager().start();
+        } catch (Exception e) {
+            Logs.error("Failed to start counting rewards manager", e);
+        }
 
         Utils.async(() -> {
             Utils.deleteOldLogFiles();
@@ -386,6 +393,7 @@ public final class Main extends JavaPlugin implements Listener {
         if (afkManager != null) afkManager.stop();
         if (tabListManager != null) tabListManager.stop();
         if (chatMinecraftManager != null) chatMinecraftManager.block();
+        if (countingRewardsManager != null) countingRewardsManager.close();
         if (teleportsManager != null) teleportsManager.cancelAll();
         if (economyManager != null) economyManager.setEnabled(false);
         if (chatReportsManager != null) chatReportsManager.stop();
