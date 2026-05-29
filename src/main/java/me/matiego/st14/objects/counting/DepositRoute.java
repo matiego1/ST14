@@ -74,7 +74,7 @@ public class DepositRoute {
 
         if (config.getBoolean("counting-rewards.log-every-deposit", true)) {
             String name = plugin.getOfflinePlayersManager().getEffectiveNameById(uuid);
-            Logs.info("Deposited a " + economy.format(amount) + " counting reward into " + name + " account");
+            Logs.info("[CountingRewards] Deposited " + economy.format(amount) + " into " + name + " account");
         }
 
         return new Response(200, "success");

@@ -25,25 +25,25 @@ public class CountingRewardsHandler implements WebSocket.Listener {
     @Override
     public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
         if (statusCode == UNAUTHORIZED_CODE) {
-            Logs.error("WebSocket is closed. (Code: " + statusCode + "; Reason: " + reason + ")");
+            Logs.error("[CountingRewards] WebSocket is closed. (Code: " + statusCode + "; Reason: " + reason + ")");
             return null;
         }
 
         CountingRewardsManager manager = plugin.getCountingRewardsManager();
 
         if (manager.isClosed()) {
-            Logs.info("WebSocket is closed. (Code: " + statusCode + "; Reason: " + reason + ")");
+            Logs.info("[CountingRewards] WebSocket is closed. (Code: " + statusCode + "; Reason: " + reason + ")");
             return null;
         }
 
-        Logs.warning("WebSocket is closed. (Code: " + statusCode + "; Reason: " + reason + ") Reconnecting...");
+        Logs.warning("[CountingRewards] WebSocket is closed. (Code: " + statusCode + "; Reason: " + reason + ") Reconnecting...");
         manager.scheduleReconnect(statusCode == WebSocket.NORMAL_CLOSURE ? 15 : 0);
         return null;
     }
 
     @Override
     public void onError(WebSocket webSocket, Throwable error) {
-        Logs.error("An WebSocket error occurred", error);
+        Logs.error("[CountingRewards] WebSocket error occurred", error);
     }
 
     @Override
@@ -52,7 +52,7 @@ public class CountingRewardsHandler implements WebSocket.Listener {
             Response response = getResponse(String.valueOf(data));
             webSocket.sendText(response.getAsJSON(), true);
         } catch (Exception e) {
-            Logs.error("Failed to handle a WebSocket message", e);
+            Logs.error("[CountingRewards] Failed to handle a WebSocket message", e);
         }
 
         webSocket.request(1);
@@ -76,7 +76,7 @@ public class CountingRewardsHandler implements WebSocket.Listener {
             response.setId(id);
             return response;
         } catch (Exception e) {
-            Logs.error("Failed to get a response to a WebSocket message", e);
+            Logs.error("[CountingRewards] Failed to get a response to a WebSocket message", e);
             return new Response(500, e.getMessage());
         }
     }

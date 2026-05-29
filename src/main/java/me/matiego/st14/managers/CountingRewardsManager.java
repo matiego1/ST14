@@ -112,7 +112,7 @@ public class CountingRewardsManager {
                     .thenAccept(ws -> {
                         webSocket = ws;
                         reconnectAttempts.set(0);
-                        Logs.info("Connected to WebSocket");
+                        Logs.info("[CountingRewards] Connected to WebSocket");
                         result.complete(null);
                     })
                     .exceptionally(e -> {
@@ -121,13 +121,13 @@ public class CountingRewardsManager {
                         }
 
                         if (e instanceof IllegalArgumentException || e instanceof SSLException) {
-                            Logs.error("Failed to connect to WebSocket", e);
+                            Logs.error("[CountingRewards] Failed to connect to WebSocket", e);
                             close();
                             result.complete(null);
                             return null;
                         }
 
-                        Logs.error("Failed to connect to WebSocket: " + e.getClass().getName() + ": " + e.getMessage() + ". Scheduling a reconnect...");
+                        Logs.error("[CountingRewards] Failed to connect to WebSocket: " + e.getClass().getName() + ": " + e.getMessage() + ". Scheduling a reconnect...");
                         scheduleReconnect();
                         result.complete(null);
                         return null;
@@ -155,13 +155,13 @@ public class CountingRewardsManager {
                     .orTimeout(5, TimeUnit.SECONDS)
                     .whenComplete((result, e) -> {
                         if (e != null) {
-                            Logs.error("Failed to gracefully close the WebSocket, aborting...", e);
+                            Logs.error("[CountingRewards] Failed to gracefully close the WebSocket, aborting...", e);
                             webSocket.abort();
                         }
                     })
                     .join();
         } catch (Exception e) {
-            Logs.error("Failed to close the WebSocket", e);
+            Logs.error("[CountingRewards] Failed to close the WebSocket", e);
         }
     }
 
