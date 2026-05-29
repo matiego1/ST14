@@ -5,10 +5,7 @@ import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.objects.Pair;
 import me.matiego.st14.objects.rankings.Ranking;
-import me.matiego.st14.rankings.AdvancementsRanking;
-import me.matiego.st14.rankings.EconomyRanking;
-import me.matiego.st14.rankings.MiniGameRanking;
-import me.matiego.st14.rankings.TimeRanking;
+import me.matiego.st14.rankings.*;
 import me.matiego.st14.utils.DiscordUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -187,7 +184,8 @@ public class RankingsManager {
         ECONOMY(new EconomyRanking(), "ekonomii"),
         MINIGAME(new MiniGameRanking(), "wygranych minigier"),
         TIME(new TimeRanking(), "czasu gry"),
-        ADVANCEMENTS(new AdvancementsRanking(), "zdobytych osiągnięć");
+        ADVANCEMENTS(new AdvancementsRanking(), "zdobytych osiągnięć"),
+        DEATHS(new DeathsRanking(), "śmierci");
 
         Type(@NotNull Ranking instance, @NotNull String rankingName) {
             this.instance = instance;

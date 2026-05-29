@@ -23,6 +23,10 @@ public class PlayerDeathListener implements Listener {
         plugin.getAntyLogoutManager().cancelAntyLogout(player);
         plugin.getMiniGamesManager().onPlayerDeath(player);
 
+        if (plugin.getConfig().getStringList("deaths-ranking-worlds").contains(player.getWorld().getName())) {
+            plugin.getDeathsManager().increaseDeathsNumber(player.getUniqueId());
+        }
+
         Component component = event.deathMessage();
         String msg = player.getName() + " died";
         if (component != null) {

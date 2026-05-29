@@ -51,6 +51,7 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private ChatMinecraftManager chatMinecraftManager;
     private ChatReportsManager chatReportsManager;
     @Getter private CommandManager commandManager;
+    @Getter private DeathsManager deathsManager;
     private DidYouKnowManager didYouKnowManager;
     @Getter private DynmapManager dynmapManager;
     @Getter private EconomyManager economyManager;
@@ -150,6 +151,7 @@ public final class Main extends JavaPlugin implements Listener {
         bansManager = new BansManager(this);
         chatMinecraftManager = new ChatMinecraftManager(this);
         chatReportsManager = new ChatReportsManager();
+        deathsManager = new DeathsManager(this);
         didYouKnowManager = new DidYouKnowManager(this);
         dynmapManager = new DynmapManager(this);
         economyManager = new EconomyManager(this);
