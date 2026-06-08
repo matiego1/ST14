@@ -202,7 +202,7 @@ public class NonPremiumManager {
         playerName.put(name, new Pair<>(uuid, user.getName()));
         expiration.put(uuid, Utils.now() + expirationInSeconds * 1000L);
 
-        Logs.info("Rozpoczęto sesję non-premium dla gracza " + DiscordUtils.getAsTag(member));
+        Logs.info("Rozpoczęto sesję non-premium gracza " + DiscordUtils.getAsTag(member) + " na " + expirationInSeconds + "s");
         return true;
     }
 
