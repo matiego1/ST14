@@ -223,6 +223,8 @@ public final class Main extends JavaPlugin implements Listener {
                 new PlayerSetSpawnListener(),
                 new PlayerStatisticIncrementListener(this),
                 new PlayerTeleportListener(),
+                new PreFillProfileListener(),
+                new PrepareAnvilListener(),
                 new ServerCommandListener(),
                 new PaperServerListPingListener(this),
                 new ServerLoadListener(this),

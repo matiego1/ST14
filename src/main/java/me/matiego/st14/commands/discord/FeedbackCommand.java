@@ -75,6 +75,6 @@ public class FeedbackCommand implements Discord {
                 success -> hook.sendMessage("Dziękujemy za twoją opinię!").queue(),
                 failure -> hook.sendMessage(errorMessage).queue()
         );
-        return 30;
+        return 15;
     }
 }

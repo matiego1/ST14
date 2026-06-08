@@ -1,9 +1,9 @@
 package me.matiego.st14.commands.minecraft;
 
-import me.matiego.st14.Main;
-import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.Logs;
+import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
+import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
@@ -49,6 +49,6 @@ public class SuicideCommand implements CommandHandler.Minecraft {
                 "Gracz " + player.getName() + " popełnił samobójstwo!",
                 "Gracz **" + player.getName() + "** popełnił samobójstwo!"
         );
-        return 60;
+        return 20;
     }
 }

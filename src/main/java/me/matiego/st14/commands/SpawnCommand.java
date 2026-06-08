@@ -129,7 +129,7 @@ public class SpawnCommand implements CommandHandler.Minecraft, CommandHandler.Di
             }
         });
 
-        return 30;
+        return 15;
     }
 
     @Override

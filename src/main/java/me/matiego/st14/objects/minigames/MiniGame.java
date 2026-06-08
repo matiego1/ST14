@@ -497,6 +497,9 @@ public abstract class MiniGame implements Listener {
         if (!isInMiniGame(player)) return;
 
         if (timer != null) timer.hideBossBarFromPlayer(player);
+        World world = MiniGamesUtils.getMiniGamesWorld();
+        if (world != null) player.setRespawnLocation(world.getSpawnLocation(), true);
+        player.setWorldBorder(null);
 
         PlayerStatus status = getPlayerStatus(player);
         changePlayerStatus(player, PlayerStatus.NOT_IN_MINI_GAME);

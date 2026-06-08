@@ -38,8 +38,8 @@ public class NonPremiumCommand implements CommandHandler.Discord {
                         new SubcommandData("cancel", "Zakończ aktualną sesję"),
                         new SubcommandData("start", "Zacznij nową sesję")
                                 .addOptions(
-                                        new OptionData(OptionType.STRING, "name", "nick, z którym dołączysz do serwera", true)
-                                                .setRequiredLength(10, 16)
+                                        new OptionData(OptionType.STRING, "name", "nick, z którym dołączysz do serwera", false)
+                                                .setRequiredLength(7, 16)
                                 )
                 );
     }
@@ -74,16 +74,23 @@ public class NonPremiumCommand implements CommandHandler.Discord {
                     return 5;
                 }
 
-                String name = event.getOption("name", OptionMapping::getAsString);
-                if (name == null) return 0;
+                String name = plugin.getNonPremiumManager().getLastUsedName(member);
+                if (name == null) {
+                    name = event.getOption("name", OptionMapping::getAsString);
+                    if (name == null) {
+                        hook.sendMessage("Podaj nick, z którym dołączysz do serwera.").queue();
+                        return 2;
+                    }
+                    plugin.getNonPremiumManager().setLastUsedName(member, name);
+                }
 
                 if (!name.startsWith(NonPremiumManager.JOIN_NAME_PREFIX)) {
                     hook.sendMessage("Nick musi zaczynać się od `" + NonPremiumManager.JOIN_NAME_PREFIX + "`. Ten nick służy tylko do dołączenia na serwer, później zostanie zmieniony!").queue();
-                    return 3;
+                    return 2;
                 }
-                if (manager.isNameUsed(name)) {
+                if (manager.isNameUsed(name, member)) {
                     hook.sendMessage("Ktoś już używa tego nicku! Wymyśl inny.").queue();
-                    return 3;
+                    return 2;
                 }
 
                 AccountsManager accountsManager = plugin.getAccountsManager();
@@ -99,8 +106,7 @@ public class NonPremiumCommand implements CommandHandler.Discord {
                     return 3;
                 }
 
-                String code = manager.startLogin(member, name);
-                if (code == null) {
+                if (manager.startLogin(member, name, 60)) {
                     hook.sendMessage("Napotkano niespodziewany błąd. Spróbuj ponownie.").queue();
                     return 3;
                 }
@@ -111,7 +117,7 @@ public class NonPremiumCommand implements CommandHandler.Discord {
                         W każdej chwili możesz anulować sesję, używając komendy `/nonpremium cancel` na Discord.
                         Twój nick po dołączeniu do gry zostanie zmieniony na `%s`.
                         Wszystkie informacje o graczu zostaną przypisane do twojego konta Discord.
-                        Po wyjściu z serwera twoja sesja automatycznie wygaśnie.
+                        30 sekund po wyjściu z serwera twoja sesja automatycznie wygaśnie.
                         
                         **UWAGA!** Przez następną minutę **każdy** gracz z wybranym nickiem może dołączyć na serwer za ciebie! Wybierz skomplikowany nick, aby temu zapobiec.
                         """.formatted(name, NonPremiumManager.NAME_PREFIX + member.getUser().getName())

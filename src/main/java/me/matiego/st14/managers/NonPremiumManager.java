@@ -19,15 +19,16 @@ import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
 import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.UserSnowflake;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.minecraft.network.Connection;
 import net.minecraft.network.PacketListener;
 import net.minecraft.server.network.ServerLoginPacketListenerImpl;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
@@ -38,6 +39,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -50,8 +54,10 @@ public class NonPremiumManager {
     public static final String NAME_PREFIX = "+";
 
     private final Main plugin;
+    private final String ERROR_MSG = "An error occurred while modifying values in \"st14_non_premium\" table in the database.";
     private final HashMap<UUID, Long> expiration = new HashMap<>();
     private final HashMap<String, Pair<UUID, String>> playerName = new HashMap<>();
+    private final HashMap<UUID, String> originalName = new HashMap<>();
 
     public void addPacketListener() {
         ProtocolManager protocolManager = ProtocolLibrary.getProtocolManager();
@@ -72,17 +78,17 @@ public class NonPremiumManager {
                     }
 
                     Long time = expiration.remove(newName.getFirst());
-                    if (time == null || Utils.now() - time > 60 * 1000) {
+                    if (time == null || Utils.now() > time) {
                         kickLoginPlayer(event, "&cTwoja sesja wygasła!");
                         return;
                     }
                     newName.setSecond(NAME_PREFIX + newName.getSecond());
 
-
                     LuckPerms luckPerms = LuckPermsProvider.get();
                     luckPerms.getUserManager().loadUser(newName.getFirst(), newName.getSecond()).thenAcceptAsync(user -> Utils.async(() -> {
                         if (forceLoginSuccess(event, newName.getFirst(), newName.getSecond())) {
                             sendMessageToUser(newName.getFirst(), "Dołączyłeś na serwer, miłej gry!");
+                            originalName.put(newName.getFirst(), name);
                         } else {
                             kickLoginPlayer(event, "&cNapotkano niespodziewany błąd. Spróbuj później.");
                         }
@@ -179,32 +185,31 @@ public class NonPremiumManager {
         return false;
     }
 
-    public synchronized @Nullable String startLogin(@NotNull Member member, @NotNull String name) {
-        if (!name.startsWith(JOIN_NAME_PREFIX)) return null;
-        if (playerName.containsKey(name)) return null;
+    public synchronized boolean startLogin(@NotNull Member member, @NotNull String name, int expirationInSeconds) {
+        if (!name.startsWith(JOIN_NAME_PREFIX)) return false;
+        if (isNameUsed(name, member)) return false;
 
         User user = member.getUser();
-        if (!user.getDiscriminator().equals("0000")) return null;
-        if (!DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.verified"))) return null;
-        if (!DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.non-premium"))) return null;
+        if (!user.getDiscriminator().equals("0000")) return false;
+        if (!DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.verified"))) return false;
+        if (!DiscordUtils.hasRole(member, plugin.getConfig().getLong("discord.role-ids.non-premium"))) return false;
 
         UUID uuid = NonPremiumUtils.createNonPremiumUuid(member);
-        if (!uuid.equals(plugin.getAccountsManager().getPlayerByUser(member))) return null;
+        if (!uuid.equals(plugin.getAccountsManager().getPlayerByUser(member))) return false;
 
         endSession(uuid, "Rozpoczęto nową sesję");
 
-        String code = RandomStringUtils.secure().nextAlphanumeric(10);
-
         playerName.put(name, new Pair<>(uuid, user.getName()));
-        expiration.put(uuid, Utils.now());
+        expiration.put(uuid, Utils.now() + expirationInSeconds * 1000L);
 
         Logs.info("Rozpoczęto sesję non-premium dla gracza " + DiscordUtils.getAsTag(member));
-
-        return code;
+        return true;
     }
 
-    public synchronized boolean isNameUsed(@NotNull String name) {
-        return playerName.containsKey(name);
+    public synchronized boolean isNameUsed(@NotNull String name, @NotNull UserSnowflake user) {
+        Pair<UUID, String> pair = playerName.get(name);
+        if (pair == null) return false;
+        return NonPremiumUtils.getIdByNonPremiumUuid(pair.getFirst()) != user.getIdLong();
     }
 
     public synchronized void endSession(@NotNull UUID uuid, @NotNull String reason) {
@@ -227,5 +232,59 @@ public class NonPremiumManager {
         jda.retrieveUserById(NonPremiumUtils.getIdByNonPremiumUuid(uuid)).queue(
                 user -> DiscordUtils.sendPrivateMessage(user, message, action -> action.setComponents(ActionRow.of(Button.danger("end-session", "Zakończ sesję"))), result -> {})
         );
+    }
+
+    public void onPlayerQuit(@NotNull UUID uuid) {
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            String name = originalName.remove(uuid);
+
+            UserSnowflake user = plugin.getAccountsManager().getUserByPlayer(uuid);
+            if (user == null) return;
+            JDA jda = plugin.getJda();
+            if (jda == null) return;
+            Guild guild = jda.getGuildById(plugin.getConfig().getLong("discord.guild-id"));
+            if (guild == null) return;
+            Member member = DiscordUtils.retrieveMember(guild, user);
+            if (member == null) return;
+
+            startLogin(member, name, 30);
+        }, 3);
+    }
+
+    public @Nullable String getLastUsedName(@NotNull UserSnowflake user) {
+        try (java.sql.Connection conn = plugin.getMySQLConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT name FROM st14_non_premium WHERE id = ?")) {
+            stmt.setLong(1, user.getIdLong());
+
+            ResultSet result = stmt.executeQuery();
+            if (!result.next()) return null;
+            return result.getString("name");
+        } catch (SQLException e) {
+            Logs.error(ERROR_MSG, e);
+        }
+        return null;
+    }
+
+    public void setLastUsedName(@NotNull UserSnowflake user, String name) {
+        try (java.sql.Connection conn = plugin.getMySQLConnection();
+             PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_non_premium(id, name) VALUES (?, ?) ON DUPLICATE KEY UPDATE name = ?")) {
+            stmt.setLong(1, user.getIdLong());
+            stmt.setString(2, name);
+            stmt.setString(3, name);
+            stmt.execute();
+        } catch (SQLException e) {
+            Logs.error(ERROR_MSG, e);
+        }
+    }
+
+    public boolean createTable() {
+        try (java.sql.Connection conn = plugin.getMySQLConnection();
+             PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_non_premium(id BIGINT PRIMARY KEY, name VARCHAR(30))")) {
+            stmt.execute();
+            return true;
+        } catch (SQLException e) {
+            Logs.error("An error occurred while creating the database table \"st14_non_premium\"", e);
+        }
+        return false;
     }
 }

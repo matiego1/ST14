@@ -95,7 +95,7 @@ public class AsyncPlayerPreLoginListener implements Listener {
                     "Użyj komendy &9/accounts &bna Discord\n" +
                     "z kodem &9" + code + "&b\n\n" +
                     "(" + plugin.getConfig().getString("discord.invite-link", "---") + ")\n\n" +
-                    "&cUWAGA! &bKod będzie ważny tylko 5 minut.");
+                    "&cUWAGA! &bKod jest ważny tylko 5 minut.");
             return false;
         }
         Guild guild = jda.getGuildById(plugin.getConfig().getLong("discord.guild-id"));
