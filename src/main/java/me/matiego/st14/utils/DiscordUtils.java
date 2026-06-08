@@ -245,15 +245,11 @@ public class DiscordUtils {
         action.queue(
                 success -> result.accept(PrivateMessageResult.SUCCESS),
                 failure -> {
-                    if (failure instanceof ErrorResponseException e && (e.getErrorResponse() == ErrorResponse.CANNOT_SEND_TO_USER || e.getErrorCode() == 50278)) {
+                    if (failure instanceof ErrorResponseException e && (e.getErrorResponse() == ErrorResponse.CANNOT_SEND_TO_USER || e.getErrorResponse() == ErrorResponse.NO_MUTUAL_GUILDS)) {
                         long now = Utils.now();
                         if (now - privateMessages.getOrDefault(user.getIdLong(), 0L) >= 15 * 60 * 1000L) {
                             Logs.warning("User " + DiscordUtils.getAsTag(user) + " doesn't allow private messages.");
                             privateMessages.put(user.getIdLong(), now);
-
-                            TextChannel chn = DiscordUtils.getChatMinecraftChannel();
-                            if (chn == null) return;
-                            chn.sendMessage(user.getAsMention() + " nie mogę wysłać do ciebie prywatnej wiadomości :( Czy możesz mi na to zezwolić?").queue();
                         }
                         result.accept(PrivateMessageResult.CANNOT_SEND_TO_USER);
                     } else {

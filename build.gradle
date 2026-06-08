@@ -37,7 +37,7 @@ dependencies {
     paperweight.paperDevBundle("1.21.11-R0.1-SNAPSHOT")
 
     // JDA
-    implementation('net.dv8tion:JDA:6.4.1') {
+    implementation('net.dv8tion:JDA:6.4.2') {
         exclude group: 'club.minnced', module: 'opus-java'
     }
 
