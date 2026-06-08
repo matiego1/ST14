@@ -277,8 +277,8 @@ public class NonPremiumManager {
         }
     }
 
-    public boolean createTable() {
-        try (java.sql.Connection conn = plugin.getMySQLConnection();
+    public static boolean createTable() {
+        try (java.sql.Connection conn = Main.getInstance().getMySQLConnection();
              PreparedStatement stmt = conn.prepareStatement("CREATE TABLE IF NOT EXISTS st14_non_premium(id BIGINT PRIMARY KEY, name VARCHAR(30))")) {
             stmt.execute();
             return true;

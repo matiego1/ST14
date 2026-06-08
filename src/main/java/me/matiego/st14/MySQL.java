@@ -44,6 +44,7 @@ public class MySQL {
     }
 
     public boolean createTables() {
+        if (!NonPremiumManager.createTable()) return false;
         if (!RewardsManager.createTable()) return false;
         if (!AccountsManager.createTable()) return false;
         if (!BackpackManager.createTable()) return false;

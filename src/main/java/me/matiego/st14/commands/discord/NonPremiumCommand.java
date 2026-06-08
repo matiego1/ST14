@@ -75,14 +75,14 @@ public class NonPremiumCommand implements CommandHandler.Discord {
                 }
 
                 String name = plugin.getNonPremiumManager().getLastUsedName(member);
+                String nameOption = event.getOption("name", OptionMapping::getAsString);
+                if (nameOption != null) name = nameOption;
+
                 if (name == null) {
-                    name = event.getOption("name", OptionMapping::getAsString);
-                    if (name == null) {
-                        hook.sendMessage("Podaj nick, z którym dołączysz do serwera.").queue();
-                        return 2;
-                    }
-                    plugin.getNonPremiumManager().setLastUsedName(member, name);
+                    hook.sendMessage("Podaj nick, z którym dołączysz do serwera.").queue();
+                    return 2;
                 }
+                plugin.getNonPremiumManager().setLastUsedName(member, name);
 
                 if (!name.startsWith(NonPremiumManager.JOIN_NAME_PREFIX)) {
                     hook.sendMessage("Nick musi zaczynać się od `" + NonPremiumManager.JOIN_NAME_PREFIX + "`. Ten nick służy tylko do dołączenia na serwer, później zostanie zmieniony!").queue();
@@ -106,7 +106,7 @@ public class NonPremiumCommand implements CommandHandler.Discord {
                     return 3;
                 }
 
-                if (manager.startLogin(member, name, 60)) {
+                if (!manager.startLogin(member, name, 60)) {
                     hook.sendMessage("Napotkano niespodziewany błąd. Spróbuj ponownie.").queue();
                     return 3;
                 }
