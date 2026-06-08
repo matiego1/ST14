@@ -235,6 +235,8 @@ public class NonPremiumManager {
     }
 
     public void onPlayerQuit(@NotNull UUID uuid) {
+        if (!NonPremiumUtils.isNonPremiumUuid(uuid)) return;
+
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             String name = originalName.remove(uuid);
 
