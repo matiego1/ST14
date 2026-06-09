@@ -84,8 +84,9 @@ public class NonPremiumCommand implements CommandHandler.Discord {
                 }
                 plugin.getNonPremiumManager().setLastUsedName(member, name);
 
-                if (!name.startsWith(NonPremiumManager.JOIN_NAME_PREFIX)) {
-                    hook.sendMessage("Nick musi zaczynać się od `" + NonPremiumManager.JOIN_NAME_PREFIX + "`. Ten nick służy tylko do dołączenia na serwer, później zostanie zmieniony!").queue();
+                String joinNamePrefix = plugin.getNonPremiumManager().getJoinNamePrefix();
+                if (!name.startsWith(joinNamePrefix)) {
+                    hook.sendMessage("Nick musi zaczynać się od `" + joinNamePrefix + "`. Ten nick służy tylko do dołączenia na serwer, później zostanie zmieniony!").queue();
                     return 2;
                 }
                 if (manager.isNameUsed(name, member)) {

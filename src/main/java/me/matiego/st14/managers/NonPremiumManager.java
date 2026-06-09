@@ -50,7 +50,6 @@ public class NonPremiumManager {
         this.plugin = plugin;
     }
 
-    public static final String JOIN_NAME_PREFIX = "st14_";
     public static final String NAME_PREFIX = "+";
 
     private final Main plugin;
@@ -67,7 +66,7 @@ public class NonPremiumManager {
                 Player player = event.getPlayer();
                 String name = event.getPacket().getStrings().read(0).toLowerCase();
 
-                if (name.startsWith(JOIN_NAME_PREFIX)) {
+                if (name.startsWith(getJoinNamePrefix())) {
                     event.setCancelled(true);
                     Logs.info("Skipping authorisation for player " + name);
 
@@ -97,6 +96,10 @@ public class NonPremiumManager {
                 }
             }
         });
+    }
+
+    public @NotNull String getJoinNamePrefix() {
+        return plugin.getConfig().getString("non-premium.join-prefix", "st14_");
     }
 
     private void kickLoginPlayer(@NotNull PacketEvent event, @NotNull String message) {
@@ -186,7 +189,7 @@ public class NonPremiumManager {
     }
 
     public synchronized boolean startLogin(@NotNull Member member, @NotNull String name, int expirationInSeconds) {
-        if (!name.startsWith(JOIN_NAME_PREFIX)) return false;
+        if (!name.startsWith(getJoinNamePrefix())) return false;
         if (isNameUsed(name, member)) return false;
 
         User user = member.getUser();
@@ -207,6 +210,12 @@ public class NonPremiumManager {
     }
 
     public synchronized boolean isNameUsed(@NotNull String name, @NotNull UserSnowflake user) {
+        UUID uuid = plugin.getOfflinePlayersManager().getIdByName(name);
+        if (uuid != null) {
+            if (!NonPremiumUtils.isNonPremiumUuid(uuid)) return true;
+            if (NonPremiumUtils.getIdByNonPremiumUuid(uuid) != user.getIdLong()) return true;
+        }
+
         Pair<UUID, String> pair = playerName.get(name);
         if (pair == null) return false;
         return NonPremiumUtils.getIdByNonPremiumUuid(pair.getFirst()) != user.getIdLong();

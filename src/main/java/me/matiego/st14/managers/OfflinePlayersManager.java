@@ -1,7 +1,7 @@
 package me.matiego.st14.managers;
 
-import me.matiego.st14.Main;
 import me.matiego.st14.Logs;
+import me.matiego.st14.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -35,7 +35,7 @@ public class OfflinePlayersManager {
             ResultSet result = stmt.executeQuery();
             if (!result.next()) return null;
             return UUID.fromString(result.getString("uuid"));
-        } catch (SQLException e) {
+        } catch (SQLException | IllegalArgumentException e) {
             Logs.error(ERROR_MSG, e);
         }
         return null;
