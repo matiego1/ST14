@@ -85,5 +85,8 @@ public class PlayerJoinListener implements Listener {
 
         // send f3 brand
         plugin.getF3BrandManager().sendF3Brand(player);
+
+        // elytra exhaustion
+        if (player.isGliding()) plugin.getElytraExhaustionManager().flightBeginning(player);
     }
 }
