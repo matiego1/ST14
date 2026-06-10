@@ -54,25 +54,45 @@ public class NonPremiumManager {
 
     private final Main plugin;
     private final String ERROR_MSG = "An error occurred while modifying values in \"st14_non_premium\" table in the database.";
+    private final String noSessionError = "&cAby zagrać bez kupionego minecrafta, musisz rozpocząć sesję na serwerze Discord!\nUżyj komendy &l/nonpremium start";
     private final HashMap<UUID, Long> expiration = new HashMap<>();
     private final HashMap<String, Pair<UUID, String>> playerName = new HashMap<>();
     private final HashMap<UUID, String> originalName = new HashMap<>();
 
     public void addPacketListener() {
         ProtocolManager protocolManager = ProtocolLibrary.getProtocolManager();
+
+        protocolManager.addPacketListener(new PacketAdapter(plugin, ListenerPriority.HIGHEST, PacketType.Login.Server.DISCONNECT) {
+            @Override
+            public void onPacketSending(@NotNull PacketEvent event) {
+                try {
+                    Logs.info("[DEBUG] disconnect");
+                    String originalMessage = event.getPacket().getChatComponents().read(0).getJson();
+                    if (!originalMessage.contains("multiplayer.disconnect.unverified")) return;
+
+                    String message = noSessionError.replace("&", "§");
+                    event.getPacket().getChatComponents().write(0, WrappedChatComponent.fromText(message));
+                } catch (Exception e) {
+                    Logs.error("Failed to handle a disconnect packet", e);
+                }
+            }
+        });
+
         protocolManager.addPacketListener(new PacketAdapter(plugin, ListenerPriority.HIGHEST, PacketType.Login.Client.START) {
             @Override
-            public void onPacketReceiving(PacketEvent event) {
-                Player player = event.getPlayer();
+            public void onPacketReceiving(@NotNull PacketEvent event) {
                 String name = event.getPacket().getStrings().read(0).toLowerCase();
 
-                if (name.startsWith(getJoinNamePrefix())) {
+                String prefix = getJoinNamePrefix();
+                if (name.startsWith(prefix)) {
+                    if (prefix.isBlank() && !playerName.containsKey(name)) return;
+
                     event.setCancelled(true);
                     Logs.info("Skipping authorisation for player " + name);
 
                     Pair<UUID, String> newName = playerName.remove(name);
                     if (newName == null) {
-                        kickLoginPlayer(event, "&cAby zagrać z konta non-premium, musisz rozpocząć sesję na serwerze Discord! Użyj komendy &l/nonpremium start");
+                        kickLoginPlayer(event, noSessionError);
                         return;
                     }
 

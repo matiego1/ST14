@@ -173,6 +173,16 @@ public class Utils {
         woolToStrings.addIngredient(Material.WHITE_WOOL);
         woolToStrings.setCategory(CraftingBookCategory.MISC);
         Bukkit.addRecipe(woolToStrings);
+
+        // Nametag
+        if (Bukkit.getBukkitVersion().equals("1.21.11-R0.1-SNAPSHOT")) {
+            ShapelessRecipe nametag = new ShapelessRecipe(new NamespacedKey(Main.getInstance(), "nametag"), new ItemStack(Material.NAME_TAG, 1));
+            nametag.addIngredient(Material.IRON_NUGGET);
+            nametag.addIngredient(Material.PAPER);
+            Bukkit.addRecipe(nametag);
+        } else {
+            Logs.warning("Remove nametag recipe !!!"); // I'll forget to remove that when migrating to 26.1+
+        }
     }
 
     public static boolean isDifferentDay(long date1, long date2) {

@@ -56,6 +56,7 @@ public final class Main extends JavaPlugin implements Listener {
     private DidYouKnowManager didYouKnowManager;
     @Getter private DynmapManager dynmapManager;
     @Getter private EconomyManager economyManager;
+    @Getter private ElytraExhaustionManager elytraExhaustionManager;
     @Getter private F3BrandManager f3BrandManager;
     @Getter private HeadsManager headsManager;
     @Getter private HomeManager homeManager;
@@ -157,6 +158,7 @@ public final class Main extends JavaPlugin implements Listener {
         didYouKnowManager = new DidYouKnowManager(this);
         dynmapManager = new DynmapManager(this);
         economyManager = new EconomyManager(this);
+        elytraExhaustionManager = new ElytraExhaustionManager(this);
         f3BrandManager = new F3BrandManager(this);
         headsManager = new HeadsManager(this);
         homeManager = new HomeManager(this);
@@ -210,6 +212,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new PlayerCommandSendListener(this),
                 new PlayerDeathListener(this),
                 playerDeepSleepListener,
+                new PlayerElytraBoostListener(this),
                 new PlayerInteractListener(this),
                 new PlayerItemFrameChangeListener(this),
                 new PlayerJoinListener(this),
@@ -350,6 +353,7 @@ public final class Main extends JavaPlugin implements Listener {
         Utils.registerRecipes();
         Utils.kickPlayersAtMidnightTask();
         getOfflinePlayersManager().refreshCache();
+        getElytraExhaustionManager().start();
         try {
             getCountingRewardsManager().start();
         } catch (Exception e) {
@@ -391,6 +395,7 @@ public final class Main extends JavaPlugin implements Listener {
             if (player.getOpenInventory().getTopInventory().getHolder() instanceof GUI) player.closeInventory();
         }
         // disable managers
+        if (elytraExhaustionManager != null) elytraExhaustionManager.stop();
         if (antyLogoutManager != null) antyLogoutManager.stop();
         if (afkManager != null) afkManager.stop();
         if (tabListManager != null) tabListManager.stop();
