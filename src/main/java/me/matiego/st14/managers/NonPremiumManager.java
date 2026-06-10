@@ -61,23 +61,6 @@ public class NonPremiumManager {
 
     public void addPacketListener() {
         ProtocolManager protocolManager = ProtocolLibrary.getProtocolManager();
-
-        protocolManager.addPacketListener(new PacketAdapter(plugin, ListenerPriority.HIGHEST, PacketType.Login.Server.DISCONNECT) {
-            @Override
-            public void onPacketSending(@NotNull PacketEvent event) {
-                try {
-                    Logs.info("[DEBUG] disconnect");
-                    String originalMessage = event.getPacket().getChatComponents().read(0).getJson();
-                    if (!originalMessage.contains("multiplayer.disconnect.unverified")) return;
-
-                    String message = noSessionError.replace("&", "§");
-                    event.getPacket().getChatComponents().write(0, WrappedChatComponent.fromText(message));
-                } catch (Exception e) {
-                    Logs.error("Failed to handle a disconnect packet", e);
-                }
-            }
-        });
-
         protocolManager.addPacketListener(new PacketAdapter(plugin, ListenerPriority.HIGHEST, PacketType.Login.Client.START) {
             @Override
             public void onPacketReceiving(@NotNull PacketEvent event) {
@@ -119,7 +102,7 @@ public class NonPremiumManager {
     }
 
     public @NotNull String getJoinNamePrefix() {
-        return plugin.getConfig().getString("non-premium.join-prefix", "st14_");
+        return plugin.getConfig().getString("non-premium-join-prefix", "st14_");
     }
 
     private void kickLoginPlayer(@NotNull PacketEvent event, @NotNull String message) {
@@ -246,6 +229,7 @@ public class NonPremiumManager {
 
         playerName.entrySet().removeIf(e -> e.getValue().getFirst().equals(uuid));
         expiration.remove(uuid);
+        originalName.remove(uuid);
 
         Utils.sync(() -> {
             Player player = Bukkit.getPlayer(uuid);
@@ -266,9 +250,10 @@ public class NonPremiumManager {
     public void onPlayerQuit(@NotNull UUID uuid) {
         if (!NonPremiumUtils.isNonPremiumUuid(uuid)) return;
 
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            String name = originalName.remove(uuid);
+        String name = originalName.remove(uuid);
+        if (name == null) return;
 
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
             UserSnowflake user = plugin.getAccountsManager().getUserByPlayer(uuid);
             if (user == null) return;
             JDA jda = plugin.getJda();

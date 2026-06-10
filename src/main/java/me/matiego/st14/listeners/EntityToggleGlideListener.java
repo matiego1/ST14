@@ -19,7 +19,7 @@ public class EntityToggleGlideListener implements Listener {
         if (!(event.getEntity() instanceof Player player)) return;
         if (!plugin.getConfig().getStringList("elytra.worlds").contains(player.getWorld().getName())) return;
 
-        if (event.isGliding() && !(Utils.getTps() >= plugin.getConfig().getDouble("elytra.block-below-tps"))) {
+        if (event.isGliding() && Utils.getTps() < plugin.getConfig().getDouble("elytra.block-below-tps")) {
             player.sendActionBar(Utils.getComponentByString("&cNie możesz teraz latać!"));
             event.setCancelled(true);
             return;

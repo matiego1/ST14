@@ -21,7 +21,7 @@ public class PlayerElytraBoostListener implements Listener {
 
         if (!plugin.getConfig().getStringList("elytra.worlds").contains(player.getWorld().getName())) return;
 
-        if (Utils.getTps() >= plugin.getConfig().getDouble("elytra.block-below-tps")) {
+        if (Utils.getTps() < plugin.getConfig().getDouble("elytra.block-below-tps")) {
             player.sendActionBar(Utils.getComponentByString("&cNie możesz teraz latać!"));
             event.setCancelled(true);
             return;
