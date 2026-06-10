@@ -1,6 +1,5 @@
 package me.matiego.st14.managers;
 
-import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;
@@ -65,7 +64,6 @@ public class ElytraExhaustionManager {
 
     private void applyExhaustion(@NotNull Player player, long start, long now) {
         double duration = (now - start) / 1000d;
-        Logs.info("[DEBUG] apply " + player.getName() + " " + duration);
         float exhaustion = (float) (plugin.getConfig().getDouble("elytra.glide-exhaustion", 0.5d) * duration);
 
         player.setExhaustion(player.getExhaustion() + exhaustion);
