@@ -201,6 +201,7 @@ public final class Main extends JavaPlugin implements Listener {
                 gravePostCreateListener,
                 new GraveTeleportListener(this),
                 new GS4QueryListener(this),
+                new InventoryClickListener(),
                 new InventoryCloseListener(this),
                 new PlayerAdvancementCriterionGrantListener(this),
                 new PlayerAdvancementDoneListener(this),
