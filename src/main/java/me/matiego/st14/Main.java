@@ -85,6 +85,7 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private PlayerDeepSleepListener playerDeepSleepListener;
     @Getter private PlayerMoveListener playerMoveListener;
     @Getter private PlayerQuitListener playerQuitListener;
+    @Getter private VehicleMoveListener vehicleMoveListener;
 
     private JDA jda;
     private boolean isJdaEnabled = false;
@@ -183,6 +184,7 @@ public final class Main extends JavaPlugin implements Listener {
         playerDeepSleepListener = new PlayerDeepSleepListener(this);
         playerMoveListener = new PlayerMoveListener(this);
         playerQuitListener = new PlayerQuitListener(this);
+        vehicleMoveListener = new VehicleMoveListener(this);
         listenersManager.registerListeners(
                 new AsyncChatListener(this),
                 new AsyncPlayerPreLoginListener(this),
@@ -233,8 +235,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new PaperServerListPingListener(this),
                 new ServerLoadListener(this),
                 new StructureGrowListener(),
-                new VehicleMoveListener(this)
-
+                vehicleMoveListener
         );
         listenersManager.registerListener("minecraft:brand", new PluginMessageReceivedListener(this));
         getDynmapManager().getClaimsMarker().registerListeners();

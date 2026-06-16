@@ -5,8 +5,8 @@ import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.EconomyManager;
 import me.matiego.st14.managers.HomeManager;
-import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.objects.GUI;
+import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.milkbowl.vault.economy.EconomyResponse;
@@ -169,7 +169,7 @@ public class HomeCommand implements CommandHandler.Minecraft {
 
         EconomyManager economy = plugin.getEconomyManager();
         if (cost != 0 && !economy.has(player, cost)) {
-            player.sendMessage(Utils.getComponentByString(Prefix.HOME + "Aby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.getBalance(player) + "."));
+            player.sendMessage(Utils.getComponentByString(Prefix.HOME + "Aby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.format(economy.getBalance(player))));
             return;
         }
 
@@ -181,7 +181,7 @@ public class HomeCommand implements CommandHandler.Minecraft {
                     if (cost == 0) return true;
                     EconomyResponse response = economy.withdrawPlayer(player, cost);
                     if (response.transactionSuccess()) return true;
-                    player.sendMessage(Utils.getComponentByString(Prefix.HOME + "Aby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.format(response.balance) + "."));
+                    player.sendMessage(Utils.getComponentByString(Prefix.HOME + "Aby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.format(response.balance)));
                     return false;
                 }).get()) {
                     case SUCCESS -> {

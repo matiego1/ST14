@@ -91,7 +91,7 @@ public class SpawnCommand implements CommandHandler.Minecraft, CommandHandler.Di
 
         EconomyManager economy = plugin.getEconomyManager();
         if (cost != 0 && !economy.has(player, cost)) {
-            player.sendMessage(Utils.getComponentByString("&aAby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.getBalance(player) + "."));
+            player.sendMessage(Utils.getComponentByString("&aAby się przeteleportować potrzebujesz " + economy.format(cost) + " a masz tylko " + economy.format(economy.getBalance(player))));
             return 3;
         }
 
@@ -103,7 +103,7 @@ public class SpawnCommand implements CommandHandler.Minecraft, CommandHandler.Di
                     if (cost == 0) return true;
                     EconomyResponse response = economy.withdrawPlayer(player, cost);
                     if (response.transactionSuccess()) return true;
-                    player.sendMessage(Utils.getComponentByString("&cAby się przeteleportować potrzebujesz " + economy.format(cost) + ", a masz tylko " + economy.format(response.balance) + "."));
+                    player.sendMessage(Utils.getComponentByString("&cAby się przeteleportować potrzebujesz " + economy.format(cost) + ", a masz tylko " + economy.format(response.balance)));
                     return false;
                 }).get()) {
                     case SUCCESS -> {

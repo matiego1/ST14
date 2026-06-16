@@ -28,6 +28,7 @@ public class PlayerQuitListener implements Listener {
         plugin.getTellCommand().removeReply(player.getUniqueId());
         plugin.getTpaCommand().cancel(player);
         plugin.getPlayerMoveListener().removeBossBarForPlayer(player);
+        plugin.getVehicleMoveListener().removeBossBarForPlayer(player);
         plugin.getAfkManager().move(player);
         plugin.getBackpackManager().clearCache(player.getUniqueId());
         plugin.getMiniGamesManager().onPlayerQuit(player);
