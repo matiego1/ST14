@@ -108,6 +108,8 @@ public class VehicleMoveListener implements Listener {
     }
 
     public void removeBossBarForPlayer(@NotNull Player player) {
-        bossBars.remove(player.getUniqueId());
+        BossBar bossBar = bossBars.remove(player.getUniqueId());
+        if (bossBar == null) return;
+        player.hideBossBar(bossBar);
     }
 }
