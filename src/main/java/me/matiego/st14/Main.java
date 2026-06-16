@@ -235,6 +235,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new PaperServerListPingListener(this),
                 new ServerLoadListener(this),
                 new StructureGrowListener(),
+                new VehicleExitListener(this),
                 vehicleMoveListener
         );
         listenersManager.registerListener("minecraft:brand", new PluginMessageReceivedListener(this));

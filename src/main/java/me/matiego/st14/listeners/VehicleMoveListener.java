@@ -31,6 +31,7 @@ public class VehicleMoveListener implements Listener {
     private final double VANILLA_MAX_SPEED = 0.4;
     private final double MIN_MAX_SPEED = 0.01;
     private final HashMap<UUID, BossBar> bossBars = new HashMap<>();
+    private final double SQRT_2 = Math.sqrt(2);
 
     @EventHandler (ignoreCancelled = true)
     public void onVehicleMove(@NotNull VehicleMoveEvent event) {
@@ -73,9 +74,16 @@ public class VehicleMoveListener implements Listener {
         double distance = event.getFrom().distance(event.getTo());
         double speed = distance * 20;
 
-        Component title = Utils.getComponentByString("&6" + Utils.round(speed, 2) + " m/s");
-        double maxSpeed = minecart.getMaxSpeed();
+        boolean isCurve = isAscending ||
+                shape == Rail.Shape.NORTH_EAST ||
+                shape == Rail.Shape.NORTH_WEST ||
+                shape == Rail.Shape.SOUTH_EAST ||
+                shape == Rail.Shape.SOUTH_WEST;
+        double maxSpeed = minecart.getMaxSpeed() * 20;
+        if (isCurve) maxSpeed *= SQRT_2;
+
         float progress = (float) Math.min(1, Math.max(0, speed / maxSpeed));
+        Component title = Utils.getComponentByString("&6" + Utils.round(speed, 2) + " m/s");
 
         passengers.forEach(entity -> {
             if (!(entity instanceof Player player)) return;
