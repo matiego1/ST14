@@ -83,7 +83,7 @@ public class VehicleMoveListener implements Listener {
         if (isCurve) maxSpeed *= SQRT_2;
 
         float progress = (float) Math.min(1, Math.max(0, speed / maxSpeed));
-        Component title = Utils.getComponentByString("&6" + Utils.round(speed, 2) + " m/s");
+        Component title = Utils.getComponentByString("&ePrędkość: " + Utils.round(speed, 2) + " m/s");
 
         passengers.forEach(entity -> {
             if (!(entity instanceof Player player)) return;

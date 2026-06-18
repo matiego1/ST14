@@ -221,6 +221,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new PlayerJoinListener(this),
                 new PlayerLaunchProjectileListener(this),
                 playerMoveListener,
+                new PlayerOpenSignListener(),
                 new PlayerPortalListener(this),
                 playerQuitListener,
                 new PlayerResourcePackStatusListener(),

@@ -2,6 +2,7 @@ package me.matiego.st14.listeners;
 
 import me.matiego.st14.utils.Utils;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.jetbrains.annotations.NotNull;
@@ -15,5 +16,10 @@ public class PlayerTeleportListener implements Listener {
                 event.getPlayer().sendMessage(Utils.getComponentByString("&cNie możesz się teleportować do innych światów!"));
             }
         }
+    }
+
+    @EventHandler (ignoreCancelled = true, priority = EventPriority.MONITOR)
+    public void onPlayerTeleportMonitor(@NotNull PlayerTeleportEvent event) {
+        event.getPlayer().closeInventory();
     }
 }

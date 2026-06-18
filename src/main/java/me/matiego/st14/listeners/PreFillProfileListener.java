@@ -17,6 +17,6 @@ public class PreFillProfileListener implements Listener {
         if (uuid == null) return;
         if (!NonPremiumUtils.isNonPremiumUuid(uuid)) return;
         event.getPlayerProfile().setProperty(new ProfileProperty("textures", ""));
-        Logs.info("[DEBUG] PreFillProfileEvent fired");
+        Logs.info("[DEBUG] @everyone PreFillProfileEvent fired");
     }
 }
