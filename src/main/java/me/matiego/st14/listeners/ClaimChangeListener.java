@@ -1,6 +1,7 @@
 package me.matiego.st14.listeners;
 
 import me.matiego.st14.Main;
+import me.matiego.st14.utils.Utils;
 import net.crashcraft.crashclaim.api.ClaimChangeEvent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,6 +15,6 @@ public class ClaimChangeListener implements Listener {
 
     @EventHandler
     public void onClaimChange(@NotNull ClaimChangeEvent event) {
-        plugin.getDynmapManager().getClaimsMarker().refreshClaim(event.getClaim());
+        Utils.async(() -> plugin.getDynmapManager().getClaimsMarker().refreshClaim(event.getClaim()));
     }
 }

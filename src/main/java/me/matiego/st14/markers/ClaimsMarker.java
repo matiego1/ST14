@@ -5,7 +5,6 @@ import me.matiego.st14.Main;
 import me.matiego.st14.listeners.ClaimChangeListener;
 import me.matiego.st14.listeners.ClaimDeleteListener;
 import me.matiego.st14.objects.dynmap.DynmapMarker;
-import me.matiego.st14.utils.Utils;
 import net.crashcraft.crashclaim.CrashClaim;
 import net.crashcraft.crashclaim.api.CrashClaimAPI;
 import net.crashcraft.crashclaim.claimobjects.Claim;
@@ -61,7 +60,7 @@ public class ClaimsMarker extends DynmapMarker {
                         return;
                     }
 
-                    claims.forEach(claim -> Utils.sync(() -> refreshClaim(set, claim)));
+                    claims.forEach(claim -> refreshClaim(set, claim));
                 });
     }
 
@@ -75,18 +74,21 @@ public class ClaimsMarker extends DynmapMarker {
             return;
         }
 
-        Utils.sync(() -> refreshClaim(set, claim));
+        refreshClaim(set, claim);
     }
 
     private void refreshClaim(@NotNull MarkerSet markerSet, @NotNull Claim claim) {
+        String claimMarkerId = getClaimMarkerId(claim);
+        String claimLabel = getClaimLabel(claim);
+
         World world = Bukkit.getWorld(claim.getWorld());
         if (world == null) return;
 
-        AreaMarker marker = markerSet.findAreaMarker(getClaimMarkerId(claim));
+        AreaMarker marker = markerSet.findAreaMarker(claimMarkerId);
         if (marker == null) {
             marker = markerSet.createAreaMarker(
-                    getClaimMarkerId(claim),
-                    getClaimLabel(claim),
+                    claimMarkerId,
+                    claimLabel,
                     true,
                     world.getName(),
                     new double[]{claim.getMinX(), claim.getMaxX() + 1},
@@ -94,15 +96,16 @@ public class ClaimsMarker extends DynmapMarker {
                     true
             );
             if (marker == null) {
-                Logs.warning("An error occurred while creating area marker for claim (" + getClaimMarkerId(claim) + ")");
+                Logs.warning("An error occurred while creating area marker for claim (" + claimMarkerId + ")");
                 return;
             }
+        } else {
+            marker.setLabel(claimLabel, true);
+            marker.setCornerLocations(new double[]{claim.getMinX(), claim.getMaxX() + 1}, new double[]{claim.getMinZ(), claim.getMaxZ() + 1});
         }
 
         marker.setLineStyle(1, 1, 0x00ffb3);
         marker.setFillStyle(0.1, 0xd6fff3);
-        marker.setLabel(getClaimLabel(claim), true);
-        marker.setCornerLocations(new double[]{claim.getMinX(), claim.getMaxX() + 1}, new double[]{claim.getMinZ(), claim.getMaxZ() + 1});
     }
 
     public void deleteClaim(@NotNull Claim claim) {
