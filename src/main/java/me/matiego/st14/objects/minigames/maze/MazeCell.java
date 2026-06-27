@@ -68,6 +68,6 @@ public class MazeCell {
     private void setBlock(@NotNull Location location, int x, int y, int z, @NotNull Material material) {
         location.add(x, y, z);
         location.getBlock().setType(material);
-        location.add(-x, -y, -z);
+        location.subtract(x, y, z);
     }
 }

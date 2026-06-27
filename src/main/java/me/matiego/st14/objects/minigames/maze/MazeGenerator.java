@@ -44,13 +44,8 @@ public class MazeGenerator {
     @Getter private MazeCell endCell;
 
     private void pickExit() {
-        if (random.nextBoolean()) {
-            int randomX = random.nextInt(sizeX);
-            endCell = grid[randomX][sizeZ - 1];
-        } else {
-            int randomZ = random.nextInt(sizeZ);
-            endCell = grid[sizeX - 1][randomZ];
-        }
+        int randomZ = random.nextInt(sizeZ);
+        endCell = grid[sizeX - 1][randomZ];
     }
 
     // Wilson's Algorithm (absolutely not written by Gemini)
