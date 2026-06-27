@@ -34,8 +34,8 @@ public class HelpCommand implements CommandHandler.Minecraft {
             return 1; //not zero to prevent a loop if it somehow happened
         }
 
-        Component link = Utils.getComponentByString("&2mapa.st14.pl/tutorial")
-                .clickEvent(ClickEvent.openUrl("http://mapa.st14.pl/tutorial"));
+        Component link = Utils.getComponentByString("&2poradnik.st14.pl")
+                .clickEvent(ClickEvent.openUrl("https://poradnik.st14.pl"));
 
         player.sendMessage(Utils.getComponentByString("&aNa stronie ").append(link).append(Utils.getComponentByString("&a znajdziesz opis wszystkich funkcji i komend na tym serwerze.")));
         return 1;

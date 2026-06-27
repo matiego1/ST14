@@ -65,7 +65,7 @@ public class TabListManager {
         }
         Utils.sync(() -> {
             for (Player player : Bukkit.getOnlinePlayers()) {
-                if (!player.isOp()) {
+                if (!plugin.getPremiumManager().isSuperPremium(player.getUniqueId())) {
                     player.kick(Utils.getComponentByString("&cTPS spadły poniżej 10! Spróbuj dołączyć później."));
                 }
             }

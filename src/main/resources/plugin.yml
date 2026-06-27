@@ -96,6 +96,9 @@ commands:
   help:
     permission: st14.help
     usage: 'Poprawne użycie: /help'
+  balance:
+    permission: st14.balance
+    usage: 'Poprawne użycie: /balance'
 permissions:
   st14.st14:
     default: op
@@ -148,4 +151,6 @@ permissions:
   st14.heads:
     default: true
   st14.help:
+    default: true
+  st14.balance:
     default: true
