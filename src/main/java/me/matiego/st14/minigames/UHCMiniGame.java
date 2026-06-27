@@ -22,8 +22,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class UHCMiniHame extends MiniGame {
-    public UHCMiniHame(@NotNull Main plugin, @NotNull MiniGameType miniGameType, @Nullable String mapName) {
+public class UHCMiniGame extends MiniGame {
+    public UHCMiniGame(@NotNull Main plugin, @NotNull MiniGameType miniGameType, @Nullable String mapName) {
         super(plugin, miniGameType, mapName);
     }
 

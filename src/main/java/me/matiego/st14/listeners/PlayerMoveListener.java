@@ -34,7 +34,7 @@ public class PlayerMoveListener implements Listener {
                 .orElseGet(() -> player.getWorld().getWorldBorder());
         double distance = MAX_DISTANCE_OUTSIDE + worldBorder.getSize() / 2;
         double distanceTo = distanceMax(worldBorder.getCenter(), event.getTo());
-        if (distanceTo >= distance && distanceTo > distanceMax(worldBorder.getCenter(), event.getFrom())) {
+        if (!player.isOp() && distanceTo >= distance && distanceTo > distanceMax(worldBorder.getCenter(), event.getFrom())) {
             event.setCancelled(true);
             player.sendActionBar(Utils.getComponentByString("&cNie możesz wyjść tak daleko po za granicę świata!"));
             return;

@@ -25,7 +25,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 public class SpleefMiniGame extends MiniGame {
     public SpleefMiniGame(@NotNull Main plugin, @NotNull MiniGameType miniGameType, @Nullable String mapName) {
@@ -33,6 +35,8 @@ public class SpleefMiniGame extends MiniGame {
     }
 
     private Location spawn;
+    private HashMap<UUID, Long> blockBreaks;
+    private long blockBreakFrequency;
 
     @Override
     public @NotNull String getMiniGameName() {
@@ -58,6 +62,8 @@ public class SpleefMiniGame extends MiniGame {
         if (spawn == null) throw new MiniGameException("cannot load spawn location");
         spectatorSpawn = MiniGamesUtils.getRelativeLocationFromConfig(baseLocation, mapConfigPath + "spectator-spawn");
         if (spectatorSpawn == null) throw new MiniGameException("cannot load spectator spawn location");
+
+        blockBreakFrequency = plugin.getConfig().getInt(mapConfigPath + "block-break-frequency", 15);
     }
 
     @Override
@@ -135,9 +141,14 @@ public class SpleefMiniGame extends MiniGame {
 
     private void tickPlayers() {
         List<Player> playersInMiniGame = getPlayersInMiniGame();
+        long now = Utils.now();
         playersInMiniGame.forEach(player -> {
             player.setLevel(playersInMiniGame.size());
             player.setFireTicks(0);
+
+            if (now - blockBreaks.getOrDefault(player.getUniqueId(), now) >= blockBreakFrequency * 1000) {
+                breakBlocksUnderPlayer(player);
+            }
         });
 
         playersInMiniGame.sort(Comparator.comparingInt(a -> a.getLocation().getBlockY()));
@@ -192,6 +203,7 @@ public class SpleefMiniGame extends MiniGame {
     @EventHandler(ignoreCancelled = true)
     public void onBlockBreak(@NotNull BlockBreakEvent event) {
         if (!isInMiniGame(event.getPlayer())) return;
+        blockBreaks.put(event.getPlayer().getUniqueId(), Utils.now());
         event.setDropItems(false);
     }
 

@@ -379,7 +379,7 @@ public abstract class MiniGame implements Listener {
     protected abstract void setUpGameRules(@NotNull World world);
     protected void setUpWorldBorder(@NotNull World world) {
         if (getMapType() == MapType.SURVIVAL) {
-            worldBorder = Bukkit.createWorldBorder();
+            worldBorder = world.getWorldBorder();
             worldBorder.setCenter(spectatorSpawn);
             worldBorder.setSize(plugin.getConfig().getInt(mapConfigPath + "size", 500));
             worldBorder.setWarningDistance(0);
