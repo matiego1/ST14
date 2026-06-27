@@ -321,6 +321,7 @@ public final class Main extends JavaPlugin implements Listener {
                 new VersionCommand(this),
                 // Minecraft commands
                 new BackpackCommand(this),
+                new BalanceCommand(this),
                 new HelpCommand(this),
                 new HomeCommand(this),
                 new McreloadCommand(this),
