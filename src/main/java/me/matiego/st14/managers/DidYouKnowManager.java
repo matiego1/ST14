@@ -35,7 +35,7 @@ public class DidYouKnowManager {
         long period = Math.max(60L, plugin.getConfig().getLong("did-you-know.period-seconds")) * 20;
 
         task = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
-            if (shouldNotBroadcastMessage()) return;
+            if (shouldSkipBroadcast()) return;
 
             if (lastIndex >= messages.size()) lastIndex = 0;
 
@@ -55,9 +55,11 @@ public class DidYouKnowManager {
         }
     }
 
-    private boolean shouldNotBroadcastMessage() {
+    private boolean shouldSkipBroadcast() {
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (!plugin.getIncognitoManager().isIncognito(player.getUniqueId())) return false;
+            if (plugin.getIncognitoManager().isIncognito(player.getUniqueId())) continue;
+            if (plugin.getAfkManager().isAfk(player)) continue;
+            return false;
         }
         return true;
     }
