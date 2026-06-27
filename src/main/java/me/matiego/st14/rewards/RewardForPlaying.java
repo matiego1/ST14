@@ -3,9 +3,9 @@ package me.matiego.st14.rewards;
 import me.matiego.st14.Main;
 import me.matiego.st14.managers.EconomyManager;
 import me.matiego.st14.managers.RewardsManager;
+import me.matiego.st14.objects.rewards.Reward;
 import me.matiego.st14.objects.time.GameTime;
 import me.matiego.st14.objects.time.PlayerTime;
-import me.matiego.st14.objects.rewards.Reward;
 import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -67,7 +67,9 @@ public class RewardForPlaying extends Reward {
                     }
                     data.setLimit(limit);
 
-                    if (economy.depositPlayer(player, amount).transactionSuccess()) {
+                    if (economy.getBalance(player) >= plugin.getConfig().getDouble("reward-for-playing.max-balance", 500)) {
+                        cache.put(uuid, data);
+                    } else if (economy.depositPlayer(player, amount).transactionSuccess()) {
                         sendActionBar(player, "&eDostałeś " + economy.format(amount) + " za " + (difference * INTERVAL_MS / 1000 / 60) + " minut gry");
                         cache.put(uuid, data);
                     }
