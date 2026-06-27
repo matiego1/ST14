@@ -15,7 +15,6 @@ import me.matiego.st14.utils.Utils;
 import me.matiego.st14.utils.WorldEditUtils;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -123,7 +122,9 @@ public class RandomItemsMiniGame extends MiniGame {
         loadSpawns(world, clipboard);
         if (spawns.size() < 2) throw new MiniGameException("not enough spawns found");
 
-        Utils.sync(() -> spectatorSpawn.getNearbyEntitiesByType(Item.class, mapRadius).forEach(Entity::remove));
+        Utils.sync(() -> spectatorSpawn.getNearbyEntities(mapRadius, 500, mapRadius).stream()
+                .filter(e -> !(e instanceof Player))
+                .forEach(Entity::remove));
     }
 
     private void loadSpawns(@NotNull World world, @NotNull Clipboard clipboard) {

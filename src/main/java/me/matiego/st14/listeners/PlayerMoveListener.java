@@ -26,14 +26,15 @@ public class PlayerMoveListener implements Listener {
 
     private final long MAX_DISTANCE_OUTSIDE = 20;
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerMove(@NotNull PlayerMoveEvent event) {
         Player player = event.getPlayer();
 
         WorldBorder worldBorder = Optional.ofNullable(player.getWorldBorder())
                 .orElseGet(() -> player.getWorld().getWorldBorder());
         double distance = MAX_DISTANCE_OUTSIDE + worldBorder.getSize() / 2;
-        if (distanceMax(worldBorder.getCenter(), event.getTo()) >= distance) {
+        double distanceTo = distanceMax(worldBorder.getCenter(), event.getTo());
+        if (distanceTo >= distance && distanceTo > distanceMax(worldBorder.getCenter(), event.getFrom())) {
             event.setCancelled(true);
             player.sendActionBar(Utils.getComponentByString("&cNie możesz wyjść tak daleko po za granicę świata!"));
             return;

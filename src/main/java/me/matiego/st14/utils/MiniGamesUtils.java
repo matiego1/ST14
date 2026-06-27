@@ -188,4 +188,8 @@ public class MiniGamesUtils {
                 .formatted(center.getWorld().getName(), center.getX(), center.getZ(), radius);
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
     }
+
+    public static void killNearbyEntities(@NotNull Location center, int radius) {
+
+    }
 }

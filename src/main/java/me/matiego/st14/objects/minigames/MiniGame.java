@@ -53,6 +53,7 @@ public abstract class MiniGame implements Listener {
     protected Location baseLocation;
     protected WorldBorder worldBorder;
     protected BossBarTimer timer;
+    protected Random random = new Random();
     @Getter(onMethod_ = {@Synchronized})
     protected boolean isMiniGameStarted = false;
     protected boolean lobby = true;
@@ -242,7 +243,7 @@ public abstract class MiniGame implements Listener {
         if (mapConfigPath == null) return null;
 
         List<String> seeds = plugin.getConfig().getStringList(mapConfigPath + "seeds");
-        if (seeds.isEmpty()) return null;
+        if (seeds.isEmpty()) return String.valueOf(random.nextInt());
 
         int i = Utils.getRandomNumber(0, seeds.size() - 1);
         return seeds.get(i);

@@ -130,7 +130,11 @@ public class SumoMiniGame extends MiniGame {
     public void onEntityDamageByEntity(@NotNull EntityDamageByEntityEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
         if (!isInMiniGame(player)) return;
-        event.setDamage(0);
+        if (getPlayerStatus(player) == PlayerStatus.SPECTATOR) {
+            event.setCancelled(true);
+        } else {
+            event.setDamage(0);
+        }
     }
 
     @EventHandler(ignoreCancelled = true)

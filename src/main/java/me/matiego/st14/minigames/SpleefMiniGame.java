@@ -145,7 +145,7 @@ public class SpleefMiniGame extends MiniGame {
         Player max1 = playersInMiniGame.getLast();
         Player max2 = playersInMiniGame.get(playersInMiniGame.size() - 2);
 
-        if (max1.getLocation().getBlockY() - max2.getLocation().getBlockY() > Math.max(0, plugin.getConfig().getInt(mapConfigPath + "vertical-max-distance", 10)) && miniGameTime % 3 == 0) {
+        if (max1.getLocation().getBlockY() - max2.getLocation().getBlockY() > Math.max(0, plugin.getConfig().getInt(mapConfigPath + "vertical-max-distance", 10))) {
             breakBlocksUnderPlayer(max1);
         }
     }

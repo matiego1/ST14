@@ -8,8 +8,13 @@ import me.matiego.st14.objects.minigames.MiniGameType;
 import me.matiego.st14.utils.MiniGamesUtils;
 import org.bukkit.GameMode;
 import org.bukkit.GameRules;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
@@ -25,6 +30,7 @@ public class UHCMiniHame extends MiniGame {
     private int mapSize = 500;
     private int prepareTime = 60 * 10;
     private int shrinkBorderBeforeEnd = 60 * 10;
+    private double goldenAppleChance = 0.005;
 
     @Override
     protected @NotNull String getMiniGameName() {
@@ -47,6 +53,7 @@ public class UHCMiniHame extends MiniGame {
         prepareTime = Math.max(0, plugin.getConfig().getInt(configPath + "prepare-time", prepareTime));
         shrinkBorderBeforeEnd = Math.max(0, plugin.getConfig().getInt(configPath + "shrink-border-before-end", shrinkBorderBeforeEnd));
         if (prepareTime > totalMiniGameTime) throw new MiniGameException("incorrect game times");
+        goldenAppleChance = Math.max(0, Math.min(1, plugin.getConfig().getDouble(configPath + "golden-apple-chance", goldenAppleChance)));
     }
 
     @Override
@@ -109,5 +116,15 @@ public class UHCMiniHame extends MiniGame {
             sendMessage("Bariera zaczęła się zmniejszać!");
             worldBorder.changeSize(Math.max(1, 0.05 * mapSize), shrinkBorderBeforeEnd * 20L);
         }
+    }
+
+    @EventHandler
+    public void onBlockBreak(@NotNull BlockBreakEvent event) {
+        if (!isInMiniGame(event.getPlayer())) return;
+        Block block = event.getBlock();
+        if (!block.getType().name().contains("LEAVES")) return;
+
+        if (random.nextDouble() >= goldenAppleChance) return;
+        block.getWorld().dropItemNaturally(block.getLocation(), new ItemStack(Material.GOLDEN_APPLE));
     }
 }
