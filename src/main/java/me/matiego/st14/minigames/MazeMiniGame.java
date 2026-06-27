@@ -21,6 +21,8 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.CompassMeta;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -89,6 +91,7 @@ public class MazeMiniGame extends MiniGame {
             changePlayerStatus(player, PlayerStatus.IN_MINI_GAME);
             MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
             player.setRespawnLocation(spectatorSpawn, true);
+            player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 999999, 255, true, false, false));
             timer.showBossBarToPlayer(player);
         });
     }
