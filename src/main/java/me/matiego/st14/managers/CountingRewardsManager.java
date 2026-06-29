@@ -12,6 +12,7 @@ import java.net.http.HttpClient;
 import java.net.http.WebSocket;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -60,6 +61,7 @@ public class CountingRewardsManager {
         sslContext.init(null, new TrustManager[]{SSL_TRUST_MANAGER}, new SecureRandom());
 
         client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(5))
                 .cookieHandler(CookieHandler.getDefault())
                 .followRedirects(HttpClient.Redirect.ALWAYS)
                 .sslContext(sslContext)
@@ -109,6 +111,7 @@ public class CountingRewardsManager {
             client.newWebSocketBuilder()
                     .header("Cookie", KEY_COOKIE + "=" + apiKey)
                     .buildAsync(apiUri, new CountingRewardsHandler(plugin))
+                    .orTimeout(7, TimeUnit.SECONDS)
                     .thenAccept(ws -> {
                         webSocket = ws;
                         reconnectAttempts.set(0);
@@ -152,7 +155,7 @@ public class CountingRewardsManager {
 
         try {
             webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "Closing")
-                    .orTimeout(5, TimeUnit.SECONDS)
+                    .orTimeout(7, TimeUnit.SECONDS)
                     .whenComplete((result, e) -> {
                         if (e != null) {
                             Logs.error("[CountingRewards] Failed to gracefully close the WebSocket, aborting...", e);
