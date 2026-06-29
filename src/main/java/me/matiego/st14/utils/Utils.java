@@ -224,8 +224,9 @@ public class Utils {
         return (number % 1) == 0 ? String.valueOf((int) number) : String.valueOf(number);
     }
 
-
     public static boolean doesBlockContactPortalBlock(@NotNull Block block) {
+        if (!Main.getInstance().getConfig().getBoolean("disallow-blocking-portals", true)) return false;
+
         if (block.getType().toString().contains("RAIL")) return false;
         World world = block.getWorld();
         int x = block.getX(), y = block.getY(), z = block.getZ();
