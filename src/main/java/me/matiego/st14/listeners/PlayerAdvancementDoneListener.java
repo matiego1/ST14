@@ -30,6 +30,6 @@ public class PlayerAdvancementDoneListener implements Listener {
                 player
         );
 
-        Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> plugin.getAdvancementsManager().updateAmount(player), 2);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getAdvancementsManager().updateAmount(player), 2);
     }
 }

@@ -2,6 +2,7 @@ package me.matiego.st14.managers;
 
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
+import me.matiego.st14.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Objective;
@@ -29,15 +30,17 @@ public class AdvancementsManager {
         }
         int amount = objective.getScore(player).getScore();
 
-        try (Connection conn = plugin.getMySQLConnection();
-             PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_advancements(uuid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = ?")) {
-            stmt.setString(1, player.getUniqueId().toString());
-            stmt.setInt(2, amount);
-            stmt.setInt(3, amount);
-            stmt.execute();
-        } catch (SQLException e) {
-            Logs.error(ERROR_MSG, e);
-        }
+        Utils.async(() -> {
+            try (Connection conn = plugin.getMySQLConnection();
+                 PreparedStatement stmt = conn.prepareStatement("INSERT INTO st14_advancements(uuid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = ?")) {
+                stmt.setString(1, player.getUniqueId().toString());
+                stmt.setInt(2, amount);
+                stmt.setInt(3, amount);
+                stmt.execute();
+            } catch (SQLException e) {
+                Logs.error(ERROR_MSG, e);
+            }
+        });
     }
 
     public static boolean createTable() {

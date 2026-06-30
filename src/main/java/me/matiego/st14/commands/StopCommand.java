@@ -94,7 +94,7 @@ public class StopCommand implements CommandHandler.Minecraft, CommandHandler.Dis
 
         event.reply("Wyłączanie serwera minecraft...").setEphemeral(true).complete();
 
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "st14:stop" + (now ? " now" : ""));
+        Utils.sync(() -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "st14:stop" + (now ? " now" : "")));
         return 0;
     }
 }
