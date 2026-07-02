@@ -97,6 +97,7 @@ commands:
     permission: st14.help
     usage: 'Poprawne użycie: /help'
   balance:
+    alias: bal
     permission: st14.balance
     usage: 'Poprawne użycie: /balance'
 permissions:

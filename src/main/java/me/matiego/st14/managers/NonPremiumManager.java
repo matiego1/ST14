@@ -17,8 +17,6 @@ import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.NonPremiumUtils;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.components.actionrow.ActionRow;
-import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
@@ -89,7 +87,6 @@ public class NonPremiumManager {
                     LuckPerms luckPerms = LuckPermsProvider.get();
                     luckPerms.getUserManager().loadUser(newName.getFirst(), newName.getSecond()).thenAcceptAsync(user -> Utils.async(() -> {
                         if (forceLoginSuccess(event, newName.getFirst(), newName.getSecond())) {
-                            sendMessageToUser(newName.getFirst(), "Dołączyłeś na serwer, miłej gry!");
                             originalName.put(newName.getFirst(), name);
                         } else {
                             kickLoginPlayer(event, "&cNapotkano niespodziewany błąd. Spróbuj później.");
@@ -236,15 +233,6 @@ public class NonPremiumManager {
             if (player == null) return;
             player.kick(Utils.getComponentByString("&cTwoja sesja została zakończona!\nPowód: " + reason));
         });
-    }
-
-    public void sendMessageToUser(@NotNull UUID uuid, @NotNull String message) {
-        JDA jda = plugin.getJda();
-        if (jda == null) return;
-
-        jda.retrieveUserById(NonPremiumUtils.getIdByNonPremiumUuid(uuid)).queue(
-                user -> DiscordUtils.sendPrivateMessage(user, message, action -> action.setComponents(ActionRow.of(Button.danger("end-session", "Zakończ sesję"))), result -> {})
-        );
     }
 
     public void onPlayerQuit(@NotNull UUID uuid) {
