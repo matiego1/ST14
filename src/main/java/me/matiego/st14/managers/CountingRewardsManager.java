@@ -68,7 +68,14 @@ public class CountingRewardsManager {
                 .build();
 
         apiKey = plugin.getConfig().getString("counting-rewards.key", "");
-        apiUri = URI.create(plugin.getConfig().getString("counting-rewards.url", ""));
+
+        String url = plugin.getConfig().getString("counting-rewards.url", "");
+        if (url.isBlank()) {
+            Logs.error("[CountingRewards] Incorrect URL");
+            close();
+            return;
+        }
+        apiUri = URI.create(url);
 
         connect(0).join();
 

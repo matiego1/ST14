@@ -1,9 +1,16 @@
 package me.matiego.st14.commands;
 
+import io.papermc.paper.dialog.Dialog;
+import io.papermc.paper.registry.data.dialog.ActionButton;
+import io.papermc.paper.registry.data.dialog.DialogBase;
+import io.papermc.paper.registry.data.dialog.action.DialogAction;
+import io.papermc.paper.registry.data.dialog.body.DialogBody;
+import io.papermc.paper.registry.data.dialog.input.DialogInput;
+import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
+import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
-import me.matiego.st14.objects.GUI;
 import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.interactions.InteractionContextType;
@@ -11,27 +18,28 @@ import net.dv8tion.jda.api.interactions.commands.*;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.kyori.adventure.text.event.ClickCallback;
 import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class DifficultyCommand implements CommandHandler.Minecraft, CommandHandler.Discord {
     public DifficultyCommand(@NotNull Main plugin) {
+        this.plugin = plugin;
         command = plugin.getCommand("difficulty");
         if (command == null) {
             Logs.warning("The command /difficulty does not exist in the plugin.yml file and cannot be registered.");
         }
     }
+    private final Main plugin;
     private final PluginCommand command;
 
     @Override
@@ -46,39 +54,59 @@ public class DifficultyCommand implements CommandHandler.Minecraft, CommandHandl
             return 0;
         }
         if (args.length != 0) return -1;
+
         if (Utils.checkIfCanNotExecuteCommandInWorld(player, "difficulty")) {
             sender.sendMessage(Utils.getComponentByString("&cNie możesz zmienić poziomu trudności w tym świecie."));
             return 3;
         }
-        Inventory inv = GUI.createInventory(9, "&6Ustaw poziom trudności");
-        inv.setItem(2, GUI.createGuiItem(Material.LIME_WOOL, "&aŁatwy", "Kliknij, aby ustawić"));
-        inv.setItem(4, GUI.createGuiItem(Material.YELLOW_WOOL, "&eNormalny", "Kliknij, aby ustawić"));
-        inv.setItem(6, GUI.createGuiItem(Material.RED_WOOL, "&cTrudny", "Kliknij, aby ustawić"));
-        player.openInventory(inv);
-        return 30;
+
+        Difficulty difficulty = player.getWorld().getDifficulty();
+        List<SingleOptionDialogInput.OptionEntry> options = List.of(
+                SingleOptionDialogInput.OptionEntry.create("easy", Utils.getComponentByString("&aŁatwy"), difficulty == Difficulty.EASY),
+                SingleOptionDialogInput.OptionEntry.create("normal", Utils.getComponentByString("&eNormalny"), difficulty == Difficulty.NORMAL),
+                SingleOptionDialogInput.OptionEntry.create("hard", Utils.getComponentByString("&cTrudny"), difficulty == Difficulty.HARD)
+        );
+
+        DialogBase base = DialogBase.create(
+                Utils.getComponentByString("&lWybierz poziom trudności"),
+                null,
+                true,
+                true,
+                DialogBase.DialogAfterAction.CLOSE,
+                List.of(DialogBody.plainMessage(Utils.getComponentByString("Aktualny poziom trudności: " + getDifficultyNameFormatted(difficulty)))),
+                List.of(DialogInput.singleOption("difficulty", Utils.getComponentByString("Nowy poziom trudności"), options).build())
+        );
+
+        ActionButton yes = ActionButton.create(
+                Utils.getComponentByString("&aOK"),
+                null,
+                100,
+                DialogAction.customClick((view, audience) -> {
+                    switch (view.getText("difficulty")) {
+                        case "easy" -> change(player, Difficulty.EASY);
+                        case "normal" -> change(player, Difficulty.NORMAL);
+                        case "hard" -> change(player, Difficulty.HARD);
+                        case null, default -> {}
+                    }
+                }, ClickCallback.Options.builder().build())
+        );
+        ActionButton no = ActionButton.create(
+                Utils.getComponentByString("&cAnuluj"),
+                null,
+                100,
+                null
+        );
+
+        Dialog dialog = Dialog.create(builder -> builder.empty()
+                .base(base)
+                .type(DialogType.confirmation(yes, no))
+        );
+        player.showDialog(dialog);
+
+        return 3;
     }
 
-    @Override
-    public void onInventoryClick(@NotNull InventoryClickEvent event) {
-        if (!GUI.checkInventory(event, "&6Ustaw poziom trudności")) return;
-
-        Player player = (Player) event.getWhoClicked();
-        int slot = event.getSlot();
-        event.getInventory().close();
-
-        if (Utils.checkIfCanNotExecuteCommandInWorld(player, "difficulty")) {
-            player.sendMessage(Utils.getComponentByString("&cNie możesz zmienić poziomu trudności w tym świecie."));
-            return;
-        }
-
-        switch (slot) {
-            case 2 -> change(player, Difficulty.EASY, "łatwy");
-            case 4 -> change(player, Difficulty.NORMAL, "normalny");
-            case 6 -> change(player, Difficulty.HARD, "trudny");
-        }
-    }
-
-    private void change(@NotNull Player player, @NotNull Difficulty difficulty, @NotNull String name) {
+    private void change(@NotNull Player player, @NotNull Difficulty difficulty) {
         World world = player.getWorld();
         if (world.getDifficulty() == difficulty) {
             player.sendMessage(Utils.getComponentByString("&cW tym świecie już obowiązuje ten poziom trudności"));
@@ -86,6 +114,9 @@ public class DifficultyCommand implements CommandHandler.Minecraft, CommandHandl
         }
         world.setDifficulty(difficulty);
 
+        plugin.getCommandManager().putCooldown("difficulty", player.getUniqueId(), 30);
+
+        String name = getDifficultyName(difficulty);
         Utils.broadcastMessage(
                 player,
                 Prefix.DIFFICULTY,
@@ -129,14 +160,9 @@ public class DifficultyCommand implements CommandHandler.Minecraft, CommandHandl
             return 3;
         }
 
-        String difficulty = switch (world.getDifficulty()) {
-            case PEACEFUL -> "pokojowy";
-            case EASY -> "łatwy";
-            case NORMAL -> "normalny";
-            case HARD -> "trudny";
-        };
-
+        String difficulty = getDifficultyName(world.getDifficulty());
         event.reply("W świecie **" + Utils.getWorldName(world) + "** obowiązuje **" + difficulty + "** poziom trudności.").setEphemeral(ephemeral).queue();
+
         return 5;
     }
 
@@ -150,5 +176,18 @@ public class DifficultyCommand implements CommandHandler.Minecraft, CommandHandl
                 .map(name -> new Command.Choice(name, name))
                 .collect(Collectors.toList())
         ).queue();
+    }
+
+    private @NotNull String getDifficultyName(@NotNull Difficulty difficulty) {
+        return getDifficultyNameFormatted(difficulty).substring(2).toLowerCase();
+    }
+
+    private @NotNull String getDifficultyNameFormatted(@NotNull Difficulty difficulty) {
+        return switch (difficulty) {
+            case PEACEFUL -> "&fPokojowy";
+            case EASY -> "&aŁatwy";
+            case NORMAL -> "&eNormalny";
+            case HARD -> "&cTrudny";
+        };
     }
 }

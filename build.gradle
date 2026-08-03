@@ -1,5 +1,3 @@
-import io.papermc.paperweight.userdev.ReobfArtifactConfiguration
-
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -15,7 +13,7 @@ description = 'A plugin for the ST14 server'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -34,10 +32,10 @@ repositories {
 
 dependencies {
     // papermc
-    paperweight.paperDevBundle("1.21.11-R0.1-SNAPSHOT")
+    paperweight.paperDevBundle("26.2.build.+")
 
     // JDA
-    implementation('net.dv8tion:JDA:6.4.2') {
+    implementation('net.dv8tion:JDA:6.5.0') {
         exclude group: 'club.minnced', module: 'opus-java'
     }
 
@@ -57,7 +55,7 @@ dependencies {
     }
 
     // AnvilGUI
-    implementation('net.wesjd:anvilgui:1.10.11-SNAPSHOT')
+    implementation('net.wesjd:anvilgui:1.10.13-SNAPSHOT')
 
     // Lombok
     compileOnly 'org.projectlombok:lombok:1.18.46'
@@ -76,7 +74,7 @@ dependencies {
     compileOnly 'com.sk89q.worldedit:worldedit-bukkit:7.2.14'
 
     // CrashClaim
-    compileOnly files('CrashClaim-1.0.42.jar')
+    compileOnly files('CrashClaim-26.07.27.jar')
 
     // Dynmap
     compileOnly 'us.dynmap:DynmapCoreAPI:3.7-beta-6'
@@ -106,16 +104,10 @@ processResources {
 }
 
 shadowJar {
-    archiveClassifier.set('all')
+    archiveClassifier.set('')
     relocate 'net.wesjd.anvilgui', 'me.matiego.st14.anvilgui'
 }
 
-paperweight {
-    reobfArtifactConfiguration = ReobfArtifactConfiguration.getREOBF_PRODUCTION()
-}
-
 tasks.assemble {
-    dependsOn tasks.reobfJar
+    dependsOn tasks.shadowJar
 }
-
-build.dependsOn tasks.named('reobfJar')

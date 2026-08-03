@@ -23,7 +23,7 @@ public class F3BrandManager {
         this.plugin = plugin;
 
         this.manager = ProtocolLibrary.getProtocolManager();
-        this.packetDataSerializer = Class.forName("net.minecraft.network.PacketDataSerializer");
+        this.packetDataSerializer = Class.forName("net.minecraft.network.FriendlyByteBuf");
     }
 
     private final Main plugin;
@@ -43,6 +43,7 @@ public class F3BrandManager {
         try {
             WirePacket customPacket = new WirePacket(PacketType.Play.Server.CUSTOM_PAYLOAD, data);
             manager.sendWirePacket(player, customPacket);
+
         } catch (Exception ignored) {}
     }
 
@@ -58,7 +59,7 @@ public class F3BrandManager {
 
     private boolean writeString(@NotNull Object buf, @NotNull String data) {
         try {
-            Method writeString = packetDataSerializer.getDeclaredMethod("a", String.class);
+            Method writeString = packetDataSerializer.getDeclaredMethod("writeUtf", String.class);
             writeString.invoke(buf, data);
             return true;
         } catch (Exception e) {

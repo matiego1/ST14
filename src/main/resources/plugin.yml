@@ -1,7 +1,7 @@
 name: ST14
 version: '${version}'
 main: me.matiego.st14.Main
-api-version: '1.21'
+api-version: '26.2'
 author: Matiego
 description: '${description}'
 depend: [Vault, GravesX, ProtocolLib]

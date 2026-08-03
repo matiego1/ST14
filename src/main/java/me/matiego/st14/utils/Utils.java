@@ -7,10 +7,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -169,19 +166,11 @@ public class Utils {
 
     public static void registerRecipes() {
         // Wool to strings
-        ShapelessRecipe woolToStrings = new ShapelessRecipe(new NamespacedKey(Main.getInstance(), "wool_to_strings"), new ItemStack(Material.STRING, 4));
-        woolToStrings.addIngredient(Material.WHITE_WOOL);
-        woolToStrings.setCategory(CraftingBookCategory.MISC);
-        Bukkit.addRecipe(woolToStrings);
-
-        // Nametag
-        if (Bukkit.getBukkitVersion().equals("1.21.11-R0.1-SNAPSHOT")) {
-            ShapelessRecipe nametag = new ShapelessRecipe(new NamespacedKey(Main.getInstance(), "nametag"), new ItemStack(Material.NAME_TAG, 1));
-            nametag.addIngredient(Material.IRON_NUGGET);
-            nametag.addIngredient(Material.PAPER);
-            Bukkit.addRecipe(nametag);
-        } else {
-            Logs.warning("Remove nametag recipe !!!"); // I'll forget to remove that when migrating to 26.1+
+        for (Material wool : Tag.WOOL.getValues()) {
+            ShapelessRecipe woolToStrings = new ShapelessRecipe(new NamespacedKey(Main.getInstance(), wool.getKey().getKey() + "_to_strings"), new ItemStack(Material.STRING, 4));
+            woolToStrings.addIngredient(wool);
+            woolToStrings.setCategory(CraftingBookCategory.MISC);
+            Bukkit.addRecipe(woolToStrings);
         }
     }
 
