@@ -1,10 +1,15 @@
 package me.matiego.st14.commands;
 
+import io.papermc.paper.dialog.Dialog;
+import io.papermc.paper.registry.data.dialog.ActionButton;
+import io.papermc.paper.registry.data.dialog.DialogBase;
+import io.papermc.paper.registry.data.dialog.action.DialogAction;
+import io.papermc.paper.registry.data.dialog.body.DialogBody;
+import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.AccountsManager;
-import me.matiego.st14.objects.GUI;
 import me.matiego.st14.objects.Pair;
 import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.DiscordUtils;
@@ -26,19 +31,16 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
-import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.time.Instant;
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class AccountsCommand implements CommandHandler.Discord, CommandHandler.Minecraft {
@@ -183,96 +185,96 @@ public class AccountsCommand implements CommandHandler.Discord, CommandHandler.M
         UUID uuid = player.getUniqueId();
 
         Utils.async(() -> {
-            Inventory inv = GUI.createInventory(9, Prefix.DISCORD + "Twoje konta");
+            List<DialogBody> body = new ArrayList<>();
             JDA jda = plugin.getJda();
+
+            if (jda == null) {
+                body.add(DialogBody.plainMessage(Utils.getComponentByString("&bBot Discord: &cOFFLINE")));
+            } else {
+                body.add(DialogBody.plainMessage(Utils.getComponentByString("&bBot Discord: &aONLINE")));
+            }
+
+            body.add(DialogBody.plainMessage(Utils.getComponentByString("&bZaproszenie na serwer Discord:\n&a" + plugin.getConfig().getString("discord.invite-link", "&cBRAK"))));
+
+            boolean link;
             if (manager.isLinked(uuid)) {
+                link = false;
                 UserSnowflake id = manager.getUserByPlayer(uuid);
                 if (id == null) {
-                    inv.setItem(1, GUI.createGuiItem(
-                            Material.LEAD,
-                            "&9Konto Discord",
-                            "&aTwoje konto jest połączone z kontem Discord!",
-                            "&cNapotkano niespodziewany błąd przy",
-                            "&cwczytywaniu informacji o twoim koncie",
-                            "&9Kliknij, aby rozłączyć twoje konta"
-
-                    ));
+                    body.add(DialogBody.plainMessage(Utils.getComponentByString("&bTwoje konto Discord:\n&aPołączone!\n\n&cNapotkano błąd przy wczytywaniu dodatkowych informacji.")));
                 } else {
                     String user = jda == null ? "&cBRAK" : DiscordUtils.getAsTag(jda.retrieveUserById(id.getId()).complete());
-                    inv.setItem(1, GUI.createGuiItem(
-                            Material.LEAD,
-                            "&9Konto Discord",
-                            "&aTwoje konto jest połączone z kontem Discord!",
-                            "&bNick: " + user,
-                            "&bID: " + id.getId(),
-                            "&9Kliknij, aby rozłączyć twoje konta"
-
-                    ));
+                    body.add(DialogBody.plainMessage(Utils.getComponentByString("&bTwoje konto Discord:\n&aPołączone!\n\n&aNick: " + user + "\nID: " + id.getId())));
                 }
             } else {
-                inv.setItem(1, GUI.createGuiItem(Material.LEAD, "&9Konto Discord", "&bKliknij, aby połączyć twoje konta"));
+                link = true;
+                body.add(DialogBody.plainMessage(Utils.getComponentByString("&bTwoje konto Discord:\n&cNie połączone :(")));
             }
-            if (jda == null) {
-                inv.setItem(4, GUI.createGuiItem(Material.REDSTONE, "&9Bot Discord", "&bAktualny status: &cOFFLINE"));
-            } else {
-                inv.setItem(4, GUI.createGuiItem(
-                        Material.REDSTONE,
-                        "&9Bot Discord",
-                        "&bAktualny status: &aONLINE",
-                        "&bNick: &9" + DiscordUtils.getAsTag(jda.getSelfUser())
-                ));
-            }
-            inv.setItem(7, GUI.createGuiItem(Material.PAPER, "&9Serwer Discord", "&bKliknij, aby wyświetlić zaproszenie!"));
-            Utils.sync(() -> player.openInventory(inv));
+
+            DialogBase base = DialogBase.create(
+                    Utils.getComponentByString(Prefix.DISCORD + "Serwer Discord"),
+                    null,
+                    true,
+                    true,
+                    DialogBase.DialogAfterAction.CLOSE,
+                    body,
+                    List.of()
+            );
+
+
+            ActionButton linkButton = ActionButton.create(
+                    Utils.getComponentByString(link ? "&aPołącz konto Discord" : "&cRozłącz konto Discord"),
+                    null,
+                    Utils.DIALOG_BUTTON_WIDTH,
+                    DialogAction.customClick((view, audience) -> change(player), Utils.BUTTON_OPTIONS)
+            );
+            ActionButton close = ActionButton.create(
+                    Utils.getComponentByString("Gotowe"),
+                    null,
+                    Utils.DIALOG_BUTTON_WIDTH,
+                    null
+            );
+
+            Dialog dialog = Dialog.create(builder -> builder.empty()
+                    .base(base)
+                    .type(DialogType.confirmation(linkButton, close))
+            );
+            player.showDialog(dialog);
         });
         return 5;
     }
 
-    @Override
-    public void onInventoryClick(@NotNull InventoryClickEvent event) {
-        if (!GUI.checkInventory(event, Prefix.DISCORD + "Twoje konta")) return;
-
-        Player player = (Player) event.getWhoClicked();
-        UUID uuid = player.getUniqueId();
-        int slot = event.getSlot();
-        ItemStack item = event.getCurrentItem();
+    private void change(@NotNull Player player) {
         AccountsManager manager = plugin.getAccountsManager();
-        Objects.requireNonNull(item); //already checked in GUI#checkInventory()
+        UUID uuid = player.getUniqueId();
 
-        if (slot == 7) {
-            player.closeInventory();
-            player.sendMessage(Utils.getComponentByString(Prefix.DISCORD + "Link z zaproszeniem na nasz serwer Discord: " + plugin.getConfig().getString("discord.invite-link", "&cBRAK")));
-        } else if (slot == 1) {
-            player.closeInventory();
-            Utils.async(() -> {
-                if (manager.isLinked(uuid)) {
-                    UserSnowflake id = manager.getUserByPlayer(uuid);
-                    boolean success = manager.unlink(uuid);
-                    player.sendMessage(Utils.getComponentByString(Prefix.DISCORD + (success ?
-                            "Pomyślnie rozłączono twoje konto z kontem Discord" :
-                            "Napotkano niespodziewany błąd. Spróbuj później"
-                    )));
+        Utils.async(() -> {
+            if (manager.isLinked(uuid)) {
+                UserSnowflake id = manager.getUserByPlayer(uuid);
+                boolean success = manager.unlink(uuid);
+                player.sendMessage(Utils.getComponentByString(Prefix.DISCORD + (success ?
+                        "Pomyślnie rozłączono twoje konto Discord" :
+                        "Napotkano niespodziewany błąd. Spróbuj później"
+                )));
 
-                    JDA jda = plugin.getJda();
-                    if (jda == null || id == null || !success) return;
+                JDA jda = plugin.getJda();
+                if (jda == null || id == null || !success) return;
 
-                    jda.retrieveUserById(id.getId()).queue(
-                            user -> DiscordUtils.sendPrivateMessage(user, "Twoje konto zostało rozłączone z kontem minecraft!"),
-                            failure -> {
-                            }
-                    );
-                } else {
-                    String code = plugin.getAccountsManager().getNewVerificationCode(uuid, player.getName());
-                    player.sendMessage(Utils.getComponentByString(
-                            Prefix.DISCORD + "=================================\n" +
-                                    Prefix.DISCORD + "Aby dokończyć proces łączenia kont,\n" +
-                                    Prefix.DISCORD + "użyj komendy &9/accounts&b\n" +
-                                    Prefix.DISCORD + "na Discord z kodem: &9" + code + "&b.\n" +
-                                    Prefix.DISCORD + "UWAGA! Kod będzie ważny tylko 5 minut.\n" +
-                                    Prefix.DISCORD + "=================================\n"
-                    ));
-                }
-            });
-        }
+                jda.retrieveUserById(id.getId()).queue(
+                        user -> DiscordUtils.sendPrivateMessage(user, "Twoje konto zostało rozłączone z kontem minecraft!"),
+                        failure -> {}
+                );
+            } else {
+                String code = plugin.getAccountsManager().getNewVerificationCode(uuid, player.getName());
+                player.sendMessage(Utils.getComponentByString(
+                        Prefix.DISCORD + "=================================\n" +
+                                Prefix.DISCORD + "Aby dokończyć proces łączenia kont,\n" +
+                                Prefix.DISCORD + "użyj komendy &a/accounts&b\n" +
+                                Prefix.DISCORD + "na Discord z kodem: &a" + code + "&b.\n" +
+                                Prefix.DISCORD + "Kod jest ważny przez 5 minut.\n" +
+                                Prefix.DISCORD + "================================="
+                ));
+            }
+        });
     }
 }

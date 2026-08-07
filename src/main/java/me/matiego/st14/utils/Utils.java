@@ -4,6 +4,7 @@ import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -27,6 +28,8 @@ import java.util.regex.Pattern;
 
 
 public class Utils {
+    public static final int DIALOG_BUTTON_WIDTH = 150;
+    public static final ClickCallback.Options BUTTON_OPTIONS = ClickCallback.Options.builder().build();
     public static final Pattern STRING_TO_MILLIS = Pattern.compile("([1-9][0-9]{0,3}d)?(([1-9]|1[0-9]|2[0-3])h)?(([1-9]|[1-5][0-9])m)?(([1-9]|[1-5][0-9])s)?");
 
     public static void async(@NotNull Runnable task) {

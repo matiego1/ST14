@@ -4,7 +4,9 @@ import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.objects.Pair;
-import me.matiego.st14.utils.*;
+import me.matiego.st14.utils.DiscordUtils;
+import me.matiego.st14.utils.NonPremiumUtils;
+import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -108,7 +110,7 @@ public class AccountsManager {
 
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) {
-                player.sendMessage(Utils.getComponentByString(Prefix.DISCORD + "Pomyślnie połączono to konto z kontem Discord!"));
+                player.sendMessage(Utils.getComponentByString(Prefix.DISCORD + "Pomyślnie połączono twoje konto Discord!"));
             }
 
             String playerName = plugin.getOfflinePlayersManager().getEffectiveNameById(uuid);
@@ -139,7 +141,7 @@ public class AccountsManager {
             stmt.setString(1, uuid.toString());
             if (stmt.executeUpdate() > 0) {
                 Player player = Bukkit.getPlayer(uuid);
-                if (player != null && isRequired(uuid)) Utils.sync(() -> player.kick(Utils.getComponentByString(Prefix.DISCORD + "Twoje konto zostało rozłączone z kontem Discord!")));
+                if (player != null && isRequired(uuid)) Utils.sync(() -> player.kick(Utils.getComponentByString(Prefix.DISCORD + "Twoje konto Discord zostało rozłączone!")));
                 Logs.info(plugin.getOfflinePlayersManager().getEffectiveNameById(uuid) + " has unlinked his account.");
                 return true;
             }

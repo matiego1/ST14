@@ -69,7 +69,7 @@ public class PremiumCommand implements CommandHandler.Minecraft, CommandHandler.
         UUID uuid = plugin.getOfflinePlayersManager().getIdByName(args[1]);
         if (uuid == null) {
             sender.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cZły nick!"));
-            return getCooldown(sender, 3);
+            return 0;
         }
 
         if (args.length == 2 && args[0].equalsIgnoreCase("get")) {
@@ -85,7 +85,7 @@ public class PremiumCommand implements CommandHandler.Minecraft, CommandHandler.
                     sender.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Ten gracz nie jest premium."));
                 }
             });
-            return getCooldown(sender, 5);
+            return 0;
         }
 
         if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
@@ -148,24 +148,15 @@ public class PremiumCommand implements CommandHandler.Minecraft, CommandHandler.
         return -1;
     }
 
-    private int getCooldown(@NotNull CommandSender sender, int cooldown) {
-        if (!(sender instanceof Player player)) return 0;
-        return player.isOp() ? 0 : cooldown;
-    }
-
     @Override
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args) {
+        if (!isAdmin(sender)) return new ArrayList<>();
         if (args.length == 1) {
-            if (isAdmin(sender)) {
-                return Arrays.asList("get", "extend", "reduce", "set", "remove");
-            } else {
-                return List.of("get");
-            }
+            return Arrays.asList("get", "extend", "reduce", "set", "remove");
         }
         if (args.length == 2) {
             return plugin.getOfflinePlayersManager().getNames();
         }
-        if (!isAdmin(sender)) return new ArrayList<>();
         if (!(args[0].equalsIgnoreCase("extend") || args[0].equalsIgnoreCase("reduce") || args[0].equalsIgnoreCase("set"))) return new ArrayList<>();
         if (args.length == 3) {
             List<String> list = plugin.getConfig().getStringList("premium.popular-times");

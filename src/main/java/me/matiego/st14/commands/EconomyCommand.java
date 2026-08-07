@@ -1,12 +1,18 @@
 package me.matiego.st14.commands;
 
+import io.papermc.paper.dialog.Dialog;
+import io.papermc.paper.registry.data.dialog.ActionButton;
+import io.papermc.paper.registry.data.dialog.DialogBase;
+import io.papermc.paper.registry.data.dialog.action.DialogAction;
+import io.papermc.paper.registry.data.dialog.body.DialogBody;
+import io.papermc.paper.registry.data.dialog.input.DialogInput;
+import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.AccountsManager;
 import me.matiego.st14.managers.EconomyManager;
 import me.matiego.st14.managers.PremiumManager;
-import me.matiego.st14.objects.GUI;
 import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Utils;
@@ -21,18 +27,13 @@ import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.milkbowl.vault.economy.EconomyResponse;
-import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.potion.PotionType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -150,22 +151,50 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                 return 5;
             }
 
-            Inventory inv = GUI.createInventory(9, Prefix.ECONOMY + "Twoje konto");
-            inv.setItem(0, GUI.createGuiItem(Material.DISPENSER, "&9Przelew", "&bPrzelej pieniądze innemu graczowi"));
-            inv.setItem(1, GUI.createGuiItem(Material.PAPER, "&9Wypłata", "&bWypłać pieniądze w postaci banknotu"));
-            Utils.async(() -> inv.setItem(4, GUI.createGuiItem(Material.DIAMOND, "&9Saldo konta", "&b" + plugin.getEconomyManager().format(plugin.getEconomyManager().getBalance(player)))));
+            DialogBase base = DialogBase.create(
+                    Utils.getComponentByString(Prefix.ECONOMY + "Twoje konto"),
+                    null,
+                    true,
+                    true,
+                    DialogBase.DialogAfterAction.CLOSE,
+                    List.of(DialogBody.plainMessage(Utils.getComponentByString("&bSaldo twojego konta:\n&e" + plugin.getEconomyManager().format(plugin.getEconomyManager().getBalance(player))))),
+                    List.of()
+            );
 
-            inv.setItem(6, GUI.createGuiItem(Material.VILLAGER_SPAWN_EGG, "&9Sprzedaj przedmioty", "&cJuż wkrótce!"));
+            List<ActionButton> actions = new ArrayList<>();
+            actions.add(ActionButton.create(
+                    Utils.getComponentByString("&bWypłać pieniądze"),
+                    null,
+                    Utils.DIALOG_BUTTON_WIDTH,
+                    DialogAction.customClick((view, audience) -> handleWithdrawal(player, null, null), Utils.BUTTON_OPTIONS)
+            ));
+            actions.add(ActionButton.create(
+                    Utils.getComponentByString("&bPrzelej pieniądze"),
+                    null,
+                    Utils.DIALOG_BUTTON_WIDTH,
+                    DialogAction.customClick((view, audience) -> handleTransfer(player, null, null, null), Utils.BUTTON_OPTIONS)
+            ));
+            actions.add(ActionButton.create(
+                    Utils.getComponentByString("&bKup główki"),
+                    null,
+                    Utils.DIALOG_BUTTON_WIDTH,
+                    DialogAction.staticAction(ClickEvent.runCommand("st14:heads"))
+            ));
+            actions.add(ActionButton.create(
+                    Utils.getComponentByString("&bKup status premium"),
+                    null,
+                    Utils.DIALOG_BUTTON_WIDTH,
+                    DialogAction.customClick((view, audience) -> handlePremiumStatusPurchase(player, null, null), Utils.BUTTON_OPTIONS)
+            ));
 
-            ItemStack item = GUI.createGuiItem(Material.POTION, "&9Kup status premium", "&bUzyskaj priorytetowy dostęp do serwera");
-            PotionMeta meta = (PotionMeta) item.getItemMeta();
-            meta.setBasePotionType(PotionType.SWIFTNESS);
-            meta.clearCustomEffects();
-            item.setItemMeta(meta);
-            inv.setItem(7, item);
+            ActionButton exitAction = ActionButton.create(Utils.getComponentByString("Gotowe"), null, 150, null);
 
-            inv.setItem(8, GUI.createGuiItem(Material.CREEPER_HEAD, "&9Kup główkę"));
-            player.openInventory(inv);
+            Dialog dialog = Dialog.create(builder -> builder.empty()
+                    .base(base)
+                    .type(DialogType.multiAction(actions, exitAction, 1))
+            );
+            player.showDialog(dialog);
+
             return 3;
         }
     }
@@ -183,217 +212,340 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
         return new ArrayList<>();
     }
 
-    @Override
-    public void onInventoryClick(@NotNull InventoryClickEvent event) {
-        if (!GUI.checkInventory(event, Prefix.ECONOMY + "Twoje konto")) return;
+    private void handleWithdrawal(@NotNull Player player, @Nullable String errorMessage, @Nullable String previousText) {
+        EconomyManager economy = plugin.getEconomyManager();
 
-        Player player = (Player) event.getWhoClicked();
-        int slot = event.getSlot();
-        if (slot == 0) {
-            new AnvilGUI.Builder()
-                    .jsonTitle(Utils.getJsonByLegacyString(Prefix.ECONOMY + "Wpisz wartość"))
-                    .text("Wpisz tutaj...")
-                    .itemLeft(GUI.createGuiItem(Material.PAPER, "&9Wprowadź wartość...", "&bKliknij &9ESC&b, aby wyjść", "&bKliknij przedmiot po prawej, aby zaakceptować"))
-                    .plugin(plugin)
-                    .onClick((anvilSlot, state) -> {
-                        if (anvilSlot != AnvilGUI.Slot.OUTPUT) return Collections.emptyList();
-
-                        double amount;
-                        try {
-                            amount = Utils.round(Double.parseDouble(state.getText().replace(",", ".")), 2);
-                        } catch (Exception e) {
-                            return List.of(AnvilGUI.ResponseAction.replaceInputText("Podaj liczbę!"));
-                        }
-                        if (amount <= 0d) {
-                            return List.of(AnvilGUI.ResponseAction.replaceInputText("Podaj liczbę!"));
-                        }
-                        amount = Utils.round(amount, 2);
-
-                        EconomyManager economy = plugin.getEconomyManager();
-                        if (!economy.has(player, amount)) {
-                            return List.of(AnvilGUI.ResponseAction.replaceInputText("Brak środków"));
-                        }
-
-                        double finalAmount = amount;
-                        Bukkit.getScheduler().runTaskLater(plugin, () -> finishTransfer(player, finalAmount), 3);
-                        return List.of(AnvilGUI.ResponseAction.close());
-                    })
-                    .open(player);
-        } else if (slot == 1) {
-            new AnvilGUI.Builder()
-                    .jsonTitle(Utils.getJsonByLegacyString(Prefix.ECONOMY + "Wpisz wartość"))
-                    .text("Wpisz tutaj...")
-                    .itemLeft(GUI.createGuiItem(Material.PAPER, "&9Wprowadź wartość...", "&bKliknij &9ESC&b, aby wyjść", "&bKliknij przedmiot po prawej, aby zaakceptować"))
-                    .plugin(plugin)
-                    .onClick((anvilSlot, state) -> {
-                        if (anvilSlot != AnvilGUI.Slot.OUTPUT) return Collections.emptyList();
-
-                        double amount;
-                        try {
-                            amount = Utils.round(Double.parseDouble(state.getText().replace(",", ".")), 2);
-                        } catch (Exception e) {
-                            return List.of(AnvilGUI.ResponseAction.replaceInputText("Podaj liczbę!"));
-                        }
-                        if (amount <= 0d) {
-                            return List.of(AnvilGUI.ResponseAction.replaceInputText("Podaj liczbę!"));
-                        }
-                        if (amount >= 500d) {
-                            return List.of(AnvilGUI.ResponseAction.replaceInputText("Za duża kwota!"));
-                        }
-
-                        amount = Utils.round(amount, 2);
-                        double tax = Utils.round(Math.max(
-                                Math.max(0, plugin.getConfig().getDouble("economy.banknote-tax.min", 0)),
-                                amount * Math.max(0, plugin.getConfig().getDouble("economy.banknote-tax.percent", 0))
-                        ), 2);
-
-                        EconomyManager economy = plugin.getEconomyManager();
-                        if (!economy.has(player, amount + tax)) {
-                            return List.of(AnvilGUI.ResponseAction.replaceInputText("Brak środków"));
-                        }
-
-                        final double finalAmount = amount;
-                        Utils.async(() -> {
-                            ItemStack banknote = plugin.getBanknoteManager().createBanknote(finalAmount);
-                            if (banknote == null) {
-                                player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd. Spróbuj później."));
-                                return;
-                            }
-
-                            EconomyResponse response = economy.withdrawPlayer(player, finalAmount + tax);
-                            if (!response.transactionSuccess()) {
-                                player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd. Spróbuj później."));
-                                return;
-                            }
-
-                            HashMap<Integer, ItemStack> drop = player.getInventory().addItem(banknote);
-                            for (ItemStack item : drop.values()) {
-                                player.getWorld().dropItem(player.getLocation().add(0, 0.5, 0), item);
-                            }
-
-                            Logs.info("Gracz " + player.getName() + " wypłacił " + economy.format(finalAmount) + " ze swojego konta za opłatą " + economy.format(tax) + ". (Na ziemi? " + (drop.isEmpty() ? "Nie" : "Tak") + ")");
-
-                            player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie wypłacono &9" + economy.format(finalAmount) + "&b z twojego konta za opłatą &9" + economy.format(tax)));
-                        });
-                        return List.of(AnvilGUI.ResponseAction.close());
-                    })
-                    .open(player);
-        } else if (slot == 6) {
-            player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Już wkrótce!"));
-            player.closeInventory();
-        } else if (slot == 7) {
-            new AnvilGUI.Builder()
-                    .jsonTitle(Utils.getJsonByLegacyString(Prefix.ECONOMY + "Wpisz czas"))
-                    .text("Wpisz tutaj...")
-                    .itemLeft(GUI.createGuiItem(Material.PAPER, "&9Wprowadź czas...", "&bKliknij &9ESC&b, aby wyjść", "&bKliknij przedmiot po prawej, aby zaakceptować"))
-                    .plugin(plugin)
-                    .onClick((anvilSlot, state) -> {
-                        if (anvilSlot != AnvilGUI.Slot.OUTPUT) return Collections.emptyList();
-
-                        PremiumManager premium = plugin.getPremiumManager();
-                        if (premium.isSuperPremium(player.getUniqueId())) {
-                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cNie możesz kupić statusu premium, ponieważ jesteś graczem super premium."));
-                            return List.of(AnvilGUI.ResponseAction.close());
-                        }
-
-                        long time = 0;
-                        try {
-                            time = Utils.parseStringToMillis(state.getText().replace(" ", "").toLowerCase());
-                            time /= (3600 * 1000);
-                        } catch (Exception ignored) {}
-
-                        if (time <= 0) {
-                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Wprowadziłeś zły czas, na który chcesz kupić status premium. Przykładowe czasy: 5h, 5h30m, 1d. Minimalny czas: 1h."));
-                            return List.of(AnvilGUI.ResponseAction.close());
-                        }
-
-                        double amount = Math.max(plugin.getConfig().getDouble("premium.min-cost", 0), plugin.getConfig().getDouble("premium.cost-const", 0) * Math.sqrt(time));
-                        if (amount <= 0) {
-                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cNie możesz kupić teraz statusu premium."));
-                            return List.of(AnvilGUI.ResponseAction.close());
-                        }
-
-                        time *= 3600 * 1000;
-
-                        EconomyManager economy = plugin.getEconomyManager();
-                        if (!economy.has(player, amount)) {
-                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cAby przedłużyć status premium o " + Utils.parseMillisToString(time, false) + " potrzebujesz " + economy.format(amount) + ", a masz " + economy.format(economy.getBalance(player))));
-                            return List.of(AnvilGUI.ResponseAction.close());
-                        }
-
-                        EconomyResponse response = economy.withdrawPlayer(player, amount);
-                        if (!response.transactionSuccess()) {
-                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cNapotkano niespodziewany błąd. Spróbuj później."));
-                            return List.of(AnvilGUI.ResponseAction.close());
-                        }
-
-                        if (premium.extend(player.getUniqueId(), time)) {
-                            long remaining = premium.getRemainingTime(player.getUniqueId());
-                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Pomyślnie przedłużono twój status premium o &6" + Utils.parseMillisToString(time, false) + "&b za &6" + economy.format(amount)));
-
-                            Logs.info("Gracz " + player.getName() + " przedłużył status premium o `" + Utils.parseMillisToString(time, false) + "` za `" + economy.format(amount) + "`" + (remaining > 0 ? ". Pozostało: " + Utils.parseMillisToString(remaining, false) : ""));
-                        } else {
-                            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Napotkano niespodziewany błąd."));
-                            if (!economy.depositPlayer(player, amount).transactionSuccess()) {
-                                player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&c&lNapotkano błąd przy oddawaniu pieniędzy! Zgłoś się do administratora, aby je odzyskać. Przepraszamy."));
-                                Logs.warning("Gracz " + player.getName() + " (" + player.getUniqueId() + ") stracił " + plugin.getEconomyManager().format(amount) + " ze swojego konta! Kwota musi być przywrócona ręcznie.");
-                            }
-                        }
-                        return List.of(AnvilGUI.ResponseAction.close());
-                    })
-                    .open(player);
-        } else if (slot == 8) {
-            player.closeInventory();
-            player.performCommand("st14:heads");
+        List<DialogBody> body = new ArrayList<>();
+        body.add(DialogBody.plainMessage(Utils.getComponentByString("&bSaldo twojego konta:\n&e" + economy.format(economy.getBalance(player)))));
+        double taxPercent = Math.max(0, plugin.getConfig().getDouble("economy.banknote-tax.percent", 0)) * 100;
+        double taxMin = Math.max(0, plugin.getConfig().getDouble("economy.banknote-tax.min", 0));
+        body.add(DialogBody.plainMessage(Utils.getComponentByString("&bPodatek: &e" + Utils.formatDouble(taxPercent) + "% (min. " + economy.format(taxMin) + ")")));
+        if (errorMessage != null) {
+            body.add(DialogBody.plainMessage(Utils.getComponentByString("&cBłąd: " + errorMessage)));
         }
+
+        DialogInput input = DialogInput.text(
+                "amount",
+                Utils.DIALOG_BUTTON_WIDTH,
+                Utils.getComponentByString("&bWartość:"),
+                true,
+                previousText == null ? "" : previousText,
+                8,
+                null
+        );
+
+        DialogBase base = DialogBase.create(
+                Utils.getComponentByString(Prefix.ECONOMY + "Wypłać pieniądze"),
+                null,
+                true,
+                true,
+                DialogBase.DialogAfterAction.CLOSE,
+                body,
+                List.of(input)
+        );
+
+        ActionButton yes = ActionButton.create(
+                Utils.getComponentByString("&aWypłać"),
+                null,
+                Utils.DIALOG_BUTTON_WIDTH,
+                DialogAction.customClick((view, audience) -> finishWithdrawal(player, view.getText("amount")), Utils.BUTTON_OPTIONS)
+        );
+        ActionButton no = ActionButton.create(
+                Utils.getComponentByString("&cAnuluj"),
+                null,
+                Utils.DIALOG_BUTTON_WIDTH,
+                null
+        );
+
+        Dialog dialog = Dialog.create(builder -> builder.empty()
+                .base(base)
+                .type(DialogType.confirmation(yes, no))
+        );
+        player.showDialog(dialog);
     }
 
-    private void finishTransfer(@NotNull Player player, double amount) {
-        new AnvilGUI.Builder()
-                .jsonTitle(Utils.getJsonByLegacyString(Prefix.ECONOMY + "Podaj nick"))
-                .text("Wpisz tutaj...")
-                .itemLeft(GUI.createGuiItem(Material.PAPER, "&9Podaj nick odbiorcy...", "&bKliknij &9ESC&b, aby wyjść", "&bKliknij przedmiot po prawej, aby zaakceptować"))
-                .plugin(plugin)
-                .onClick((anvilSlot, state) -> {
-                    if (anvilSlot != AnvilGUI.Slot.OUTPUT) return Collections.emptyList();
+    private void finishWithdrawal(@NotNull Player player, @Nullable String amountString) {
+        if (amountString == null) amountString = "";
 
-                    UUID target = plugin.getOfflinePlayersManager().getIdByName(state.getText());
-                    if (target == null) {
-                        return List.of(AnvilGUI.ResponseAction.replaceInputText("Zły nick!"));
-                    }
-                    if (target.equals(player.getUniqueId())) {
-                        return List.of(AnvilGUI.ResponseAction.replaceInputText("To twój nick!"));
-                    }
+        double amount;
+        try {
+            amount = Utils.round(Double.parseDouble(amountString.replace(",", ".").replace("$", "")), 2);
+        } catch (Exception e) {
+            handleWithdrawal(player, "Podaj poprawną kwotę", amountString);
+            return;
+        }
+        if (amount <= 0d) {
+            handleWithdrawal(player, "Podaj poprawną kwotę", amountString);
+            return;
+        }
+        if (amount > 500d) {
+            handleWithdrawal(player, "Możesz wypłacić tylko 500$", amountString);
+            return;
+        }
 
-                    double tax = Utils.round(Math.max(
-                            Math.max(0, plugin.getConfig().getDouble("economy.transfer-tax.min", 0)),
-                            amount * Math.max(0, plugin.getConfig().getDouble("economy.transfer-tax.percent", 0))
-                    ), 2);
+        amount = Utils.round(amount, 2);
+        double tax = Utils.round(Math.max(
+                Math.max(0, plugin.getConfig().getDouble("economy.banknote-tax.min", 0)),
+                amount * Math.max(0, plugin.getConfig().getDouble("economy.banknote-tax.percent", 0))
+        ), 2);
 
-                    EconomyManager economy = plugin.getEconomyManager();
-                    if (!economy.has(player, amount + tax)) {
-                        player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cBrak środków!"));
-                        return List.of(AnvilGUI.ResponseAction.close());
-                    }
-                    EconomyResponse r1 = economy.withdrawPlayer(player, amount + tax);
-                    if (!r1.transactionSuccess()) {
-                        player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd. Spróbuj później."));
-                        return List.of(AnvilGUI.ResponseAction.close());
-                    }
-                    EconomyResponse r2 = economy.depositPlayer(Bukkit.getOfflinePlayer(target), amount);
-                    if (!r2.transactionSuccess()) {
-                        player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd. Zgłoś się do administratora, żeby odzyskać swoje pieniądze. Przepraszamy."));
-                        Logs.warning("Gracz " + player.getName() + " (" + player.getUniqueId() + ") stracił " + economy.format(amount + tax) + " ze swojego konta! Kwota musi być przywrócona ręcznie.");
-                        return List.of(AnvilGUI.ResponseAction.close());
-                    }
+        EconomyManager economy = plugin.getEconomyManager();
+        if (!economy.has(player, amount + tax)) {
+            handleWithdrawal(player, "Brak środków na koncie", amountString);
+            return;
+        }
 
-                    Logs.info("Gracz " + player.getName() + " przelał " + economy.format(amount) + " graczowi " + state.getText() + " za opłatą " + economy.format(tax) + ".");
+        final double finalAmount = amount;
+        Utils.async(() -> {
+            ItemStack banknote = plugin.getBanknoteManager().createBanknote(finalAmount);
+            if (banknote == null) {
+                player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd. Spróbuj później."));
+                return;
+            }
 
-                    player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie przelano " + economy.format(amount) + " graczowi " + state.getText() + " za opłatą " + economy.format(tax) + "."));
-                    informPlayer(target, player.getName(), amount, Type.ADD);
-                    return List.of(AnvilGUI.ResponseAction.close());
-                })
-                .open(player);
+            EconomyResponse response = economy.withdrawPlayer(player, finalAmount + tax);
+            if (!response.transactionSuccess()) {
+                player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd. Spróbuj później."));
+                return;
+            }
+
+            HashMap<Integer, ItemStack> drop = player.getInventory().addItem(banknote);
+            for (ItemStack item : drop.values()) {
+                player.getWorld().dropItem(player.getLocation().add(0, 0.5, 0), item);
+            }
+
+            Logs.info("Gracz " + player.getName() + " wypłacił " + economy.format(finalAmount) + " ze swojego konta za opłatą " + economy.format(tax) + ". (Na ziemi? " + (drop.isEmpty() ? "Nie" : "Tak") + ")");
+
+            player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie wypłacono &9" + economy.format(finalAmount) + "&b z twojego konta za opłatą &9" + economy.format(tax)));
+        });
+    }
+
+    private void handleTransfer(@NotNull Player player, @Nullable String errorMessage, @Nullable String previousAmount, @Nullable String previosReceiver) {
+        EconomyManager economy = plugin.getEconomyManager();
+
+        List<DialogBody> body = new ArrayList<>();
+        body.add(DialogBody.plainMessage(Utils.getComponentByString("&bSaldo twojego konta:\n&e" + economy.format(economy.getBalance(player)))));
+        double taxPercent = Math.max(0, plugin.getConfig().getDouble("economy.transfer-tax.percent", 0)) * 100;
+        double taxMin = Math.max(0, plugin.getConfig().getDouble("economy.transfer-tax.min", 0));
+        body.add(DialogBody.plainMessage(Utils.getComponentByString("&bPodatek: &e" + Utils.formatDouble(taxPercent) + "% (min. " + economy.format(taxMin) + ")")));
+        if (errorMessage != null) {
+            body.add(DialogBody.plainMessage(Utils.getComponentByString("&cBłąd: " + errorMessage)));
+        }
+
+        DialogInput amount = DialogInput.text(
+                "amount",
+                Utils.DIALOG_BUTTON_WIDTH,
+                Utils.getComponentByString("&bWartość:"),
+                true,
+                previousAmount == null ? "" : previousAmount,
+                8,
+                null
+        );
+        DialogInput receiver = DialogInput.text(
+                "receiver",
+                Utils.DIALOG_BUTTON_WIDTH,
+                Utils.getComponentByString("&bOdbiorca:"),
+                true,
+                previosReceiver == null ? "" : previosReceiver,
+                16,
+                null
+        );
+
+        DialogBase base = DialogBase.create(
+                Utils.getComponentByString(Prefix.ECONOMY + "Przelej pieniądze"),
+                null,
+                true,
+                true,
+                DialogBase.DialogAfterAction.CLOSE,
+                body,
+                List.of(amount, receiver)
+        );
+
+        ActionButton yes = ActionButton.create(
+                Utils.getComponentByString("&aPrzelej"),
+                null,
+                Utils.DIALOG_BUTTON_WIDTH,
+                DialogAction.customClick((view, audience) -> finishTransfer(player, view.getText("amount"), view.getText("receiver")), Utils.BUTTON_OPTIONS)
+        );
+        ActionButton no = ActionButton.create(
+                Utils.getComponentByString("&cAnuluj"),
+                null,
+                Utils.DIALOG_BUTTON_WIDTH,
+                null
+        );
+
+        Dialog dialog = Dialog.create(builder -> builder.empty()
+                .base(base)
+                .type(DialogType.confirmation(yes, no))
+        );
+        player.showDialog(dialog);
+    }
+
+    private void finishTransfer(@NotNull Player player, @Nullable String amountString, @Nullable String receiverName) {
+        if (amountString == null) amountString = "";
+        if (receiverName == null) receiverName = "";
+
+        double amount;
+        try {
+            amount = Utils.round(Double.parseDouble(amountString.replace(",", ".").replace("$", "")), 2);
+        } catch (Exception e) {
+            handleTransfer(player, "Podaj poprawną kwotę", amountString, receiverName);
+            return;
+        }
+        if (amount <= 0d) {
+            handleTransfer(player, "Podaj poprawną kwotę", amountString, receiverName);
+            return;
+        }
+        if (amount > 1000d) {
+            handleTransfer(player, "Możesz przelać tylko 1000$", amountString, receiverName);
+            return;
+        }
+
+        UUID receiver = plugin.getOfflinePlayersManager().getIdByName(receiverName);
+        if (receiver == null) {
+            handleTransfer(player, "Podaj poprawny nick odbiorcy",  amountString, receiverName);
+            return;
+        }
+        if (receiver.equals(player.getUniqueId())) {
+            handleTransfer(player, "Podałeś swój nick", amountString, receiverName);
+            return;
+        }
+
+        amount = Utils.round(amount, 2);
+        double tax = Utils.round(Math.max(
+                Math.max(0, plugin.getConfig().getDouble("economy.transfer-tax.min", 0)),
+                amount * Math.max(0, plugin.getConfig().getDouble("economy.transfer-tax.percent", 0))
+        ), 2);
+
+        EconomyManager economy = plugin.getEconomyManager();
+        if (!economy.has(player, amount + tax)) {
+            handleTransfer(player, "Brak środków na koncie", amountString, receiverName);
+            return;
+        }
+
+        EconomyResponse r1 = economy.withdrawPlayer(player, amount + tax);
+        if (!r1.transactionSuccess()) {
+            player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd. Spróbuj później."));
+            return;
+        }
+        EconomyResponse r2 = economy.depositPlayer(Bukkit.getOfflinePlayer(receiver), amount);
+        if (!r2.transactionSuccess()) {
+            player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "&cNapotkano niespodziewany błąd. Zgłoś się do administratora, żeby odzyskać swoje pieniądze. Przepraszamy."));
+            Logs.warning("Gracz " + player.getName() + " (" + player.getUniqueId() + ") stracił " + economy.format(amount + tax) + " ze swojego konta! Kwota musi być przywrócona ręcznie.");
+            return;
+        }
+
+        Logs.info("Gracz " + player.getName() + " przelał " + economy.format(amount) + " graczowi " + receiverName + " za opłatą " + economy.format(tax) + ".");
+
+        player.sendMessage(Utils.getComponentByString(Prefix.ECONOMY + "Pomyślnie przelano " + economy.format(amount) + " graczowi " + receiverName + " za opłatą " + economy.format(tax) + "."));
+        informPlayer(receiver, player.getName(), amount, Type.ADD);
+    }
+
+    private void handlePremiumStatusPurchase(@NotNull Player player, @Nullable String errorMessage, @Nullable String previousText) {
+        EconomyManager economy = plugin.getEconomyManager();
+
+        List<DialogBody> body = new ArrayList<>();
+        body.add(DialogBody.plainMessage(Utils.getComponentByString("&bStatus premium daje priorytetowy dostęp do serwera i &eżółty&b nick na liście graczy.")));
+        double costConst = plugin.getConfig().getDouble("premium.cost-const", 0);
+        double costMin = Math.max(plugin.getConfig().getDouble("premium.min-cost"), 0);
+        body.add(DialogBody.plainMessage(Utils.getComponentByString("&bKoszt:&e sqrt(czas w godzinach) * " + economy.format(costConst) + " (min. " + economy.format(costMin) + ")")));
+        body.add(DialogBody.plainMessage(Utils.getComponentByString("&bSaldo twojego konta:\n&e" + economy.format(economy.getBalance(player)))));
+        if (errorMessage != null) {
+            body.add(DialogBody.plainMessage(Utils.getComponentByString("&cBłąd: " + errorMessage)));
+        }
+
+        DialogInput input = DialogInput.text(
+                "time",
+                200,
+                Utils.getComponentByString("&bCzas:"),
+                true,
+                previousText == null ? "np. 3d10h" : previousText,
+                10,
+                null
+        );
+
+        DialogBase base = DialogBase.create(
+                Utils.getComponentByString(Prefix.ECONOMY + "Kup status premium"),
+                null,
+                true,
+                true,
+                DialogBase.DialogAfterAction.CLOSE,
+                body,
+                List.of(input)
+        );
+
+        ActionButton yes = ActionButton.create(
+                Utils.getComponentByString("&aAkceptuj"),
+                null,
+                Utils.DIALOG_BUTTON_WIDTH,
+                DialogAction.customClick((view, audience) -> finishPremiumStatusPurchase(player, view.getText("time")), Utils.BUTTON_OPTIONS)
+        );
+        ActionButton no = ActionButton.create(
+                Utils.getComponentByString("&cAnuluj"),
+                null,
+                Utils.DIALOG_BUTTON_WIDTH,
+                null
+        );
+
+        Dialog dialog = Dialog.create(builder -> builder.empty()
+                .base(base)
+                .type(DialogType.confirmation(yes, no))
+        );
+        player.showDialog(dialog);
+    }
+
+    private void finishPremiumStatusPurchase(@NotNull Player player, @Nullable String timeString) {
+        if (timeString == null) timeString = "";
+
+        PremiumManager premium = plugin.getPremiumManager();
+        if (premium.isSuperPremium(player.getUniqueId())) {
+            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cNie możesz kupić statusu premium, ponieważ jesteś graczem super premium."));
+            return;
+        }
+
+        long time = 0;
+        try {
+            time = Utils.parseStringToMillis(timeString.replace(" ", "").toLowerCase());
+            time /= (3600 * 1000);
+        } catch (Exception ignored) {}
+
+        if (time <= 0) {
+            handlePremiumStatusPurchase(player, "Zły czas. Minimalny czas: 1h. Przykładowy czas: 3d10h", timeString);
+            return;
+        }
+
+        double amount = Math.max(plugin.getConfig().getDouble("premium.min-cost", 0), plugin.getConfig().getDouble("premium.cost-const", 0) * Math.sqrt(time));
+        if (amount <= 0) {
+            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cKupowanie statusu premium jest wyłączone."));
+            return;
+        }
+
+        time *= 3600 * 1000;
+
+        EconomyManager economy = plugin.getEconomyManager();
+        if (!economy.has(player, amount)) {
+            handlePremiumStatusPurchase(player, "Brak środków. Potrzebujesz " + economy.format(amount), timeString);
+            return;
+        }
+
+        EconomyResponse response = economy.withdrawPlayer(player, amount);
+        if (!response.transactionSuccess()) {
+            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&cNapotkano niespodziewany błąd. Spróbuj później."));
+            return;
+        }
+
+        if (premium.extend(player.getUniqueId(), time)) {
+            long remaining = premium.getRemainingTime(player.getUniqueId());
+            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Pomyślnie przedłużono twój status premium o &6" + Utils.parseMillisToString(time, false) + "&b za &6" + economy.format(amount)));
+
+            Logs.info("Gracz " + player.getName() + " przedłużył status premium o `" + Utils.parseMillisToString(time, false) + "` za `" + economy.format(amount) + "`" + (remaining > 0 ? ". Pozostało: " + Utils.parseMillisToString(remaining, false) : ""));
+        } else {
+            player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "Napotkano niespodziewany błąd."));
+            if (!economy.depositPlayer(player, amount).transactionSuccess()) {
+                player.sendMessage(Utils.getComponentByString(Prefix.PREMIUM + "&c&lNapotkano błąd przy oddawaniu pieniędzy! Zgłoś się do administratora, aby je odzyskać. Przepraszamy."));
+                Logs.warning("Gracz " + player.getName() + " (" + player.getUniqueId() + ") stracił " + plugin.getEconomyManager().format(amount) + " ze swojego konta! Kwota musi być przywrócona ręcznie.");
+            }
+        }
     }
 
     @Override

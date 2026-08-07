@@ -1,9 +1,16 @@
 package me.matiego.st14.commands;
 
+import io.papermc.paper.dialog.Dialog;
+import io.papermc.paper.registry.data.dialog.ActionButton;
+import io.papermc.paper.registry.data.dialog.DialogBase;
+import io.papermc.paper.registry.data.dialog.action.DialogAction;
+import io.papermc.paper.registry.data.dialog.body.DialogBody;
+import io.papermc.paper.registry.data.dialog.input.DialogInput;
+import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
+import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
-import me.matiego.st14.objects.GUI;
 import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.Utils;
 import net.dv8tion.jda.api.interactions.InteractionContextType;
@@ -13,15 +20,14 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
-import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class GameModeCommand implements CommandHandler.Minecraft, CommandHandler.Discord {
@@ -44,54 +50,79 @@ public class GameModeCommand implements CommandHandler.Minecraft, CommandHandler
     public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         if (!(sender instanceof Player player) || (player.isOp() && args.length > 0)) {
             Bukkit.dispatchCommand(sender, "minecraft:gamemode " + String.join(" ", args));
-            return 1; //not zero to prevent a loop if it somehow happened
+            return 1; //non-zero to prevent loop if it somehow happened
         }
         if (args.length != 0) return -1;
+
         if (Utils.checkIfCanNotExecuteCommandInWorld(player, "gamemode")) {
             sender.sendMessage(Utils.getComponentByString("&cNie możesz zmienić trybu gry w tym świecie."));
             return 3;
         }
-        if (player.getGameMode() == GameMode.SPECTATOR) {
-            change(player, GameMode.CREATIVE, "kreatywny");
-            return 2;
+
+        GameMode currentGameMode = player.getGameMode();
+        List<SingleOptionDialogInput.OptionEntry> options = new ArrayList<>();
+        for (GameMode gameMode : GameMode.values()) {
+            options.add(SingleOptionDialogInput.OptionEntry.create(
+                    gameMode.name(),
+                    Utils.getComponentByString(getGameModeNameFormatted(gameMode)),
+                    currentGameMode == gameMode
+            ));
         }
-        Inventory inv = GUI.createInventory(9, "&6Ustaw tryb gry");
-        inv.setItem(1, GUI.createGuiItem(Material.DIAMOND_SWORD, "&ePrzetrwania", "Kliknij, aby ustawić"));
-        inv.setItem(3, GUI.createGuiItem(Material.DIAMOND_BLOCK, "&eKreatywny", "Kliknij, aby ustawić"));
-        inv.setItem(5, GUI.createGuiItem(Material.GRASS_BLOCK, "&ePrzygodowy", "Kliknij, aby ustawić"));
-        inv.setItem(7, GUI.createGuiItem(Material.ENDER_PEARL, "&eObserwatora", "Kliknij, aby ustawić"));
-        player.openInventory(inv);
+
+        DialogBase base = DialogBase.create(
+                Utils.getComponentByString("&lZmień swój tryb gry"),
+                null,
+                true,
+                true,
+                DialogBase.DialogAfterAction.CLOSE,
+                List.of(DialogBody.plainMessage(Utils.getComponentByString("Aktualny tryb gry: " + getGameModeNameFormatted(currentGameMode)))),
+                List.of(DialogInput.singleOption("gamemode", Utils.getComponentByString("Nowy tryb gry"), options).build())
+        );
+
+        ActionButton yes = ActionButton.create(
+                Utils.getComponentByString("&aOK"),
+                null,
+                Utils.DIALOG_BUTTON_WIDTH,
+                DialogAction.customClick((view, audience) -> {
+                    GameMode gameMode;
+                    try {
+                        gameMode = GameMode.valueOf(view.getText("gamemode"));
+                    } catch (IllegalArgumentException e) {
+                        return;
+                    }
+
+                    change(player, gameMode);
+                }, Utils.BUTTON_OPTIONS)
+        );
+        ActionButton no = ActionButton.create(
+                Utils.getComponentByString("&cAnuluj"),
+                null,
+                Utils.DIALOG_BUTTON_WIDTH,
+                null
+        );
+
+        Dialog dialog = Dialog.create(builder -> builder.empty()
+                .base(base)
+                .type(DialogType.confirmation(yes, no))
+        );
+        player.showDialog(dialog);
+
         return 3;
     }
 
-    @Override
-    public void onInventoryClick(@NotNull InventoryClickEvent event) {
-        if (!GUI.checkInventory(event, "&6Ustaw tryb gry")) return;
-
-        Player player = (Player) event.getWhoClicked();
-        int slot = event.getSlot();
-        event.getInventory().close();
-
+    private void change(@NotNull Player player, @NotNull GameMode gameMode) {
         if (Utils.checkIfCanNotExecuteCommandInWorld(player, "gamemode")) {
             player.sendMessage(Utils.getComponentByString("&cNie możesz zmienić trybu gry w tym świecie."));
             return;
         }
 
-        switch (slot) {
-            case 1 -> change(player, GameMode.SURVIVAL, "przetrwania");
-            case 3 -> change(player, GameMode.CREATIVE, "kreatywny");
-            case 5 -> change(player, GameMode.ADVENTURE, "przygodowy");
-            case 7 -> change(player, GameMode.SPECTATOR, "obserwatora");
-        }
-    }
-
-    private void change(@NotNull Player player, @NotNull GameMode gameMode, @NotNull String name) {
         if (player.getGameMode() == gameMode) {
             player.sendMessage(Utils.getComponentByString("&cJuż masz ten tryb gry!"));
             return;
         }
         player.setGameMode(gameMode);
 
+        String name = getGameModeName(gameMode);
         Utils.broadcastMessage(
                 player,
                 Prefix.GAMEMODE,
@@ -126,14 +157,9 @@ public class GameModeCommand implements CommandHandler.Minecraft, CommandHandler
             return 3;
         }
 
-        String gamemode = switch (player.getGameMode()) {
-            case CREATIVE -> "kreatywny";
-            case SURVIVAL -> "przetrwania";
-            case ADVENTURE -> "przygodowy";
-            case SPECTATOR -> "obserwatora";
-        };
+        String gameMode = getGameModeName(player.getGameMode());
+        event.reply("Tryb gry gracza **" + player.getName() + "** to **" + gameMode + "**.").setEphemeral(ephemeral).queue();
 
-        event.reply("Tryb gry gracza **" + player.getName() + "** to **" + gamemode + "**.").setEphemeral(ephemeral).queue();
         return 5;
     }
 
@@ -148,5 +174,18 @@ public class GameModeCommand implements CommandHandler.Minecraft, CommandHandler
                 .map(name -> new Command.Choice(name, name))
                 .collect(Collectors.toList())
         ).queue();
+    }
+
+    private @NotNull String getGameModeName(@NotNull GameMode gameMode) {
+        return getGameModeNameFormatted(gameMode).substring(2).toLowerCase();
+    }
+
+    private @NotNull String getGameModeNameFormatted(@NotNull GameMode gameMode) {
+        return switch (gameMode) {
+            case SPECTATOR -> "&bObserwatora";
+            case CREATIVE -> "&6Kreatywny";
+            case SURVIVAL -> "&aPrzetrwania";
+            case ADVENTURE -> "&dPrzygodowy";
+        };
     }
 }

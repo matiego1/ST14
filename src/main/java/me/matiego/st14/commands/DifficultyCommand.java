@@ -18,7 +18,6 @@ import net.dv8tion.jda.api.interactions.commands.*;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.kyori.adventure.text.event.ClickCallback;
 import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
 import org.bukkit.World;
@@ -68,7 +67,7 @@ public class DifficultyCommand implements CommandHandler.Minecraft, CommandHandl
         );
 
         DialogBase base = DialogBase.create(
-                Utils.getComponentByString("&lWybierz poziom trudności"),
+                Utils.getComponentByString("&lZmień poziom trudności"),
                 null,
                 true,
                 true,
@@ -80,7 +79,7 @@ public class DifficultyCommand implements CommandHandler.Minecraft, CommandHandl
         ActionButton yes = ActionButton.create(
                 Utils.getComponentByString("&aOK"),
                 null,
-                100,
+                Utils.DIALOG_BUTTON_WIDTH,
                 DialogAction.customClick((view, audience) -> {
                     switch (view.getText("difficulty")) {
                         case "easy" -> change(player, Difficulty.EASY);
@@ -88,12 +87,12 @@ public class DifficultyCommand implements CommandHandler.Minecraft, CommandHandl
                         case "hard" -> change(player, Difficulty.HARD);
                         case null, default -> {}
                     }
-                }, ClickCallback.Options.builder().build())
+                }, Utils.BUTTON_OPTIONS)
         );
         ActionButton no = ActionButton.create(
                 Utils.getComponentByString("&cAnuluj"),
                 null,
-                100,
+                Utils.DIALOG_BUTTON_WIDTH,
                 null
         );
 
