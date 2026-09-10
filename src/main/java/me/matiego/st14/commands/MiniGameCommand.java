@@ -1,10 +1,14 @@
 package me.matiego.st14.commands;
 
+import io.papermc.paper.dialog.Dialog;
+import io.papermc.paper.registry.data.dialog.ActionButton;
+import io.papermc.paper.registry.data.dialog.DialogBase;
+import io.papermc.paper.registry.data.dialog.action.DialogAction;
+import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.MiniGamesManager;
-import me.matiego.st14.objects.GUI;
 import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.objects.minigames.MiniGame;
 import me.matiego.st14.objects.minigames.MiniGameType;
@@ -17,15 +21,10 @@ import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -130,30 +129,47 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
             return 3;
         }
 
-        Inventory inv = GUI.createInventory(getNumberOfSlots(MiniGameType.values().length), Prefix.MINI_GAMES + "Wybierz minigrę");
+        DialogBase base = DialogBase.create(
+                Utils.getComponentByString(Prefix.MINI_GAMES + "Wybierz minigrę"),
+                null,
+                true,
+                true,
+                DialogBase.DialogAfterAction.CLOSE,
+                List.of(),
+                List.of()
+        );
+
+        List<ActionButton> actions = new ArrayList<>();
         for (MiniGameType type : MiniGameType.values()) {
-            String[] lores;
+            Component tooltip;
             if (type.isMiniGameEnabled()) {
-                lores = new String[] {
-                        "&eKliknij, aby rozpocząć!",
+                tooltip = Utils.getComponentByString(
+                        "&aKliknij, aby rozpocząć!\n" +
                         "&eCzas minigry: &d" + Utils.parseMillisToString(type.getGameTimeInSeconds() * 1000L, false)
-                };
+                );
             } else {
-                lores = new String[] {
-                        "&eKliknij, aby rozpocząć!",
-                        "&eCzas minigry: &d" + Utils.parseMillisToString(type.getGameTimeInSeconds() * 1000L, false),
-                        "",
-                        (type.isMiniGameEnabled() ? "" : "&4Ta minigra jest wyłączona")
-                };
+                tooltip = Utils.getComponentByString(
+                        "&cTa minigra jest wyłączona :(\n" +
+                        "&eCzas minigry: &d" + Utils.parseMillisToString(type.getGameTimeInSeconds() * 1000L, false)
+                );
             }
-            inv.addItem(GUI.createGuiItem(type.getGuiMaterial(), "&9" + type.getName(), lores));
-        }
-        if (inv.isEmpty()) {
-            player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Żadna gra nie została jeszcze zaimplementowana."));
-            return 60;
+
+            Component label = type.getIcon().append(Utils.getComponentByString("&f " + type.getName()));
+            actions.add(ActionButton.create(
+                    label,
+                    tooltip,
+                    120,
+                    DialogAction.customClick((view, audience) -> handleMiniGameChoice(type, player), Utils.BUTTON_OPTIONS)
+            ));
         }
 
-        player.openInventory(inv);
+        ActionButton exitAction = ActionButton.create(Utils.getComponentByString("Anuluj"), null, 150, null);
+
+        Dialog dialog = Dialog.create(builder -> builder.empty()
+                .base(base)
+                .type(DialogType.multiAction(actions, exitAction, 3))
+        );
+        player.showDialog(dialog);
         return 5;
     }
 
@@ -177,16 +193,7 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
         return completions;
     }
 
-    @Override
-    public void onInventoryClick(@NotNull InventoryClickEvent event) {
-        if (!(GUI.checkInventory(event, Prefix.MINI_GAMES + "Wybierz minigrę") || GUI.checkInventory(event, Prefix.MINI_GAMES + "Wybierz mapę"))) return;
-        event.getInventory().close();
-
-        String title = LegacyComponentSerializer.legacyAmpersand().serialize(event.getView().title());
-        Player player = (Player) event.getWhoClicked();
-        ItemStack item = event.getCurrentItem();
-        Objects.requireNonNull(item); //already checked in GUI#checkInventory()
-
+    private void handleMiniGameChoice(@NotNull MiniGameType type, @NotNull Player player) {
         if (!MiniGamesUtils.isInAnyMiniGameWorld(player)) {
             player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Nie możesz użyć tej komendy w tym świecie."));
             return;
@@ -203,47 +210,53 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
             return;
         }
 
-        Component displayNameComponent = item.getItemMeta().displayName();
-        if (displayNameComponent == null) return;
-        String displayName = Utils.getPlainTextByComponent(displayNameComponent);
+        chosenMiniGame.put(player.getUniqueId(), type);
 
-        if (title.equals(Prefix.MINI_GAMES + "Wybierz minigrę")) {
-            MiniGameType type = MiniGameType.getMiniGameTypeByName(displayName);
-            if (type == null) {
-                player.sendMessage(Utils.getComponentByString(Prefix.MINI_GAMES + "Napotkano niespodziewany błąd. Spróbuj ponownie."));
-                return;
-            }
-            chosenMiniGame.put(player.getUniqueId(), type);
-
-            List<String> maps = type.getMaps();
-            if (maps.isEmpty()) {
-                startMiniGame(player, null);
-                return;
-            }
-            if (maps.size() == 1) {
-                startMiniGame(player, maps.getFirst());
-                return;
-            }
-
-            Inventory inv = GUI.createInventory(getNumberOfSlots(maps.size()), Prefix.MINI_GAMES + "Wybierz mapę");
-            for (String map : maps.subList(0, Math.min(maps.size(), 53))) {
-                inv.addItem(GUI.createGuiItem(Material.PAPER, "&9" + map, "&eKliknij, aby rozpocząć minigrę na tej mapie!"));
-            }
-            inv.setItem(inv.getSize() - 1, GUI.createGuiItem(Material.ARROW, "&9Wybierz losową mapę!"));
-
-            player.openInventory(inv);
+        List<String> maps = type.getMaps();
+        if (maps.isEmpty()) {
+            startMiniGame(player, null);
+            return;
+        }
+        if (maps.size() == 1) {
+            startMiniGame(player, maps.getFirst());
             return;
         }
 
-        if (item.getType() == Material.ARROW) displayName = null;
-        startMiniGame(player, displayName);
+        DialogBase base = DialogBase.create(
+                Utils.getComponentByString(Prefix.MINI_GAMES + "Wybierz mapę"),
+                null,
+                true,
+                true,
+                DialogBase.DialogAfterAction.CLOSE,
+                List.of(),
+                List.of()
+        );
+
+        List<ActionButton> actions = new ArrayList<>();
+        for (String map : maps) {
+            actions.add(ActionButton.create(
+                    Utils.getComponentByString("&f" + map),
+                    Utils.getComponentByString("&aKliknij, aby wybrać!"),
+                    120,
+                    DialogAction.customClick((view, audience) -> startMiniGame(player, map), Utils.BUTTON_OPTIONS)
+            ));
+        }
+        actions.add(ActionButton.create(
+                Utils.getComponentByString("&dLosowa mapa"),
+                Utils.getComponentByString("&aKliknij, aby wybrać!"),
+                120,
+                DialogAction.customClick((view, audience) -> startMiniGame(player, null), Utils.BUTTON_OPTIONS)
+        ));
+
+        ActionButton exitAction = ActionButton.create(Utils.getComponentByString("Anuluj"), null, 150, null);
+
+        Dialog dialog = Dialog.create(builder -> builder.empty()
+                .base(base)
+                .type(DialogType.multiAction(actions, exitAction, 2))
+        );
+        player.showDialog(dialog);
     }
 
-    private int getNumberOfSlots(int number) {
-        if (number > 54) return 54;
-        if (number % 9 == 0) return number;
-        return ((number / 9) + 1) * 9;
-    }
 
     private void startMiniGame(@NotNull Player player, @Nullable String mapName) {
         MiniGameType type = chosenMiniGame.remove(player.getUniqueId());

@@ -38,7 +38,7 @@ public class St14Command implements CommandHandler.Minecraft {
             return 3;
         } else if (args[0].equalsIgnoreCase("reload-commands")) {
             if (!Bukkit.getOnlinePlayers().isEmpty()) {
-                sender.sendMessage(Utils.getComponentByString("&aCannot reload commands while players are online."));
+                sender.sendMessage(Utils.getComponentByString("&cCannot reload commands while players are online."));
                 return 2;
             }
 
