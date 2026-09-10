@@ -11,6 +11,7 @@ import me.matiego.st14.commands.minecraft.*;
 import me.matiego.st14.listeners.*;
 import me.matiego.st14.managers.*;
 import me.matiego.st14.objects.GUI;
+import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.rewards.RewardForPlaying;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Utils;
@@ -283,9 +284,16 @@ public final class Main extends JavaPlugin implements Listener {
                     .build();
             jda.awaitReady();
             isJdaEnabled = true;
-            onDiscordBotEnable();
         } catch (Exception e) {
             Logs.error("An error occurred while enabling the Discord bot." + (e instanceof InvalidTokenException ? " Is the provided bot token correct?" : ""), e);
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        }
+
+        try {
+            onDiscordBotEnable();
+        } catch (Exception e) {
+            Logs.error("An error occurred while completing the plugin startup process.", e);
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
@@ -295,52 +303,8 @@ public final class Main extends JavaPlugin implements Listener {
 
     private void onDiscordBotEnable() {
         // register commands
-        economyCommand = new EconomyCommand(this);
-        incognitoCommand = new IncognitoCommand(this);
-        miniGameCommand = new MiniGameCommand(this);
-        tellCommand = new TellCommand(this);
-        suicideCommand = new SuicideCommand(this);
-        tpaCommand = new TpaCommand(this);
-        commandManager = new CommandManager(Objects.requireNonNull(getJda()), Arrays.asList(
-                new AccountsCommand(this),
-                new BanCommand(this),
-                new CoordinatesCommand(this),
-                new DifficultyCommand(this),
-                economyCommand,
-                new GameModeCommand(this),
-                new HeadsCommand(this),
-                incognitoCommand,
-                miniGameCommand,
-                new PremiumCommand(this),
-                new RankingCommand(this),
-                new SayCommand(this),
-                new SpawnCommand(this),
-                new StopCommand(this),
-                tellCommand,
-                new TimeCommand(this),
-                new VersionCommand(this),
-                // Minecraft commands
-                new BackpackCommand(this),
-                new BalanceCommand(this),
-                new HelpCommand(this),
-                new HomeCommand(this),
-                new McreloadCommand(this),
-                new ReplyCommand(this),
-                new St14Command(this),
-                suicideCommand,
-                tpaCommand,
-                new WorldsCommand(this),
-                // Discord commands
-                new AllPlayersCommand(this),
-                new EconomyAdminCommand(this),
-                new FeedbackCommand(),
-                new ListCommand(this),
-                new NonPremiumCommand(this),
-                new PingCommand(),
-                new PrivateMessageCommand(),
-                new RankingMessageCommand(this),
-                new VerifyCommand(this)
-        ));
+        commandManager = new CommandManager();
+        commandManager.registerCommands(jda, getCommandHandlers());
         listenersManager.registerListener(commandManager);
         jda.addEventListener(commandManager);
 
@@ -384,6 +348,55 @@ public final class Main extends JavaPlugin implements Listener {
             }
             updates.log(versions);
         });
+    }
+
+    public @NotNull List<CommandHandler> getCommandHandlers() {
+        economyCommand = new EconomyCommand(this);
+        incognitoCommand = new IncognitoCommand(this);
+        miniGameCommand = new MiniGameCommand(this);
+        tellCommand = new TellCommand(this);
+        suicideCommand = new SuicideCommand(this);
+        tpaCommand = new TpaCommand(this);
+        return Arrays.asList(
+                new AccountsCommand(this),
+                new BanCommand(this),
+                new CoordinatesCommand(this),
+                new DifficultyCommand(this),
+                economyCommand,
+                new GameModeCommand(this),
+                new HeadsCommand(this),
+                incognitoCommand,
+                miniGameCommand,
+                new PremiumCommand(this),
+                new RankingCommand(this),
+                new SayCommand(this),
+                new SpawnCommand(this),
+                new StopCommand(this),
+                tellCommand,
+                new TimeCommand(this),
+                new VersionCommand(this),
+                // Minecraft commands
+                new BackpackCommand(this),
+                new BalanceCommand(this),
+                new HelpCommand(this),
+                new HomeCommand(this),
+                new McreloadCommand(this),
+                new ReplyCommand(this),
+                new St14Command(this),
+                suicideCommand,
+                tpaCommand,
+                new WorldsCommand(this),
+                // Discord commands
+                new AllPlayersCommand(this),
+                new EconomyAdminCommand(this),
+                new FeedbackCommand(),
+                new ListCommand(this),
+                new NonPremiumCommand(this),
+                new PingCommand(),
+                new PrivateMessageCommand(),
+                new RankingMessageCommand(this),
+                new VerifyCommand(this)
+        );
     }
 
     @Override
@@ -456,10 +469,10 @@ public final class Main extends JavaPlugin implements Listener {
     private void disableDiscordBot() throws Exception {
         if (jda == null) return;
         jda.shutdown();
-        if (jda.awaitShutdown(5, TimeUnit.SECONDS)) return;
-        Logs.warning("Discord bot took too long to shut down, skipping.");
-        jda.shutdownNow();
-        if (jda.awaitShutdown(3, TimeUnit.SECONDS)) return;
+        if (!jda.awaitShutdown(5, TimeUnit.SECONDS)) {
+            Logs.warning("Discord bot took too long to shut down, skipping.");
+            jda.shutdownNow();
+        }
         jda = null;
     }
 

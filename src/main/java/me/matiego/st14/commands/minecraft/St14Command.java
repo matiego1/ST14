@@ -1,9 +1,11 @@
 package me.matiego.st14.commands.minecraft;
 
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.objects.command.CommandHandler;
-import me.matiego.st14.Logs;
 import me.matiego.st14.utils.Utils;
+import net.dv8tion.jda.api.JDA;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.jetbrains.annotations.NotNull;
@@ -30,11 +32,27 @@ public class St14Command implements CommandHandler.Minecraft {
     @Override
     public int onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
         if (args.length != 1) return -1;
-        if (!args[0].equalsIgnoreCase("reload")) return -1;
+        if (args[0].equalsIgnoreCase("reload")) {
+            plugin.reloadConfig();
+            sender.sendMessage(Utils.getComponentByString("&aSuccessfully reloaded config."));
+            return 3;
+        } else if (args[0].equalsIgnoreCase("reload-commands")) {
+            if (!Bukkit.getOnlinePlayers().isEmpty()) {
+                sender.sendMessage(Utils.getComponentByString("&aCannot reload commands while players are online."));
+                return 2;
+            }
 
-        plugin.reloadConfig();
-        sender.sendMessage(Utils.getComponentByString("&aSuccessfully reloaded config."));
-        return 3;
+            JDA jda = plugin.getJda();
+            if (jda == null) {
+                sender.sendMessage(Utils.getComponentByString("&cJDA is null."));
+                return 2;
+            }
+
+            plugin.getCommandManager().registerCommands(jda, plugin.getCommandHandlers());
+            sender.sendMessage(Utils.getComponentByString("&aSuccess! &eReloading commands might create bugs!"));
+
+            return 2;
+        } else return -1;
     }
 
     @Override

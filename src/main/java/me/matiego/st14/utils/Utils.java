@@ -173,7 +173,9 @@ public class Utils {
             ShapelessRecipe woolToStrings = new ShapelessRecipe(new NamespacedKey(Main.getInstance(), wool.getKey().getKey() + "_to_strings"), new ItemStack(Material.STRING, 4));
             woolToStrings.addIngredient(wool);
             woolToStrings.setCategory(CraftingBookCategory.MISC);
-            Bukkit.addRecipe(woolToStrings);
+            try {
+                Bukkit.addRecipe(woolToStrings);
+            } catch (IllegalStateException ignored) {} // this recipe is already added
         }
     }
 

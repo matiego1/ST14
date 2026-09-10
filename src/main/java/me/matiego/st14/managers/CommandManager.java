@@ -40,7 +40,19 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class CommandManager extends ListenerAdapter implements CommandExecutor, TabCompleter, Listener {
-    public CommandManager(@NotNull JDA jda, @NotNull List<CommandHandler> handlers) {
+    private final HashMap<String, CommandHandler.Discord> discordCommands = new HashMap<>();
+    private final HashMap<String, CommandHandler.Minecraft> minecraftCommands = new HashMap<>();
+    private final HashMap<String, Long> minecraftCooldown = Utils.createLimitedSizeMap(100);
+    private final HashMap<String, Long> discordCooldown = Utils.createLimitedSizeMap(100);
+
+    @Getter (onMethod_ = {@Synchronized})
+    @Setter (onMethod_ = {@Synchronized})
+    private boolean enabled = false;
+
+    public void registerCommands(@NotNull JDA jda, @NotNull List<CommandHandler> handlers) {
+        minecraftCommands.clear();
+        discordCommands.clear();
+
         List<CommandData> dc = new ArrayList<>();
         handlers.forEach(handler -> {
             if (handler instanceof CommandHandler.Discord discord) {
@@ -61,15 +73,6 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
         });
         jda.updateCommands().addCommands(dc).queue();
     }
-
-    private final HashMap<String, CommandHandler.Discord> discordCommands = new HashMap<>();
-    private final HashMap<String, CommandHandler.Minecraft> minecraftCommands = new HashMap<>();
-    private final HashMap<String, Long> minecraftCooldown = Utils.createLimitedSizeMap(100);
-    private final HashMap<String, Long> discordCooldown = Utils.createLimitedSizeMap(100);
-
-    @Getter (onMethod_ = {@Synchronized})
-    @Setter (onMethod_ = {@Synchronized})
-    private boolean enabled = false;
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull org.bukkit.command.Command command, @NotNull String label, @NotNull String[] args) {
