@@ -90,7 +90,7 @@ public class CommandManager extends ListenerAdapter implements CommandExecutor, 
         if (sender instanceof Player player) {
             long time = getRemainingCooldown(command.getName(), player.getUniqueId());
             if (time > 0) {
-                player.sendMessage(Utils.getComponentByString("&cTej komendy możesz użyć za " + Utils.parseMillisToString(time, false) + "."));
+                player.sendActionBar(Utils.getComponentByString("&cTej komendy możesz użyć za " + Utils.parseMillisToString(time, false) + "."));
                 return true;
             }
         }

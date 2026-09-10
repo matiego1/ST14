@@ -1,22 +1,24 @@
 package me.matiego.st14.commands.minecraft;
 
+import io.papermc.paper.dialog.Dialog;
+import io.papermc.paper.registry.data.dialog.ActionButton;
+import io.papermc.paper.registry.data.dialog.DialogBase;
+import io.papermc.paper.registry.data.dialog.action.DialogAction;
+import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
-import me.matiego.st14.objects.GUI;
 import me.matiego.st14.objects.Pair;
 import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
@@ -48,61 +50,59 @@ public class WorldsCommand implements CommandHandler.Minecraft {
             return 0;
         }
 
-        List<Pair<World, Material>> worlds = new ArrayList<>();
-        for (World w : Bukkit.getWorlds()) {
-            Material m = null;
-            try {
-                m = Material.valueOf(plugin.getConfig().getString("worlds-command." + w.getName() + ".material"));
-            } catch (Exception ignored) {}
-            if (m == null) continue;
-            worlds.add(new Pair<>(w, m));
+        List<Pair<World, Component>> worlds = new ArrayList<>();
+        for (World world : Bukkit.getWorlds()) {
+            String material = plugin.getConfig().getString("worlds-command." + world.getName() + ".material");
+            if (material == null) continue;
+            Component component = MiniMessage.miniMessage().deserialize("<sprite:" + material + ">");
+            worlds.add(new Pair<>(world, component));
         }
 
         if (worlds.isEmpty()) {
             player.sendMessage(Utils.getComponentByString(Prefix.WORLDS + "&dNie znaleziono światów do których możesz się przenieść."));
             return 5;
         }
-        worlds = worlds.subList(0, Math.min(worlds.size(), 54));
 
-        int slots = worlds.size() / 9 * 9 == worlds.size() ? worlds.size() : (worlds.size() / 9 + 1) * 9;
-        Inventory inv = GUI.createInventory(slots, Prefix.WORLDS + "Wybierz świat");
-        for (Pair<World, Material> pair : worlds) {
-            inv.addItem(GUI.createGuiItem(pair.getSecond(), "&d" + Utils.getWorldName(pair.getFirst()), "Kliknij, aby wybrać"));
+        DialogBase base = DialogBase.create(
+                Utils.getComponentByString(Prefix.WORLDS + "Wybierz świat"),
+                null,
+                true,
+                true,
+                DialogBase.DialogAfterAction.CLOSE,
+                List.of(),
+                List.of()
+        );
+
+        List<ActionButton> actions = new ArrayList<>();
+        for (Pair<World, Component> pair : worlds) {
+            Component label = pair.getSecond().append(Utils.getComponentByString("&f " + Utils.getWorldName(pair.getFirst())));
+            actions.add(ActionButton.create(
+                    label,
+                    Utils.getComponentByString("&aKliknij, aby się przenieść!"),
+                    Utils.DIALOG_BUTTON_WIDTH,
+                    DialogAction.customClick((view, audience) -> handleWorldChoice(pair.getFirst(), player), Utils.BUTTON_OPTIONS)
+            ));
         }
 
-        player.openInventory(inv);
+        Dialog dialog = Dialog.create(builder -> builder.empty()
+                .base(base)
+                .type(DialogType.multiAction(actions, Utils.getDialogExitButton("Anuluj"), 1))
+        );
+        player.showDialog(dialog);
         return 6;
     }
 
-    @Override
-    public void onInventoryClick(@NotNull InventoryClickEvent event) {
-        if (!GUI.checkInventory(event, Prefix.WORLDS + "Wybierz świat")) return;
-
-        Player player = (Player) event.getWhoClicked();
-        String name = getItemName(event.getCurrentItem());
-        event.getInventory().close();
-
+    private void handleWorldChoice(@NotNull World target, @NotNull Player player) {
         World world = player.getWorld();
         World.Environment env = world.getEnvironment();
         if (env == World.Environment.NETHER) {
             World normalWorld = Bukkit.getWorld(world.getName().replace("_nether", ""));
             if (normalWorld != null) world = normalWorld;
-        } else if (env ==  World.Environment.THE_END) {
+        } else if (env == World.Environment.THE_END) {
             World normalWorld = Bukkit.getWorld(world.getName().replace("_the_end", ""));
             if (normalWorld != null) world = normalWorld;
         }
 
-        World target = null;
-        for (World w : Bukkit.getWorlds()) {
-            if (Utils.getWorldName(w).equals(name)) {
-                target = w;
-                break;
-            }
-        }
-        if (target == null) {
-            player.sendMessage(Utils.getComponentByString(Prefix.WORLDS + "&dNapotkano niespodziewany błąd. Spróbuj ponownie."));
-            return;
-        }
         if (target.equals(world)) {
             player.sendMessage(Utils.getComponentByString(Prefix.WORLDS + "&dJuż jesteś w tym świecie."));
             return;
@@ -122,7 +122,6 @@ public class WorldsCommand implements CommandHandler.Minecraft {
         plugin.getWorldsLastLocationManager().setLastLocation(player.getUniqueId(), world, player.getLocation());
         Location loc = plugin.getWorldsLastLocationManager().getLastLocation(player.getUniqueId(), target);
 
-        World targetFinal = target;
         Utils.async(() -> {
             try {
                 String msg = switch (plugin.getTeleportsManager().teleport(player, loc, 5, () -> hasPermission(player, loc.getWorld())).get()) {
@@ -139,8 +138,8 @@ public class WorldsCommand implements CommandHandler.Minecraft {
                             player,
                             Prefix.WORLDS,
                             "Przeteleportowano pomyślnie.",
-                            "Gracz &1" + player.getName() + "&3 przeszedł do świata &1" + Utils.getWorldName(targetFinal) + "&3!",
-                            "Gracz **" + player.getName() + "** przeszedł do świata **" + Utils.getWorldName(targetFinal) + "**!"
+                            "Gracz &1" + player.getName() + "&3 przeszedł do świata &1" + Utils.getWorldName(target) + "&3!",
+                            "Gracz **" + player.getName() + "** przeszedł do świata **" + Utils.getWorldName(target) + "**!"
                     );
                     return;
                 }

@@ -1,8 +1,8 @@
 package me.matiego.st14.listeners;
 
+import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.objects.GUI;
-import me.matiego.st14.Logs;
 import me.matiego.st14.utils.Utils;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.entity.Player;
@@ -25,8 +25,6 @@ public class InventoryCloseListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onInventoryClose(@NotNull InventoryCloseEvent event) {
-        plugin.getIncognitoCommand().onInventoryClose(event.getPlayer().getUniqueId());
-
         //save backpack
         if (!(event.getView().getTopInventory().getHolder() instanceof GUI)) return;
         if (!LegacyComponentSerializer.legacyAmpersand().serialize(event.getView().title()).equals("&3Twój plecak")) return;

@@ -1,5 +1,6 @@
 package me.matiego.st14.utils;
 
+import io.papermc.paper.registry.data.dialog.ActionButton;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
@@ -267,5 +268,9 @@ public class Utils {
         } catch (ArithmeticException e) {
             return Long.MAX_VALUE;
         }
+    }
+
+    public static @NotNull ActionButton getDialogExitButton(@NotNull String text) {
+        return ActionButton.create(Utils.getComponentByString(text), null, Utils.DIALOG_BUTTON_WIDTH, null);
     }
 }

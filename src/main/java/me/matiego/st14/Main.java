@@ -75,7 +75,6 @@ public final class Main extends JavaPlugin implements Listener {
     @Getter private WorldsLastLocationManager worldsLastLocationManager;
 
     @Getter private EconomyCommand economyCommand;
-    @Getter private IncognitoCommand incognitoCommand;
     @Getter private MiniGameCommand miniGameCommand;
     @Getter private TellCommand tellCommand;
     @Getter private SuicideCommand suicideCommand;
@@ -352,7 +351,6 @@ public final class Main extends JavaPlugin implements Listener {
 
     public @NotNull List<CommandHandler> getCommandHandlers() {
         economyCommand = new EconomyCommand(this);
-        incognitoCommand = new IncognitoCommand(this);
         miniGameCommand = new MiniGameCommand(this);
         tellCommand = new TellCommand(this);
         suicideCommand = new SuicideCommand(this);
@@ -365,7 +363,7 @@ public final class Main extends JavaPlugin implements Listener {
                 economyCommand,
                 new GameModeCommand(this),
                 new HeadsCommand(this),
-                incognitoCommand,
+                new IncognitoCommand(this),
                 miniGameCommand,
                 new PremiumCommand(this),
                 new RankingCommand(this),

@@ -187,11 +187,9 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                     DialogAction.customClick((view, audience) -> handlePremiumStatusPurchase(player, null, null), Utils.BUTTON_OPTIONS)
             ));
 
-            ActionButton exitAction = ActionButton.create(Utils.getComponentByString("Gotowe"), null, 150, null);
-
             Dialog dialog = Dialog.create(builder -> builder.empty()
                     .base(base)
-                    .type(DialogType.multiAction(actions, exitAction, 1))
+                    .type(DialogType.multiAction(actions, Utils.getDialogExitButton("Gotowe"), 1))
             );
             player.showDialog(dialog);
 
@@ -320,7 +318,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
         });
     }
 
-    private void handleTransfer(@NotNull Player player, @Nullable String errorMessage, @Nullable String previousAmount, @Nullable String previosReceiver) {
+    private void handleTransfer(@NotNull Player player, @Nullable String errorMessage, @Nullable String previousAmount, @Nullable String previousReceiver) {
         EconomyManager economy = plugin.getEconomyManager();
 
         List<DialogBody> body = new ArrayList<>();
@@ -346,7 +344,7 @@ public class EconomyCommand implements CommandHandler.Minecraft, CommandHandler.
                 Utils.DIALOG_BUTTON_WIDTH,
                 Utils.getComponentByString("&bOdbiorca:"),
                 true,
-                previosReceiver == null ? "" : previosReceiver,
+                previousReceiver == null ? "" : previousReceiver,
                 16,
                 null
         );

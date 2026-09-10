@@ -1,27 +1,28 @@
 package me.matiego.st14.commands.minecraft;
 
+import io.papermc.paper.dialog.Dialog;
+import io.papermc.paper.registry.data.dialog.ActionButton;
+import io.papermc.paper.registry.data.dialog.DialogBase;
+import io.papermc.paper.registry.data.dialog.action.DialogAction;
+import io.papermc.paper.registry.data.dialog.body.DialogBody;
+import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.EconomyManager;
 import me.matiego.st14.managers.HomeManager;
-import me.matiego.st14.objects.GUI;
 import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.Utils;
-import net.kyori.adventure.text.Component;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class HomeCommand implements CommandHandler.Minecraft {
@@ -53,97 +54,104 @@ public class HomeCommand implements CommandHandler.Minecraft {
             return 3;
         }
 
-        Inventory inv = GUI.createInventory(9, Prefix.HOME + "Zarządzaj domem");
-
-        HomeManager manager = plugin.getHomeManager();
-        UUID uuid = player.getUniqueId();
-
         Utils.async(() -> {
+            HomeManager manager = plugin.getHomeManager();
+            UUID uuid = player.getUniqueId();
+            List<ActionButton> actions = new ArrayList<>();
+            List<DialogBody> body = new ArrayList<>();
+
             if (manager.isHomeLocationSet(uuid)) {
-                inv.setItem(2, GUI.createGuiItem(Material.ENDER_PEARL, "&6Teleportuj do domu", "&aKliknij, aby przeteleportować się do domu"));
-                inv.setItem(4, GUI.createGuiItem(Material.RED_BED, "&6Twój dom", parseLocationToString(manager.getHomeLocation(uuid))));
-                inv.setItem(6, GUI.createGuiItem(Material.BARRIER, "&6Usuń swój dom", "&aKliknij, aby usunąć swój dom"));
+                body.add(DialogBody.plainMessage(Utils.getComponentByString("&6Twój dom:\n\n" + parseLocationToString(manager.getHomeLocation(uuid)))));
+                actions.add(ActionButton.create(
+                        Utils.getComponentByString("&aTeleportuj się do domu"),
+                        null,
+                        Utils.DIALOG_BUTTON_WIDTH,
+                        DialogAction.customClick((view, audience) -> Utils.async(() -> teleportToHome(player)), Utils.BUTTON_OPTIONS)
+                ));
+                actions.add(ActionButton.create(
+                        Utils.getComponentByString("&cUsuń swój dom"),
+                        null,
+                        Utils.DIALOG_BUTTON_WIDTH,
+                        DialogAction.customClick((view, audience) -> Utils.async(() -> deleteHome(player)), Utils.BUTTON_OPTIONS)
+                ));
             } else {
-                inv.setItem(4, GUI.createGuiItem(Material.RED_BED, "&6Nie ustawiłeś jeszcze domu!", "&aKliknij, aby ustawić swój dom", "&aw miejscu, w którym stoisz."));
+                body.add(DialogBody.plainMessage(Utils.getComponentByString("&cNie ustawiłeś jeszcze swojego domu!")));
+                actions.add(ActionButton.create(
+                        Utils.getComponentByString("&aUstaw swój dom"),
+                        null,
+                        Utils.DIALOG_BUTTON_WIDTH,
+                        DialogAction.customClick((view, audience) -> Utils.async(() -> setHome(player)), Utils.BUTTON_OPTIONS)
+                ));
             }
+
+            DialogBase base = DialogBase.create(
+                    Utils.getComponentByString(Prefix.HOME + "Zarządzaj domem"),
+                    null,
+                    true,
+                    true,
+                    DialogBase.DialogAfterAction.CLOSE,
+                    body,
+                    List.of()
+            );
+
+            Dialog dialog = Dialog.create(builder -> builder.empty()
+                    .base(base)
+                    .type(DialogType.multiAction(actions, Utils.getDialogExitButton("Gotowe"), 1))
+            );
+            Utils.sync(() -> player.showDialog(dialog));
         });
-        player.openInventory(inv);
-        return 15;
+        return 5;
     }
 
-    private @NotNull String[] parseLocationToString(@Nullable Location location) {
-        if (location == null) {
-            return new String[]{"&cNapotkano błąd przy wczytywaniu położenia"};
-        }
-        return new String[]{
-                "&6X: &a" + Utils.round(location.getX(), 2) + "&6 Y: &a" + Utils.round(location.getY(), 2) + "&6 Z: &a" + Utils.round(location.getZ(), 2),
-                "&6Świat: &a" + Utils.getWorldName(location.getWorld())
-        };
+    private @NotNull String parseLocationToString(@Nullable Location location) {
+        if (location == null) return "&cNapotkano błąd przy wczytywaniu położenia";
+        return "&eX: &a" + Utils.round(location.getX(), 2) + "&e Y: &a" + Utils.round(location.getY(), 2) + "&e Z: &a" + Utils.round(location.getZ(), 2) + "\n" +
+                "&eŚwiat: &a" + Utils.getWorldName(location.getWorld());
     }
 
-    @Override
-    public void onInventoryClick(@NotNull InventoryClickEvent event) {
-        if (!GUI.checkInventory(event, Prefix.HOME + "Zarządzaj domem")) return;
-
-        Player player = (Player) event.getWhoClicked();
-        HomeManager manager = plugin.getHomeManager();
-        UUID uuid = player.getUniqueId();
-        int slot = event.getSlot();
-
+    private void teleportToHome(Player player) {
         if (Utils.checkIfCanNotExecuteCommandInWorld(player, "home", '.')) {
-            event.getInventory().close();
             player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cNie możesz użyć tej komendy w tym świecie."));
             return;
         }
 
-        switch (slot) {
-            case 2 -> Utils.async(() -> {
-                Location location = manager.getHomeLocation(uuid);
-                closeInventory(event);
-                if (location == null) {
-                    player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
-                    return;
-                }
-                teleportPlayer(player, location);
-            });
-            case 4 -> Utils.async(() -> {
-                if (getItemName(event.getCurrentItem()).equals("Twój dom")) return;
-                closeInventory(event);
+        Location location = plugin.getHomeManager().getHomeLocation(player.getUniqueId());
+        if (location == null) {
+            player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
+            return;
+        }
+        teleportPlayer(player, location);
+    }
 
-                double creation = Math.max(0, Utils.round(plugin.getConfig().getDouble("home.creation"), 2));
-                EconomyManager economy = plugin.getEconomyManager();
-                if (creation != 0) {
-                    if (!economy.withdrawPlayer(player, creation).transactionSuccess()) {
-                        player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cUstawienie domu kosztuje " + economy.format(creation) + ", a masz tylko " + economy.format(economy.getBalance(player)) + "."));
-                        return;
-                    }
-                }
-
-                if (manager.setHomeLocation(uuid, player.getLocation())) {
-                    player.sendMessage(Utils.getComponentByString(Prefix.HOME + "Pomyślnie ustawiono twój dom za " + economy.format(creation) + "."));
-                    Logs.info("Gracz " + player.getName() + " ustawił swój dom. (`" + player.getLocation() + "`)");
-                } else {
-                    player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
-                    if (creation != 0 && !economy.depositPlayer(player, creation).transactionSuccess()) {
-                        player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&c&lNapotkano niespodziewany błąd przy zwracaniu pobranych pieniędzy. Zgłoś się do administratora, aby je odzyskać. Przepraszamy."));
-                        Logs.warning("Gracz " + player.getName() + " (" + player.getUniqueId() + ") stracił " + economy.format(creation) + " ze swojego konta! Kwota musi być przywrócona ręcznie.");
-                    }
-                }
-            });
-            case 6 -> Utils.async(() -> {
-                closeInventory(event);
-                if (manager.removeHome(uuid)) {
-                    player.sendMessage(Utils.getComponentByString(Prefix.HOME + "Pomyślnie usunięto twój dom."));
-                    Logs.info("Gracz " + player.getName() + " usunął swój dom.");
-                } else {
-                    player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
-                }
-            });
+    private void deleteHome(Player player) {
+        if (plugin.getHomeManager().removeHome(player.getUniqueId())) {
+            player.sendMessage(Utils.getComponentByString(Prefix.HOME + "Pomyślnie usunięto twój dom."));
+            Logs.info("Gracz " + player.getName() + " usunął swój dom.");
+        } else {
+            player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
         }
     }
 
-    private void closeInventory(@NotNull InventoryClickEvent event) {
-        Utils.sync(() -> event.getInventory().close());
+    private void setHome(Player player) {
+        double creation = Math.max(0, Utils.round(plugin.getConfig().getDouble("home.creation"), 2));
+        EconomyManager economy = plugin.getEconomyManager();
+        if (creation != 0) {
+            if (!economy.withdrawPlayer(player, creation).transactionSuccess()) {
+                player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cUstawienie domu kosztuje " + economy.format(creation) + ", a masz tylko " + economy.format(economy.getBalance(player)) + "."));
+                return;
+            }
+        }
+
+        if (plugin.getHomeManager().setHomeLocation(player.getUniqueId(), player.getLocation())) {
+            player.sendMessage(Utils.getComponentByString(Prefix.HOME + "Pomyślnie ustawiono twój dom za " + economy.format(creation) + "."));
+            Logs.info("Gracz " + player.getName() + " ustawił swój dom. (`" + player.getLocation() + "`)");
+        } else {
+            player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&cNapotkano niespodziewany błąd. Spróbuj ponownie."));
+            if (creation != 0 && !economy.depositPlayer(player, creation).transactionSuccess()) {
+                player.sendMessage(Utils.getComponentByString(Prefix.HOME + "&c&lNapotkano niespodziewany błąd przy zwracaniu pobranych pieniędzy. Zgłoś się do administratora, aby je odzyskać. Przepraszamy."));
+                Logs.warning("Gracz " + player.getName() + " (" + player.getUniqueId() + ") stracił " + economy.format(creation) + " ze swojego konta! Kwota musi być przywrócona ręcznie.");
+            }
+        }
     }
 
     private void teleportPlayer(@NotNull Player player, @NotNull Location location) {
@@ -206,14 +214,5 @@ public class HomeCommand implements CommandHandler.Minecraft {
                 Logs.error("An error occurred while teleporting player", e);
             }
         });
-    }
-
-    private @NotNull String getItemName(@Nullable ItemStack item) {
-        if (item == null) return "";
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return "";
-        Component name = meta.displayName();
-        if (name == null) return "";
-        return Utils.getPlainTextByComponent(name);
     }
 }

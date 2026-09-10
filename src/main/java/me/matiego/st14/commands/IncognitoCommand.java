@@ -1,11 +1,17 @@
 package me.matiego.st14.commands;
 
+import io.papermc.paper.dialog.Dialog;
+import io.papermc.paper.registry.data.dialog.ActionButton;
+import io.papermc.paper.registry.data.dialog.DialogBase;
+import io.papermc.paper.registry.data.dialog.action.DialogAction;
+import io.papermc.paper.registry.data.dialog.body.DialogBody;
+import io.papermc.paper.registry.data.dialog.input.DialogInput;
+import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.matiego.st14.Logs;
 import me.matiego.st14.Main;
 import me.matiego.st14.Prefix;
 import me.matiego.st14.managers.AccountsManager;
 import me.matiego.st14.managers.IncognitoManager;
-import me.matiego.st14.objects.GUI;
 import me.matiego.st14.objects.command.CommandHandler;
 import me.matiego.st14.utils.DiscordUtils;
 import me.matiego.st14.utils.Utils;
@@ -19,23 +25,22 @@ import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
-import net.wesjd.anvilgui.AnvilGUI;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandler.Discord, Listener {
     public IncognitoCommand(@NotNull Main plugin) {
@@ -50,7 +55,6 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
     private final PluginCommand command;
     private final Material BLOCK_ON = Material.LIME_WOOL;
     private final Material BLOCK_OFF = Material.RED_WOOL;
-    private final HashMap<UUID, Boolean> inventory = new HashMap<>();
 
     @Override
     public @NotNull CommandData getDiscordCommand() {
@@ -69,113 +73,104 @@ public class IncognitoCommand implements CommandHandler.Minecraft, CommandHandle
             return 0;
         }
         if (args.length != 0) return -1;
+
         IncognitoManager manager = plugin.getIncognitoManager();
-        Inventory inv = GUI.createInventory(18, Prefix.INCOGNITO + "Ustawienia");
-        inv.setItem(2, GUI.createGuiItem(Material.NAME_TAG, "&8Zaufaj graczowi", "&7Kliknij, aby zaufać nowemu graczowi!"));
-        if (manager.isIncognito(player.getUniqueId())) {
-            inventory.put(player.getUniqueId(), true);
-            inv.setItem(4, GUI.createGuiItem(BLOCK_ON,  "&8Tryb incognito", "&7Status: &aON", "&7Kliknij, aby zmienić"));
-        } else {
-            inventory.put(player.getUniqueId(), false);
-            inv.setItem(4, GUI.createGuiItem(BLOCK_OFF,  "&8Tryb incognito", "&7Status: &cOFF", "&7Kliknij, aby zmienić"));
-        }
+
         Utils.async(() -> {
-            if (manager.isKickingEnabled(player.getUniqueId())) {
-                inv.setItem(6, GUI.createGuiItem(BLOCK_ON, "&8Wyrzucanie z serwera, gdy wchodzi gracz", "&7Status: &aON", "&7Kliknij, aby zmienić"));
-            } else {
-                inv.setItem(6, GUI.createGuiItem(BLOCK_OFF,  "&8Wyrzucanie z serwera, gdy wchodzi gracz", "&7Status: &cOFF", "&7Kliknij, aby zmienić"));
+            List<DialogInput> inputs = new ArrayList<>();
+            boolean incognito = manager.isIncognito(player.getUniqueId());
+            inputs.add(DialogInput.bool(
+                    "incognito",
+                    Utils.getComponentByString("&7- &fTryb incognito"),
+                    incognito,
+                    "true", "false"
+            ));
+            inputs.add(DialogInput.bool(
+                    "kicking",
+                    Utils.getComponentByString("&7- &fWyrzucanie z serwera, gdy dołącza niezaufany gracz"),
+                    manager.isKickingEnabled(player.getUniqueId()),
+                    "true", "false"
+            ));
+            inputs.add(DialogInput.text(
+                    "trust",
+                    Utils.getComponentByString("Dodaj nowego zaufanego gracza: ")
+            ).maxLength(16).build());
+
+            DialogBase base = DialogBase.create(
+                    Utils.getComponentByString(Prefix.INCOGNITO + "Status incognito"),
+                    null,
+                    true,
+                    true,
+                    DialogBase.DialogAfterAction.CLOSE,
+                    List.of(DialogBody.plainMessage(Utils.getComponentByString("Nie dołączając do gry nie można zobaczyć, że gracz incognito jest online."))),
+                    inputs
+            );
+
+            List<ActionButton> actions = new ArrayList<>();
+            actions.add(ActionButton.create(
+                    Utils.getComponentByString("&7Zaufaj nowemu graczowi!"),
+                    null,
+                    Utils.DIALOG_BUTTON_WIDTH,
+                    DialogAction.customClick((view, audience) -> Utils.async(() -> addTrustedPlayer(player, view.getText("trust"))), Utils.BUTTON_OPTIONS)
+            ));
+            List<UUID> trustedPlayers = manager.getTrustedPlayers(player.getUniqueId());
+            for (UUID trustedPlayer : trustedPlayers) {
+                Component head = MiniMessage.miniMessage().deserialize("<head:" + trustedPlayer + ">");
+                actions.add(ActionButton.create(
+                        head.append(Utils.getComponentByString(" " + plugin.getOfflinePlayersManager().getEffectiveNameById(trustedPlayer))),
+                        Utils.getComponentByString("&7Ufasz temu graczowi!\n\n&cKliknij, aby przestać mu ufać"),
+                        Utils.DIALOG_BUTTON_WIDTH,
+                        DialogAction.customClick((view, audience) -> Utils.async(() -> removeTrustedPlayer(player, trustedPlayer)), Utils.BUTTON_OPTIONS)
+                ));
             }
+
+            ActionButton exitAction = ActionButton.create(
+                    Utils.getComponentByString("Gotowe"),
+                    null,
+                    Utils.DIALOG_BUTTON_WIDTH,
+                    DialogAction.customClick((view, audience) -> Utils.async(() -> acceptChanges(player, view.getBoolean("incognito"), view.getBoolean("kicking"))), Utils.BUTTON_OPTIONS)
+            );
+            Dialog dialog = Dialog.create(builder -> builder.empty()
+                    .base(base)
+                    .type(DialogType.multiAction(actions, exitAction, 3))
+            );
+            Utils.sync(() -> player.showDialog(dialog));
         });
-        Utils.async(() -> updateTrustedPlayers(manager.getTrustedPlayers(player.getUniqueId()), inv));
-        player.openInventory(inv);
         return 5;
     }
 
-    private void updateTrustedPlayers(@NotNull List<UUID> trusted, @NotNull Inventory inv) {
-        int index = 9;
-        for (UUID uuid : trusted) {
-            if (index == 18) {
-                inv.setItem(17, GUI.createGuiItem(Material.ARROW, "&8Ups...", "&7Ufasz za dużej ilości graczy!", "&7Na liście zostało wyświetlone pierwsze 8 pozycji"));
-                return;
-            }
-            inv.setItem(index, GUI.createPlayerSkull(Bukkit.getOfflinePlayer(uuid), "&8" + plugin.getOfflinePlayersManager().getEffectiveNameById(uuid), "&7Ufasz temu graczowi!", "&7Kliknij, aby przestać mu ufać."));
-            index++;
-        }
-        for (int i = index; i < 18; i++) {
-            inv.setItem(i, new ItemStack(Material.AIR));
-        }
-        if (index == 9) inv.setItem(13, GUI.createGuiItem(Material.BARRIER, "&8Nie ufasz żadnym graczom!", "&7Kliknij na znacznik, aby zacząć komuś ufać!"));
-    }
-
-    @Override
-    public void onInventoryClick(@NotNull InventoryClickEvent event) {
-        if (!GUI.checkInventory(event, Prefix.INCOGNITO + "Ustawienia")) return;
-
-        Player player = (Player) event.getWhoClicked();
-        UUID uuid = player.getUniqueId();
-        int slot = event.getSlot();
-        Inventory inv = event.getView().getTopInventory();
-        ItemStack item = event.getCurrentItem();
+    private void acceptChanges(@NotNull Player player, @Nullable Boolean incognito, @Nullable Boolean kicking) {
         IncognitoManager manager = plugin.getIncognitoManager();
-        Objects.requireNonNull(item); //already checked in GUI#checkInventory()
-
-        if (slot == 4) {
-            if (item.getType() == BLOCK_ON) {
-                inventory.put(uuid, false);
-                inv.setItem(4, GUI.createGuiItem(BLOCK_OFF,  "&8Tryb incognito", "&7Status: &cOFF", "&7Kliknij, aby zmienić"));
-            } else {
-                inventory.put(uuid, true);
-                inv.setItem(4, GUI.createGuiItem(BLOCK_ON,  "&8Tryb incognito", "&7Status: &aON", "&7Kliknij, aby zmienić"));
-            }
-        } else if (slot == 6) {
-            if (item.getType() == BLOCK_ON) {
-                Utils.async(() -> {
-                    if (manager.setKickingEnabled(uuid, false)) inv.setItem(6, GUI.createGuiItem(BLOCK_OFF,  "&8Wyrzucanie z serwera, gdy wchodzi gracz", "&7Status: &cOFF", "&7Kliknij, aby zmienić"));
-                });
-            } else {
-                Utils.async(() -> {
-                    if (manager.setKickingEnabled(uuid, true)) inv.setItem(6, GUI.createGuiItem(BLOCK_ON, "&8Wyrzucanie z serwera, gdy wchodzi gracz", "&7Status: &aON", "&7Kliknij, aby zmienić"));
-                });
-            }
-        } else if (slot == 2) {
-            new AnvilGUI.Builder()
-                    .jsonTitle(Utils.getJsonByLegacyString(Prefix.INCOGNITO + "Podaj nick gracza"))
-                    .text("Podaj nick...")
-                    .itemLeft(GUI.createGuiItem(Material.PAPER, "&8Wprowadź nick gracza...", "&7Kliknij &8ESC&7, aby wyjść", "&7Kliknij przedmiot po prawej, aby zaakceptować"))
-                    .plugin(plugin)
-                    .onClick((anvilSlot, state) -> {
-                        if (anvilSlot != AnvilGUI.Slot.OUTPUT) return Collections.emptyList();
-
-                        UUID trustedUuid = plugin.getOfflinePlayersManager().getIdByName(state.getText());
-                        if (trustedUuid == null) {
-                            return List.of(AnvilGUI.ResponseAction.replaceInputText("Zły nick!"));
-                        }
-                        if (trustedUuid.equals(uuid)) {
-                            return List.of(AnvilGUI.ResponseAction.replaceInputText("To twój nick!"));
-                        }
-                        Utils.async(() -> manager.addTrustedPlayer(uuid, trustedUuid));
-                        player.sendMessage(Utils.getComponentByString(Prefix.INCOGNITO + "Pomyślnie zaufano nowemu graczowi"));
-                        return List.of(AnvilGUI.ResponseAction.close());
-                    })
-                    .open(player);
-        } else if (slot >= 9) {
-            if (item.getType() == Material.BARRIER) return;
-            UUID trustedUuid = plugin.getOfflinePlayersManager().getIdByName(Utils.getPlainTextByComponent(Objects.requireNonNull(item.getItemMeta().displayName())));
-            if (trustedUuid == null) {
-                player.sendMessage(Utils.getComponentByString(Prefix.INCOGNITO + "Napotkano niespodziewany błąd. Spróbuj później."));
-                player.closeInventory();
-                return;
-            }
-            Utils.async(() -> {
-                if (manager.removeTrustedPlayer(uuid, trustedUuid)) updateTrustedPlayers(manager.getTrustedPlayers(uuid), inv);
-            });
-        }
+        UUID uuid = player.getUniqueId();
+        if (incognito != null) manager.setIncognito(uuid, incognito);
+        if (kicking != null) manager.setKickingEnabled(uuid, kicking);
     }
 
-    public void onInventoryClose(@NotNull UUID uuid) {
-        Boolean value = inventory.get(uuid);
-        if (value == null) return;
-        plugin.getIncognitoManager().setIncognito(uuid, value);
+    private void addTrustedPlayer(@NotNull Player player, @Nullable String name) {
+        if (name == null) return;
+
+        UUID trustedUuid = plugin.getOfflinePlayersManager().getIdByName(name);
+        if (trustedUuid == null) {
+            player.sendMessage(Utils.getComponentByString(Prefix.INCOGNITO + "&cTen gracz nie istnieje!"));
+            return;
+        }
+
+        UUID uuid = player.getUniqueId();
+        if (trustedUuid.equals(uuid)) {
+            player.sendMessage(Utils.getComponentByString(Prefix.INCOGNITO + "&cTo twój nick!"));
+            return;
+        }
+
+        plugin.getIncognitoManager().addTrustedPlayer(uuid, trustedUuid);
+        player.sendMessage(Utils.getComponentByString(Prefix.INCOGNITO + "Pomyślnie zaufano nowemu graczowi"));
+    }
+
+    private void removeTrustedPlayer(@NotNull Player player, @NotNull UUID trustedPlayer) {
+        if (plugin.getIncognitoManager().removeTrustedPlayer(player.getUniqueId(), trustedPlayer)) {
+            player.sendMessage(Utils.getComponentByString(Prefix.INCOGNITO + "Przestałeś ufać temu graczowi!"));
+        } else {
+            player.sendMessage(Utils.getComponentByString(Prefix.INCOGNITO + "&cNapotkano niespodziewany błąd. Spróbuj później."));
+        }
     }
 
     @Override

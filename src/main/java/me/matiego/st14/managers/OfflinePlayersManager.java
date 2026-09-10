@@ -25,6 +25,7 @@ public class OfflinePlayersManager {
     private List<String> cache;
 
     public @Nullable UUID getIdByName(@NotNull String name) {
+        if (name.isBlank()) return null;
         Player player = Bukkit.getPlayer(name);
         if (player != null) {
             return player.getUniqueId();

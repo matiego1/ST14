@@ -163,11 +163,9 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
             ));
         }
 
-        ActionButton exitAction = ActionButton.create(Utils.getComponentByString("Anuluj"), null, 150, null);
-
         Dialog dialog = Dialog.create(builder -> builder.empty()
                 .base(base)
-                .type(DialogType.multiAction(actions, exitAction, 3))
+                .type(DialogType.multiAction(actions, Utils.getDialogExitButton("Anuluj"), 3))
         );
         player.showDialog(dialog);
         return 5;
@@ -248,11 +246,9 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
                 DialogAction.customClick((view, audience) -> startMiniGame(player, null), Utils.BUTTON_OPTIONS)
         ));
 
-        ActionButton exitAction = ActionButton.create(Utils.getComponentByString("Anuluj"), null, 150, null);
-
         Dialog dialog = Dialog.create(builder -> builder.empty()
                 .base(base)
-                .type(DialogType.multiAction(actions, exitAction, 2))
+                .type(DialogType.multiAction(actions, Utils.getDialogExitButton("Anuluj"), 2))
         );
         player.showDialog(dialog);
     }
