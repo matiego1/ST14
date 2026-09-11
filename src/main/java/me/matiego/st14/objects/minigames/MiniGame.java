@@ -360,7 +360,10 @@ public abstract class MiniGame implements Listener {
         try {
             MiniGamesUtils.teleportPlayers(players.stream().toList(), getLobbySpawn()).thenAccept(success -> {
                 if (success) {
-                    getPlayers().forEach(player -> player.setWorldBorder(worldBorder));
+                    getPlayers().forEach(player -> {
+                        player.setWorldBorder(worldBorder);
+                        runTaskLater(() -> MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE), 5);
+                    });
 
                     int countdownTime = 10;
                     if (getMapType() == MapType.SURVIVAL) countdownTime = 15;

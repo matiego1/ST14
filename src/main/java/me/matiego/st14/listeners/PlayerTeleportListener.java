@@ -21,5 +21,6 @@ public class PlayerTeleportListener implements Listener {
     @EventHandler (ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onPlayerTeleportMonitor(@NotNull PlayerTeleportEvent event) {
         event.getPlayer().closeInventory();
+        event.getPlayer().closeDialog();
     }
 }

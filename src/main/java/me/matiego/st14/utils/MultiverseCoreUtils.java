@@ -4,7 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
-import org.mvplugins.multiverse.core.MultiverseCore;
+import org.mvplugins.multiverse.core.MultiverseCoreApi;
 import org.mvplugins.multiverse.core.world.LoadedMultiverseWorld;
 import org.mvplugins.multiverse.core.world.WorldManager;
 import org.mvplugins.multiverse.core.world.options.RegenWorldOptions;
@@ -37,8 +37,7 @@ public class MultiverseCoreUtils {
         }
 
         CompletableFuture<String> future = new CompletableFuture<>();
-
-        WorldManager worldManager = ((MultiverseCore) plugin).getApi().getWorldManager();
+        WorldManager worldManager = MultiverseCoreApi.get().getWorldManager();
 
         Option<LoadedMultiverseWorld> option = worldManager.getLoadedWorld(world);
         LoadedMultiverseWorld mvWorld;
@@ -56,7 +55,7 @@ public class MultiverseCoreUtils {
                 .keepWorldConfig(true);
         worldManager.regenWorld(options)
                 .onSuccess(() -> future.complete(null))
-                .onFailure(reason -> future.complete(reason.getFailureMessage().formatted()));
+                .onFailure(reason -> future.complete(reason.getFailureMessage().formatted() + " (" + reason.getFailureReason().name() + ")"));
 
         return future;
     }

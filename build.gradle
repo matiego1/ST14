@@ -80,7 +80,7 @@ dependencies {
     compileOnly 'us.dynmap:DynmapCoreAPI:3.7-beta-6'
 
     // Multiverse-Core
-    compileOnly 'org.mvplugins.multiverse.core:multiverse-core:5.0.0-SNAPSHOT'
+    compileOnly 'org.mvplugins.multiverse.core:multiverse-core:5.8.1-SNAPSHOT'
 
     // Netty
     compileOnly 'io.netty:netty-all:5.0.0.Alpha2'
