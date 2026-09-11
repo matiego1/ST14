@@ -31,11 +31,6 @@ public class SumoMiniGame extends MiniGame {
     private int shrinkBorderBeforeEnd = 180;
 
     @Override
-    protected @NotNull String getMiniGameName() {
-        return "Sumo";
-    }
-
-    @Override
     protected @NotNull GameMode getSpectatorGameMode() {
         return GameMode.ADVENTURE;
     }

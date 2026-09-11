@@ -30,11 +30,6 @@ public class TNTRunMiniGame extends MiniGame {
     private Location spawn = null;
 
     @Override
-    public @NotNull String getMiniGameName() {
-        return "TNT Run";
-    }
-
-    @Override
     public @NotNull GameMode getSpectatorGameMode() {
         return GameMode.SPECTATOR;
     }

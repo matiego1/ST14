@@ -273,4 +273,24 @@ public class Utils {
     public static @NotNull ActionButton getDialogExitButton(@NotNull String text) {
         return ActionButton.create(Utils.getComponentByString(text), null, Utils.DIALOG_BUTTON_WIDTH, null);
     }
+
+    public static <T> @NotNull List<T> generateDerangement(@NotNull List<T> list) {
+        if (list.size() < 2) return list;
+
+        List<T> result = new ArrayList<>(list);
+        boolean done;
+        do {
+            Collections.shuffle(result);
+
+            done = true;
+            for (int i = 0; i < list.size(); i++) {
+                if (Objects.equals(result.get(i), list.get(i))) {
+                    done = false;
+                    break;
+                }
+            }
+        } while (!done);
+
+        return result;
+    }
 }

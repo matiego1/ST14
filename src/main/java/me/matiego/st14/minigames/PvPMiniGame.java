@@ -42,11 +42,6 @@ public class PvPMiniGame extends MiniGame {
     private int shrinkBorderBeforeEnd = 180;
 
     @Override
-    public @NotNull String getMiniGameName() {
-        return "PvP";
-    }
-
-    @Override
     public @NotNull GameMode getSpectatorGameMode() {
         return GameMode.ADVENTURE;
     }

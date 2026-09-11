@@ -38,11 +38,6 @@ public class MazeMiniGame extends MiniGame {
     private int giveCompassBeforeEndInSeconds = -1;
 
     @Override
-    public @NotNull String getMiniGameName() {
-        return "Labirynt";
-    }
-
-    @Override
     public @NotNull GameMode getSpectatorGameMode() {
         return GameMode.ADVENTURE;
     }

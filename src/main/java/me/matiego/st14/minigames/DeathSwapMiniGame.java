@@ -6,15 +6,11 @@ import me.matiego.st14.objects.minigames.MiniGame;
 import me.matiego.st14.objects.minigames.MiniGameException;
 import me.matiego.st14.objects.minigames.MiniGameType;
 import me.matiego.st14.utils.MiniGamesUtils;
+import me.matiego.st14.utils.Utils;
 import org.bukkit.GameMode;
 import org.bukkit.GameRules;
-import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
@@ -22,15 +18,15 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class UHCMiniGame extends MiniGame {
-    public UHCMiniGame(@NotNull Main plugin, @NotNull MiniGameType miniGameType, @Nullable String mapName) {
+public class DeathSwapMiniGame extends MiniGame {
+    public DeathSwapMiniGame(@NotNull Main plugin, @NotNull MiniGameType miniGameType, @Nullable String mapName) {
         super(plugin, miniGameType, mapName);
     }
 
     private int mapSize = 500;
     private int prepareTime = 60 * 10;
-    private int shrinkBorderBeforeEnd = 60 * 10;
-    private double goldenAppleChance = 0.005;
+    private int shuffleInterval = 150;
+    int nextShuffle = shuffleInterval;
 
     @Override
     protected @NotNull GameMode getSpectatorGameMode() {
@@ -46,9 +42,9 @@ public class UHCMiniGame extends MiniGame {
     protected void loadDataFromConfig(@NotNull World world) throws MiniGameException {
         mapSize = Math.max(5, plugin.getConfig().getInt(mapConfigPath + "size", mapSize));
         prepareTime = Math.max(0, plugin.getConfig().getInt(configPath + "prepare-time", prepareTime));
-        shrinkBorderBeforeEnd = Math.max(0, plugin.getConfig().getInt(configPath + "shrink-border-before-end", shrinkBorderBeforeEnd));
+        shuffleInterval = Math.max(20, plugin.getConfig().getInt(configPath + "shuffle-interval", shuffleInterval));
+        nextShuffle = shuffleInterval;
         if (prepareTime > totalMiniGameTime) throw new MiniGameException("incorrect game times");
-        goldenAppleChance = Math.max(0, Math.min(1, plugin.getConfig().getDouble(configPath + "golden-apple-chance", goldenAppleChance)));
     }
 
     @Override
@@ -66,7 +62,7 @@ public class UHCMiniGame extends MiniGame {
 
     @Override
     protected @NotNull BossBarTimer getBossBarTimer() {
-        return new BossBarTimer(plugin, prepareTime, "&eRozpoczęcie walki");
+        return new BossBarTimer(plugin, prepareTime, "&eKoniec minigry");
     }
 
     @Override
@@ -87,39 +83,23 @@ public class UHCMiniGame extends MiniGame {
 
     @Override
     protected void miniGameTick() {
-        if (miniGameTime == prepareTime) {
-            timer.stopTimerAndHideBossBar();
-            timer = new BossBarTimer(plugin, totalMiniGameTime - prepareTime, "&eKoniec minigry");
-            timer.startTimer();
+        int difference = nextShuffle - miniGameTime;
+        sendActionBar("&eZamiana za " + difference);
 
-            getPlayers().forEach(player -> {
-                timer.showBossBarToPlayer(player);
+        if (difference == 15) sendMessage("Losowa zamiana miejsc za 15 sekund!");
+        else if (difference == 10) sendMessage(String.valueOf(difference));
+        else if (4 <= difference && difference <= 5) sendMessage(String.valueOf(difference));
+        else if (1 <= difference && difference <= 3) sendMessage("&d" + difference);
+        else if (difference == 0) {
+            sendMessage("&d&lZamiana miejsc!");
 
-                player.setHealth(20);
-                player.setSaturation(20);
-                player.setFoodLevel(20);
-                player.setFireTicks(0);
-            });
+            List<Player> players = getPlayersInMiniGame();
+            List<Player> newPositions = Utils.generateDerangement(players);
+            for (int i = 0; i < players.size(); i++) {
+                players.get(i).teleportAsync(newPositions.get(i).getLocation());
+            }
 
-            sendMessage("PvP zostało włączone! Wszyscy gracze zostali uleczeni.");
-
-            World world = MiniGamesUtils.getMiniGamesSurvivalWorld();
-            if (world != null) world.setGameRule(GameRules.PVP, true);
+            nextShuffle = miniGameTime + shuffleInterval;
         }
-
-        if (miniGameTime == totalMiniGameTime - shrinkBorderBeforeEnd) {
-            sendMessage("Bariera zaczęła się zmniejszać!");
-            worldBorder.changeSize(Math.max(1, 0.05 * mapSize), shrinkBorderBeforeEnd * 20L);
-        }
-    }
-
-    @EventHandler
-    public void onBlockBreak(@NotNull BlockBreakEvent event) {
-        if (!isInMiniGame(event.getPlayer())) return;
-        Block block = event.getBlock();
-        if (!block.getType().name().contains("LEAVES")) return;
-
-        if (random.nextDouble() >= goldenAppleChance) return;
-        block.getWorld().dropItemNaturally(block.getLocation(), new ItemStack(Material.GOLDEN_APPLE));
     }
 }

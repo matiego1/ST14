@@ -16,6 +16,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,11 +35,6 @@ public class ItemsRaceMiniGame extends MiniGame {
     private int prepareTime = 5;
 
     @Override
-    protected @NotNull String getMiniGameName() {
-        return "Items Race";
-    }
-
-    @Override
     protected @NotNull GameMode getSpectatorGameMode() {
         return GameMode.SPECTATOR;
     }
@@ -51,6 +48,7 @@ public class ItemsRaceMiniGame extends MiniGame {
     protected void loadDataFromConfig(@NotNull World world) throws MiniGameException {
         mapSize = Math.max(5, plugin.getConfig().getInt(mapConfigPath + "size", mapSize));
         prepareTime = Math.max(0, plugin.getConfig().getInt(configPath + "prepare-time", prepareTime));
+        if (prepareTime > totalMiniGameTime) throw new MiniGameException("incorrect game times");
     }
 
     @Override
@@ -79,6 +77,10 @@ public class ItemsRaceMiniGame extends MiniGame {
             MiniGamesUtils.healPlayer(player, GameMode.SURVIVAL);
             player.setRespawnLocation(spectatorSpawn, true);
             timer.showBossBarToPlayer(player);
+
+            player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 30, 5));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * 30, 5));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 20 * 5, 5));
         });
     }
 

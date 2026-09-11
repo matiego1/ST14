@@ -39,11 +39,6 @@ public class RandomItemsMiniGame extends MiniGame {
     private int shrinkBorderBeforeEnd = 60;
 
     @Override
-    protected @NotNull String getMiniGameName() {
-        return "Losowe itemy";
-    }
-
-    @Override
     protected @NotNull GameMode getSpectatorGameMode() {
         return GameMode.ADVENTURE;
     }

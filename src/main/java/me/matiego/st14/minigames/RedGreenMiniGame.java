@@ -36,11 +36,6 @@ public class RedGreenMiniGame extends MiniGame {
     private boolean canMove = true;
 
     @Override
-    public @NotNull String getMiniGameName() {
-        return "Czerwone-Zielone";
-    }
-
-    @Override
     public @NotNull GameMode getSpectatorGameMode() {
         return GameMode.ADVENTURE;
     }

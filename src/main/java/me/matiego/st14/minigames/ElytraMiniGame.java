@@ -33,11 +33,6 @@ public class ElytraMiniGame extends MiniGame {
     private int numberOfRockets = 0;
 
     @Override
-    protected @NotNull String getMiniGameName() {
-        return "Elytra";
-    }
-
-    @Override
     protected @NotNull GameMode getSpectatorGameMode() {
         return GameMode.ADVENTURE;
     }

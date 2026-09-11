@@ -41,11 +41,6 @@ public class SkywarsMiniGame extends MiniGame {
     private int shrinkBorderBeforeEnd = 180;
 
     @Override
-    public @NotNull String getMiniGameName() {
-        return "Skywars";
-    }
-
-    @Override
     public @NotNull GameMode getSpectatorGameMode() {
         return GameMode.ADVENTURE;
     }

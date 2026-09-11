@@ -33,11 +33,6 @@ public class ParkourMiniGame extends MiniGame {
     private Location spawn = null;
 
     @Override
-    public @NotNull String getMiniGameName() {
-        return "Parkour";
-    }
-
-    @Override
     public @NotNull GameMode getSpectatorGameMode() {
         return GameMode.ADVENTURE;
     }

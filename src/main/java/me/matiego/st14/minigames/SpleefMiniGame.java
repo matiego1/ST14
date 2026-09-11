@@ -39,11 +39,6 @@ public class SpleefMiniGame extends MiniGame {
     private long blockBreakFrequency;
 
     @Override
-    public @NotNull String getMiniGameName() {
-        return "Spleef";
-    }
-
-    @Override
     public @NotNull GameMode getSpectatorGameMode() {
         return GameMode.SPECTATOR;
     }

@@ -92,9 +92,9 @@ public abstract class MiniGame implements Listener {
         if (maps.size() > 1) {
             maps.remove(miniGameType.getPreviousMapName());
         }
-        Collections.shuffle(maps);
-        mapConfigPath = configPath + "maps." + maps.getFirst() + ".";
-        mapName = maps.getFirst();
+        int i = Utils.getRandomNumber(0, maps.size() - 1);
+        mapConfigPath = configPath + "maps." + maps.get(i) + ".";
+        mapName = maps.get(i);
         miniGameType.setPreviousMapName(mapName);
     }
 
@@ -113,7 +113,9 @@ public abstract class MiniGame implements Listener {
         return 15;
     }
 
-    protected abstract @NotNull String getMiniGameName();
+    protected @NotNull String getMiniGameName() {
+        return miniGameType.getName();
+    }
     protected abstract @NotNull GameMode getSpectatorGameMode();
     public abstract @NotNull MapType getMapType();
     public enum MapType {

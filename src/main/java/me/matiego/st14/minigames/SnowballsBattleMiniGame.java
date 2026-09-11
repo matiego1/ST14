@@ -38,11 +38,6 @@ public class SnowballsBattleMiniGame extends MiniGame {
     private int increaseHealthInterval = 30;
 
     @Override
-    public @NotNull String getMiniGameName() {
-        return "Bitwa na śnieżki";
-    }
-
-    @Override
     public @NotNull GameMode getSpectatorGameMode() {
         return GameMode.ADVENTURE;
     }

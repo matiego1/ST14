@@ -41,11 +41,6 @@ public class TagMiniGame extends MiniGame {
     private Player tag = null;
 
     @Override
-    public @NotNull String getMiniGameName() {
-        return "Berek";
-    }
-
-    @Override
     public @NotNull GameMode getSpectatorGameMode() {
         return GameMode.ADVENTURE;
     }
