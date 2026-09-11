@@ -147,7 +147,7 @@ public abstract class MiniGame implements Listener {
     }
 
     public synchronized @NotNull List<Player> getPlayers() {
-        return players.keySet().stream().toList();
+        return new ArrayList<>(players.keySet());
     }
 
     public synchronized @NotNull List<Player> getPlayersInMiniGame() {
@@ -537,6 +537,10 @@ public abstract class MiniGame implements Listener {
 
         if (getPlayerStatus(player) != PlayerStatus.IN_MINI_GAME) return;
 
+        changePlayerStatusAfterDeath(player);
+    }
+
+    protected void changePlayerStatusAfterDeath(@NotNull Player player) {
         changePlayerStatus(player, PlayerStatus.SPECTATOR);
 
         if (endGameIfLessThanTwoPlayersLeft()) return;

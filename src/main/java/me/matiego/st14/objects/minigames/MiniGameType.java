@@ -30,7 +30,7 @@ public enum MiniGameType {
     SUMO(SumoMiniGame.class, "Sumo", Material.PANDA_SPAWN_EGG, 15),
     RANDOM_ITEMS(RandomItemsMiniGame.class, "Losowe itemy", Material.BEDROCK, 15),
 
-    ITEM_RACE(null, "Item race", Material.SHULKER_BOX, 20),
+    ITEMS_RACE(ItemsRaceMiniGame.class, "Items race", Material.SHULKER_BOX, 20),
     SKYWARS(SkywarsMiniGame.class, "Skywars", Material.ENDER_EYE, 20),
     PARKOUR(ParkourMiniGame.class, "Parkour", Material.POTION, 20),
     BLOCKED_IN_COMBAT(null, "Blocked in combat", Material.STONE, 20),
