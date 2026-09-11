@@ -616,6 +616,13 @@ public abstract class MiniGame implements Listener {
         plugin.getMiniGamesManager().giveRewardToWinner(winner, Utils.round(plugin.getConfig().getDouble(configPath + "winner-reward", 20), 2));
     }
 
+    protected synchronized void endGameWithWinners(@NotNull String winnersName, @NotNull List<Player> winners) {
+        scheduleStopMiniGameAndSendReason("Koniec minigry! Wygrywają " + winnersName, "&dKoniec minigry", "");
+        plugin.getChatMinecraftManager().sendMessage(winnersName + " wygrywają minigrę **" + getMiniGameName() + "**!", Prefix.MINI_GAMES.getDiscord());
+
+        winners.forEach(winner -> plugin.getMiniGamesManager().giveRewardToWinner(winner, Utils.round(plugin.getConfig().getDouble(configPath + "winner-reward", 20), 2)));
+    }
+
     protected synchronized void scheduleStopMiniGameAndSendReason(@NotNull String message, @NotNull String title, @NotNull String subtitle) {
         lobby = true;
 
@@ -645,7 +652,7 @@ public abstract class MiniGame implements Listener {
 
     //</editor-fold>
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler (ignoreCancelled = true)
     public void onPlayerDropItem(@NotNull PlayerDropItemEvent event) {
         if (getPlayerStatus(event.getPlayer()) != PlayerStatus.SPECTATOR) return;
         if (event.getItemDrop().getItemStack().getType() != Material.SPYGLASS) return;

@@ -55,7 +55,7 @@ public class DeathSwapMiniGame extends MiniGame {
         world.setGameRule(GameRules.FALL_DAMAGE, true);
         world.setGameRule(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 128);
         world.setGameRule(GameRules.FIRE_DAMAGE, true);
-        world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, false);
+        world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, true);
         world.setGameRule(GameRules.ADVANCE_TIME, false);
         world.setGameRule(GameRules.ADVANCE_WEATHER, false);
     }
@@ -73,8 +73,6 @@ public class DeathSwapMiniGame extends MiniGame {
             player.setRespawnLocation(spectatorSpawn, true);
             timer.showBossBarToPlayer(player);
 
-            player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 30, 5));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * 30, 5));
             player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 20 * 5, 5));
         });
 

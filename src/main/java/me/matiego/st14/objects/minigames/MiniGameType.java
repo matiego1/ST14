@@ -15,9 +15,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public enum MiniGameType {
-    //https://www.gamergeeks.net/apps/minecraft/list-of-atlas-sprites
+    //https://www.gamergeeks.net/apps/minecraft/list-of-atlas-sprites,
     ELYTRA(ElytraMiniGame.class, "Wyścigi elytrą", Material.ELYTRA, 10),
     TAG(TagMiniGame.class, "Berek", Material.NAME_TAG, 10),
+    RESCUE(RescueMiniGame.class, "Misja ratunkowa", Material.WATER_BUCKET, 10),
 
     HIDE_AND_SEEK(null, "Chowany", Material.SEAGRASS, 15),
     SNOWBALLS_BATTLE(SnowballsBattleMiniGame.class, "Bitwa na śnieżki", Material.SNOWBALL, 15),
@@ -28,16 +29,15 @@ public enum MiniGameType {
     PVP(PvPMiniGame.class, "PvP", Material.WOODEN_SWORD, 15),
     SUMO(SumoMiniGame.class, "Sumo", Material.PANDA_SPAWN_EGG, 15),
     RANDOM_ITEMS(RandomItemsMiniGame.class, "Losowe itemy", Material.BEDROCK, 15),
-    DEATH_HUNT(null, "Death Hunt", Material.WATER_BUCKET, 15),
+    MANHUNT(ManhuntMiniGame.class, "Manhunt", Material.DIAMOND_SWORD, 15),
 
     ITEMS_RACE(ItemsRaceMiniGame.class, "Items race", Material.SHULKER_BOX, 20),
     SKYWARS(SkywarsMiniGame.class, "Skywars", Material.ENDER_EYE, 20),
     PARKOUR(ParkourMiniGame.class, "Parkour", Material.POTION, 20),
     BLOCKED_IN_COMBAT(null, "Blocked in combat", Material.STONE, 20),
     UHC(UHCMiniGame.class, "UHC", Material.GOLDEN_APPLE, 20),
-    MANHUNT(null, "Manhunt", Material.DIAMOND_SWORD, 20),
-    DEATH_SWAP(DeathSwapMiniGame.class, "Death Swap", Material.ENDER_PEARL, 20);
-
+    DEATH_SWAP(DeathSwapMiniGame.class, "Death Swap", Material.ENDER_PEARL, 20),
+    ;
 
     private final Class<? extends MiniGame> handler;
     @Getter private final String name;

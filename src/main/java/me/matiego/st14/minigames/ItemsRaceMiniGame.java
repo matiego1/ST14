@@ -78,8 +78,6 @@ public class ItemsRaceMiniGame extends MiniGame {
             player.setRespawnLocation(spectatorSpawn, true);
             timer.showBossBarToPlayer(player);
 
-            player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 30, 5));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * 30, 5));
             player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 20 * 5, 5));
         });
     }
