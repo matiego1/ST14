@@ -53,7 +53,7 @@ public class RescueMiniGame extends MiniGame {
 
     @Override
     protected void setUpGameRules(@NotNull World world) {
-        world.setGameRule(GameRules.KEEP_INVENTORY, false);
+        world.setGameRule(GameRules.KEEP_INVENTORY, true);
         world.setGameRule(GameRules.IMMEDIATE_RESPAWN, true);
         world.setGameRule(GameRules.ENTITY_DROPS, true);
         world.setGameRule(GameRules.FALL_DAMAGE, true);
@@ -67,7 +67,7 @@ public class RescueMiniGame extends MiniGame {
 
     @Override
     protected @NotNull BossBarTimer getBossBarTimer() {
-        return new BossBarTimer(plugin, prepareTime, "&eWygrana uciekającego");
+        return new BossBarTimer(plugin, prepareTime, "&eWypuszczenie ratujących");
     }
 
     @Override
@@ -111,16 +111,25 @@ public class RescueMiniGame extends MiniGame {
             return;
         }
 
+        if (miniGameTime < prepareTime) sendActionBar("&eUcieka gracz " + escaper.getName());
         if (miniGameTime == prepareTime) {
+            timer.stopTimerAndHideBossBar();
+            timer = new BossBarTimer(plugin, totalMiniGameTime - prepareTime, "&eWygrana uciekającego");
+            timer.startTimer();
+
             players.forEach(player -> {
+                timer.showBossBarToPlayer(player);
+
                 if (isEscaper(player)) return;
                 player.setWorldBorder(worldBorder);
                 MiniGamesUtils.healPlayer(player, GameMode.CREATIVE);
                 player.give(getCompass(escaper.getLocation()));
             });
+
+            sendMessage("Goniący zostali wypuszczeni!");
         }
 
-        if (miniGameTime % compassRefreshInterval == 0) {
+        if (miniGameTime > prepareTime && miniGameTime % compassRefreshInterval == 0) {
             players.forEach(player -> updateCompass(player, escaper.getLocation()));
             sendActionBar("&aKompasy zaktualizowane!");
         }

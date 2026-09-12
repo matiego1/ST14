@@ -24,7 +24,6 @@ public class DeathSwapMiniGame extends MiniGame {
     }
 
     private int mapSize = 500;
-    private int prepareTime = 60 * 10;
     private int shuffleInterval = 150;
     int nextShuffle = shuffleInterval;
 
@@ -41,10 +40,8 @@ public class DeathSwapMiniGame extends MiniGame {
     @Override
     protected void loadDataFromConfig(@NotNull World world) throws MiniGameException {
         mapSize = Math.max(5, plugin.getConfig().getInt(mapConfigPath + "size", mapSize));
-        prepareTime = Math.max(0, plugin.getConfig().getInt(configPath + "prepare-time", prepareTime));
         shuffleInterval = Math.max(20, plugin.getConfig().getInt(configPath + "shuffle-interval", shuffleInterval));
         nextShuffle = shuffleInterval;
-        if (prepareTime > totalMiniGameTime) throw new MiniGameException("incorrect game times");
     }
 
     @Override
@@ -62,7 +59,7 @@ public class DeathSwapMiniGame extends MiniGame {
 
     @Override
     protected @NotNull BossBarTimer getBossBarTimer() {
-        return new BossBarTimer(plugin, prepareTime, "&eKoniec minigry");
+        return new BossBarTimer(plugin, totalMiniGameTime, "&eKoniec minigry");
     }
 
     @Override
@@ -85,8 +82,7 @@ public class DeathSwapMiniGame extends MiniGame {
         sendActionBar("&eZamiana za " + difference);
 
         if (difference == 15) sendMessage("Losowa zamiana miejsc za 15 sekund!");
-        else if (difference == 10) sendMessage(String.valueOf(difference));
-        else if (4 <= difference && difference <= 5) sendMessage(String.valueOf(difference));
+        else if (difference == 10 || difference == 5) sendMessage(String.valueOf(difference));
         else if (1 <= difference && difference <= 3) sendMessage("&d" + difference);
         else if (difference == 0) {
             sendMessage("&d&lZamiana miejsc!");

@@ -423,7 +423,7 @@ public abstract class MiniGame implements Listener {
                 miniGameTime++;
                 miniGameTick();
 
-                if (miniGameTime == totalMiniGameTime) {
+                if (!lobby && miniGameTime == totalMiniGameTime) {
                     scheduleStopMiniGameAndSendReason("&dKoniec minigry! &eRozgrywka zakończyła się remisem.", "&dKoniec minigry", "&eRemis");
                 }
             }, 20, 20);
@@ -617,10 +617,11 @@ public abstract class MiniGame implements Listener {
     }
 
     protected synchronized void endGameWithWinners(@NotNull String winnersName, @NotNull List<Player> winners) {
-        scheduleStopMiniGameAndSendReason("Koniec minigry! Wygrywają " + winnersName, "&dKoniec minigry", "");
+        scheduleStopMiniGameAndSendReason("Koniec minigry! Wygrywają " + winnersName.toLowerCase(), "&dKoniec minigry", "");
         plugin.getChatMinecraftManager().sendMessage(winnersName + " wygrywają minigrę **" + getMiniGameName() + "**!", Prefix.MINI_GAMES.getDiscord());
 
-        winners.forEach(winner -> plugin.getMiniGamesManager().giveRewardToWinner(winner, Utils.round(plugin.getConfig().getDouble(configPath + "winner-reward", 20), 2)));
+        double reward = Utils.round(plugin.getConfig().getDouble(configPath + "winner-reward", 20) / winners.size(), 2);
+        winners.forEach(winner -> plugin.getMiniGamesManager().giveRewardToWinner(winner, reward));
     }
 
     protected synchronized void scheduleStopMiniGameAndSendReason(@NotNull String message, @NotNull String title, @NotNull String subtitle) {

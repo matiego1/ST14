@@ -10,6 +10,7 @@ import me.matiego.st14.utils.Utils;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.CompassMeta;
@@ -66,7 +67,7 @@ public class ManhuntMiniGame extends MiniGame {
 
     @Override
     protected @NotNull BossBarTimer getBossBarTimer() {
-        return new BossBarTimer(plugin, prepareTime, "&eWygrana uciekającego");
+        return new BossBarTimer(plugin, prepareTime, "&eWypuszczenie goniących");
     }
 
     @Override
@@ -119,7 +120,13 @@ public class ManhuntMiniGame extends MiniGame {
 
         if (miniGameTime < prepareTime) sendActionBar("&eUcieka gracz " + escaper.getName());
         if (miniGameTime == prepareTime) {
+            timer.stopTimerAndHideBossBar();
+            timer = new BossBarTimer(plugin, totalMiniGameTime - prepareTime, "&eWygrana uciekającego");
+            timer.startTimer();
+
             players.forEach(player -> {
+                timer.showBossBarToPlayer(player);
+
                 if (isEscaper(player)) return;
                 player.setWorldBorder(worldBorder);
                 MiniGamesUtils.healPlayer(player, GameMode.SURVIVAL);
@@ -129,10 +136,10 @@ public class ManhuntMiniGame extends MiniGame {
             World world = MiniGamesUtils.getMiniGamesSurvivalWorld();
             if (world != null) world.setGameRule(GameRules.PVP, true);
 
-            sendActionBar("&aPvP włączone!");
+            sendMessage("Goniący zostali wypuszczeni! PvP zostało włączone!");
         }
 
-        if (miniGameTime % compassRefreshInterval == 0) {
+        if (miniGameTime > prepareTime && miniGameTime % compassRefreshInterval == 0) {
             players.forEach(player -> updateCompass(player, escaper.getLocation()));
             sendActionBar("&aKompasy zaktualizowane!");
         }
@@ -171,5 +178,11 @@ public class ManhuntMiniGame extends MiniGame {
         if (event.getItemDrop().getItemStack().getType() != Material.COMPASS) return;
         if (isEscaper(event.getPlayer())) return;
         event.setCancelled(true);
+    }
+
+    @EventHandler (ignoreCancelled = true)
+    public void onPlayerDeath(@NotNull PlayerDeathEvent event) {
+        if (!isInMiniGame(event.getPlayer())) return;
+        event.getDrops().removeIf(i -> i.getType() == Material.COMPASS);
     }
 }
