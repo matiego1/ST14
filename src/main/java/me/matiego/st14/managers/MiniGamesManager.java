@@ -36,7 +36,7 @@ public class MiniGamesManager {
     private final Main plugin;
     private final String ERROR_MSG = "An error occurred while modifying values in \"st14_minigames\" table in the database.";
     @Nullable
-    @Getter (onMethod_ = {@Synchronized})
+    @Getter(onMethod_ = {@Synchronized})
     private MiniGame activeMiniGame = null;
     private BukkitTask task = null;
     private final Set<UUID> editors = new HashSet<>();
@@ -90,6 +90,7 @@ public class MiniGamesManager {
         setEditorMode(player, false);
         onPlayerJoin0(player);
     }
+
     private void onPlayerJoin0(@NotNull Player player) {
         if (!MiniGamesUtils.isInAnyMiniGameWorld(player)) return;
 
@@ -112,13 +113,15 @@ public class MiniGamesManager {
         setEditorMode(player, false);
         onPlayerQuit0(player);
     }
+
     private void onPlayerQuit0(@NotNull Player player) {
         MiniGame miniGame = getActiveMiniGame();
         if (miniGame == null) return;
         if (!miniGame.isInMiniGame(player)) return;
 
         World survivalWorld = MiniGamesUtils.getMiniGamesSurvivalWorld();
-        if (survivalWorld != null && player.getWorld().getUID().equals(survivalWorld.getUID())) MiniGamesUtils.teleportToLobby(player);
+        if (survivalWorld != null && player.getWorld().getUID().equals(survivalWorld.getUID()))
+            MiniGamesUtils.teleportToLobby(player);
 
         try {
             miniGame.onPlayerQuit(player);

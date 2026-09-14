@@ -33,6 +33,7 @@ public class RescueMiniGame extends MiniGame {
     private int prepareTime = 5;
     private int compassRefreshInterval = 60;
     private UUID escaperUuid;
+    private WorldBorder prepareWorldBorder;
 
     @Override
     protected @NotNull GameMode getSpectatorGameMode() {
@@ -76,13 +77,13 @@ public class RescueMiniGame extends MiniGame {
         int i = Utils.getRandomNumber(0, players.size() - 1);
         escaperUuid = players.get(i).getUniqueId();
 
-        WorldBorder worldBorder = Bukkit.createWorldBorder();
-        worldBorder.setCenter(spectatorSpawn);
-        worldBorder.setSize(startWorldBorderSize);
-        worldBorder.setWarningDistance(0);
-        worldBorder.setDamageBuffer(0);
-        worldBorder.setDamageAmount(5);
-        worldBorder.setWarningTimeTicks(10);
+        prepareWorldBorder = Bukkit.createWorldBorder();
+        prepareWorldBorder.setCenter(spectatorSpawn);
+        prepareWorldBorder.setSize(startWorldBorderSize);
+        prepareWorldBorder.setWarningDistance(0);
+        prepareWorldBorder.setDamageBuffer(0);
+        prepareWorldBorder.setDamageAmount(5);
+        prepareWorldBorder.setWarningTimeTicks(10);
 
         players.forEach(player -> {
             changePlayerStatus(player, PlayerStatus.IN_MINI_GAME);
@@ -90,7 +91,7 @@ public class RescueMiniGame extends MiniGame {
                 MiniGamesUtils.healPlayer(player, GameMode.SURVIVAL);
             } else {
                 MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
-                player.setWorldBorder(worldBorder);
+                player.setWorldBorder(prepareWorldBorder);
             }
             player.teleportAsync(spectatorSpawn);
             player.setRespawnLocation(spectatorSpawn, true);
@@ -139,7 +140,12 @@ public class RescueMiniGame extends MiniGame {
 
     @Override
     protected void changePlayerStatusAfterDeath(@NotNull Player player) {
-        if (!isEscaper(player)) return;
+        if (!isEscaper(player)) {
+            runTaskLater(() -> {
+                MiniGamesUtils.healPlayer(player, miniGameTime >= prepareTime ? GameMode.CREATIVE : GameMode.ADVENTURE);
+                player.setWorldBorder(prepareWorldBorder);
+            }, 5);
+        }
         endGameWithWinner(player);
     }
 

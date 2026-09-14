@@ -7,19 +7,17 @@ import me.matiego.st14.objects.minigames.MiniGameException;
 import me.matiego.st14.objects.minigames.MiniGameType;
 import me.matiego.st14.utils.MiniGamesUtils;
 import me.matiego.st14.utils.Utils;
-import org.bukkit.GameMode;
-import org.bukkit.GameRules;
-import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
-import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
@@ -68,7 +66,7 @@ public class TagMiniGame extends MiniGame {
         world.setGameRule(GameRules.KEEP_INVENTORY, true);
         world.setGameRule(GameRules.IMMEDIATE_RESPAWN, true);
         world.setGameRule(GameRules.ENTITY_DROPS, false);
-        world.setGameRule(GameRules.FALL_DAMAGE, false);
+        world.setGameRule(GameRules.FALL_DAMAGE, true);
         world.setGameRule(GameRules.FIRE_DAMAGE, false);
         world.setGameRule(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 0);
         world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, true);
@@ -81,12 +79,20 @@ public class TagMiniGame extends MiniGame {
 
     @Override
     protected void manipulatePlayersToStartGameWith(@NotNull List<Player> players) {
+        ItemStack chestplate = new ItemStack(Material.LEATHER_CHESTPLATE);
+        LeatherArmorMeta meta = (LeatherArmorMeta) chestplate.getItemMeta();
+        meta.setColor(Color.BLACK);
+        chestplate.setItemMeta(meta);
+
         players.forEach(player -> {
             player.teleportAsync(spawn);
             changePlayerStatus(player, PlayerStatus.IN_MINI_GAME);
             MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
-            player.setRespawnLocation(spectatorSpawn, true);
+            player.setRespawnLocation(spawn, true);
             timer.showBossBarToPlayer(player);
+
+            player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, totalMiniGameTime * 20, 255, false, false, true));
+            player.getInventory().setChestplate(chestplate.clone());
         });
     }
 
@@ -116,31 +122,50 @@ public class TagMiniGame extends MiniGame {
     @Override
     public void onPlayerQuit(@NotNull Player player) {
         super.onPlayerQuit(player);
+        if (lobby) return;
 
-        if (!tagged.remove(player.getUniqueId())) return;
-        if (!tagged.isEmpty()) return;
-
+        tagged.remove(player.getUniqueId());
         List<Player> players = getPlayersInMiniGame();
-        if (players.size() <= 2) {
-            scheduleStopMiniGameAndSendReason("Koniec minigry! Brak zwycięzcy. Jedyny berek wyszedł z minigry, a zostało za mało graczy, żeby wylosować nowego.", "&dKoniec minigry", "");
+
+        int tags = tagged.size();
+        int notTags = players.size() - tags;
+
+        if (tags == 0 && notTags == 2) {
+            scheduleStopMiniGameAndSendReason("Koniec minigry! Brak zwycięzcy. Zostało za mało graczy, żeby wylosować nowego berka.", "&dKoniec minigry", "");
             return;
         }
 
-        tagRandomPlayer(players);
+        if (tags == 1 && notTags == 1) {
+            players.removeIf(p -> tagged.contains(p.getUniqueId()));
+            endGameWithWinner(players.getFirst());
+            return;
+        }
+
+        if (tags == 0) tagRandomPlayer(players);
     }
 
     private void tagRandomPlayer(@NotNull List<Player> players) {
         if (players.isEmpty()) return;
         int i = Utils.getRandomNumber(0, players.size() - 1);
-
         Player player = players.get(i);
-        player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, totalMiniGameTime * 20, 255, false, false, true));
+
         sendMessage("Gracz " + player.getName() + " został wylosowany na pierwszego berka!");
         tagged.add(player.getUniqueId());
+        markTaggedPlayer(player);
+    }
+
+    private void markTaggedPlayer(@NotNull Player player) {
+        ItemStack chestplate = new ItemStack(Material.LEATHER_CHESTPLATE);
+        LeatherArmorMeta meta = (LeatherArmorMeta) chestplate.getItemMeta();
+        meta.setColor(Color.YELLOW);
+        chestplate.setItemMeta(meta);
+        player.getInventory().setChestplate(chestplate);
     }
 
     @Override
-    protected void changePlayerStatusAfterDeath(@NotNull Player player) {}
+    protected void changePlayerStatusAfterDeath(@NotNull Player player) {
+        runTaskLater(() -> player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, totalMiniGameTime * 20, 255, false, false, true)), 5);
+    }
 
     @EventHandler (ignoreCancelled = true)
     public void onPlayerDropItem(@NotNull PlayerDropItemEvent event) {
@@ -148,10 +173,10 @@ public class TagMiniGame extends MiniGame {
         event.setCancelled(true);
     }
 
-    @EventHandler
-    public void onPlayerInteract(@NotNull PlayerInteractEvent event) {
-        if (!isInMiniGame(event.getPlayer())) return;
-        event.setUseInteractedBlock(Event.Result.DENY);
+    @EventHandler (ignoreCancelled = true)
+    public void onInventoryClick(@NotNull InventoryClickEvent event) {
+        if (!isInMiniGame((Player) event.getWhoClicked())) return;
+        event.setCancelled(true);
     }
 
     @EventHandler (ignoreCancelled = true)
@@ -161,7 +186,7 @@ public class TagMiniGame extends MiniGame {
         event.setCancelled(true);
     }
 
-    @EventHandler (ignoreCancelled = true)
+    @EventHandler (ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onEntityDamageByEntity(@NotNull EntityDamageByEntityEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
         if (!isInMiniGame(player)) return;
@@ -176,6 +201,7 @@ public class TagMiniGame extends MiniGame {
         player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, totalMiniGameTime * 20, 255, false, false, true));
         sendMessage("Gracz " + player.getName() + " dołącza do drużyny berków!");
         tagged.add(player.getUniqueId());
+        markTaggedPlayer(player);
 
         List<Player> players = getPlayersInMiniGame();
         if (tagged.size() >= players.size() - 1) {
@@ -190,13 +216,6 @@ public class TagMiniGame extends MiniGame {
                 scheduleStopMiniGameAndSendReason("Koniec minigry! Napotkano błąd przy wyłanianiu zwycięzcy.", "&dKoniec minigry", "");
             }
         }
-    }
-
-    @EventHandler (ignoreCancelled = true)
-    public void onCraftItem(@NotNull CraftItemEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player)) return;
-        if (!isInMiniGame(player)) return;
-        event.setCancelled(true);
     }
 
     @EventHandler (ignoreCancelled = true)
