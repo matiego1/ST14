@@ -9,6 +9,8 @@ import me.matiego.st14.objects.minigames.MiniGameType;
 import me.matiego.st14.objects.minigames.maze.MazeCell;
 import me.matiego.st14.objects.minigames.maze.MazeGenerator;
 import me.matiego.st14.utils.MiniGamesUtils;
+import me.matiego.st14.utils.Utils;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -86,7 +88,7 @@ public class MazeMiniGame extends MiniGame {
             changePlayerStatus(player, PlayerStatus.IN_MINI_GAME);
             MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
             player.setRespawnLocation(spectatorSpawn, true);
-            player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 999999, 255, true, false, false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, totalMiniGameTime * 20, 255, true, false, false));
             timer.showBossBarToPlayer(player);
         });
     }
@@ -107,6 +109,7 @@ public class MazeMiniGame extends MiniGame {
             playersInMiniGame.forEach(player -> {
                 ItemStack item = new ItemStack(Material.COMPASS);
                 CompassMeta meta = (CompassMeta) item.getItemMeta();
+                meta.displayName(Utils.getComponentByString("Wyjście z labiryntu").decoration(TextDecoration.ITALIC, false));
                 meta.setLodestoneTracked(false);
                 meta.setLodestone(location);
                 item.setItemMeta(meta);

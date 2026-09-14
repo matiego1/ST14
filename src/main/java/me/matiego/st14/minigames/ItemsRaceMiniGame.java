@@ -32,7 +32,6 @@ public class ItemsRaceMiniGame extends MiniGame {
 
     private final int INVENTORY_SIZE = 41;
     private int mapSize = 500;
-    private int prepareTime = 5;
 
     @Override
     protected @NotNull GameMode getSpectatorGameMode() {
@@ -47,8 +46,6 @@ public class ItemsRaceMiniGame extends MiniGame {
     @Override
     protected void loadDataFromConfig(@NotNull World world) throws MiniGameException {
         mapSize = Math.max(5, plugin.getConfig().getInt(mapConfigPath + "size", mapSize));
-        prepareTime = Math.max(0, plugin.getConfig().getInt(configPath + "prepare-time", prepareTime));
-        if (prepareTime > totalMiniGameTime) throw new MiniGameException("incorrect game times");
     }
 
     @Override
@@ -75,6 +72,7 @@ public class ItemsRaceMiniGame extends MiniGame {
         players.forEach(player -> {
             changePlayerStatus(player, PlayerStatus.IN_MINI_GAME);
             MiniGamesUtils.healPlayer(player, GameMode.SURVIVAL);
+            player.teleportAsync(spectatorSpawn);
             player.setRespawnLocation(spectatorSpawn, true);
             timer.showBossBarToPlayer(player);
 
@@ -84,13 +82,6 @@ public class ItemsRaceMiniGame extends MiniGame {
 
     @Override
     protected void miniGameTick() {
-        if (miniGameTime == prepareTime) {
-            World world = MiniGamesUtils.getMiniGamesSurvivalWorld();
-            if (world != null) world.setGameRule(GameRules.PVP, true);
-
-            sendActionBar("&aPvP włączone!");
-        }
-
         getPlayers().forEach(this::checkPlayer);
     }
 

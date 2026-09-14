@@ -79,10 +79,9 @@ public class DeathSwapMiniGame extends MiniGame {
     @Override
     protected void miniGameTick() {
         int difference = nextShuffle - miniGameTime;
-        sendActionBar("&eZamiana za " + difference);
+        if (difference <= 30) sendActionBar("&eZamiana miejsc za " + difference + "s");
 
         if (difference == 15) sendMessage("Losowa zamiana miejsc za 15 sekund!");
-        else if (difference == 10 || difference == 5) sendMessage(String.valueOf(difference));
         else if (1 <= difference && difference <= 3) sendMessage("&d" + difference);
         else if (difference == 0) {
             sendMessage("&d&lZamiana miejsc!");

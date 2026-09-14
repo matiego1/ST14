@@ -7,6 +7,8 @@ import me.matiego.st14.objects.minigames.MiniGameException;
 import me.matiego.st14.objects.minigames.MiniGameType;
 import me.matiego.st14.utils.MiniGamesUtils;
 import me.matiego.st14.utils.Utils;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -62,7 +64,6 @@ public class RescueMiniGame extends MiniGame {
         world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, true);
         world.setGameRule(GameRules.ADVANCE_TIME, false);
         world.setGameRule(GameRules.ADVANCE_WEATHER, false);
-        world.setGameRule(GameRules.PVP, true);
     }
 
     @Override
@@ -91,6 +92,7 @@ public class RescueMiniGame extends MiniGame {
                 MiniGamesUtils.healPlayer(player, GameMode.ADVENTURE);
                 player.setWorldBorder(worldBorder);
             }
+            player.teleportAsync(spectatorSpawn);
             player.setRespawnLocation(spectatorSpawn, true);
             timer.showBossBarToPlayer(player);
 
@@ -114,7 +116,7 @@ public class RescueMiniGame extends MiniGame {
         if (miniGameTime < prepareTime) sendActionBar("&eUcieka gracz " + escaper.getName());
         if (miniGameTime == prepareTime) {
             timer.stopTimerAndHideBossBar();
-            timer = new BossBarTimer(plugin, totalMiniGameTime - prepareTime, "&eWygrana uciekającego");
+            timer = new BossBarTimer(plugin, totalMiniGameTime - prepareTime, "&eWygrana ratujących");
             timer.startTimer();
 
             players.forEach(player -> {
@@ -123,14 +125,14 @@ public class RescueMiniGame extends MiniGame {
                 if (isEscaper(player)) return;
                 player.setWorldBorder(worldBorder);
                 MiniGamesUtils.healPlayer(player, GameMode.CREATIVE);
-                player.give(getCompass(escaper.getLocation()));
+                player.give(getCompass(escaper.getLocation(), escaper.getName()));
             });
 
-            sendMessage("Goniący zostali wypuszczeni!");
+            sendMessage("Ratujący zostali wypuszczeni!");
         }
 
         if (miniGameTime > prepareTime && miniGameTime % compassRefreshInterval == 0) {
-            players.forEach(player -> updateCompass(player, escaper.getLocation()));
+            players.forEach(player -> updateCompass(player, escaper.getLocation(), escaper.getName()));
             sendActionBar("&aKompasy zaktualizowane!");
         }
     }
@@ -145,9 +147,10 @@ public class RescueMiniGame extends MiniGame {
         return player.getUniqueId().equals(escaperUuid);
     }
 
-    private @NotNull ItemStack getCompass(@NotNull Location location) {
+    private @NotNull ItemStack getCompass(@NotNull Location location, @NotNull String name) {
         ItemStack item = new ItemStack(Material.COMPASS);
         CompassMeta meta = (CompassMeta) item.getItemMeta();
+        meta.displayName(Utils.getComponentByString(name).decoration(TextDecoration.ITALIC, false));
         meta.setLodestoneTracked(false);
         meta.setLodestone(location);
         item.setItemMeta(meta);
@@ -155,16 +158,20 @@ public class RescueMiniGame extends MiniGame {
         return item;
     }
 
-    private void updateCompass(@NotNull Player player, @NotNull Location newLocation) {
+    private void updateCompass(@NotNull Player player, @NotNull Location newLocation, @NotNull String name) {
         for (ItemStack item : player.getInventory().getContents()) {
             if (item == null) continue;
             if (item.getType() != Material.COMPASS) continue;
 
             CompassMeta meta = (CompassMeta) item.getItemMeta();
             if (!meta.hasLodestone()) continue;
+            Component displayName = meta.displayName();
+            if (displayName == null || !Utils.getPlainTextByComponent(displayName).equals(name)) continue;
 
             meta.setLodestone(newLocation);
             item.setItemMeta(meta);
+
+            return;
         }
     }
 

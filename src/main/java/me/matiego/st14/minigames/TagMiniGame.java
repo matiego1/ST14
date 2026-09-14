@@ -6,17 +6,16 @@ import me.matiego.st14.objects.minigames.MiniGame;
 import me.matiego.st14.objects.minigames.MiniGameException;
 import me.matiego.st14.objects.minigames.MiniGameType;
 import me.matiego.st14.utils.MiniGamesUtils;
+import me.matiego.st14.utils.Utils;
 import org.bukkit.GameMode;
 import org.bukkit.GameRules;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -25,9 +24,12 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Range;
 
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 public class TagMiniGame extends MiniGame {
     public TagMiniGame(@NotNull Main plugin, @NotNull MiniGameType miniGameType, @Nullable String mapName) {
@@ -36,9 +38,12 @@ public class TagMiniGame extends MiniGame {
 
     private Location spawn = null;
     private int prepareTime = 15;
-    private int breakFromGlowing = 60;
-    private int lastChange = 0;
-    private Player tag = null;
+    private final Set<UUID> tagged = new HashSet<>();
+
+    @Override
+    public @Range(from = 2, to = Integer.MAX_VALUE) int getMinimumPlayersAmount() {
+        return 3;
+    }
 
     @Override
     public @NotNull GameMode getSpectatorGameMode() {
@@ -57,17 +62,16 @@ public class TagMiniGame extends MiniGame {
         if (spectatorSpawn == null) throw new MiniGameException("cannot load spectator spawn location");
 
         prepareTime = Math.max(0, plugin.getConfig().getInt(configPath + "prepare-time", prepareTime));
-        breakFromGlowing = Math.max(0, plugin.getConfig().getInt(configPath + "break-from-glowing", prepareTime));
     }
 
     protected void setUpGameRules(@NotNull World world) {
         world.setGameRule(GameRules.KEEP_INVENTORY, true);
         world.setGameRule(GameRules.IMMEDIATE_RESPAWN, true);
         world.setGameRule(GameRules.ENTITY_DROPS, false);
-        world.setGameRule(GameRules.FALL_DAMAGE, true);
+        world.setGameRule(GameRules.FALL_DAMAGE, false);
         world.setGameRule(GameRules.FIRE_DAMAGE, false);
         world.setGameRule(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 0);
-        world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, false);
+        world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, true);
     }
 
     @Override
@@ -88,6 +92,8 @@ public class TagMiniGame extends MiniGame {
 
     @Override
     protected void miniGameTick() {
+        List<Player> players = getPlayersInMiniGame();
+
         if (miniGameTime == prepareTime) {
             timer.stopTimerAndHideBossBar();
             timer = new BossBarTimer(plugin, totalMiniGameTime - prepareTime, "&eKoniec minigry");
@@ -97,36 +103,46 @@ public class TagMiniGame extends MiniGame {
             World world = MiniGamesUtils.getMiniGamesWorld();
             if (world != null) world.setGameRule(GameRules.PVP, true);
 
-            lastChange = miniGameTime;
-            setRandomTag();
+            tagged.clear();
+            tagRandomPlayer(players);
         }
 
-        tickPlayers();
+        players.forEach(player -> {
+            player.setLevel(players.size());
+            player.setFireTicks(0);
+        });
     }
 
-    private void tickPlayers() {
-        List<Player> playersInMiniGame = getPlayersInMiniGame();
-        sendActionBar("&eGracz " + tag.getName() + " goni!");
-        playersInMiniGame.forEach(player -> tickPlayer(player, playersInMiniGame.size()));
-    }
+    @Override
+    public void onPlayerQuit(@NotNull Player player) {
+        super.onPlayerQuit(player);
 
-    private void tickPlayer(@NotNull Player player, int playersLeft)  {
-        player.setLevel(playersLeft);
-        player.setFireTicks(0);
+        if (!tagged.remove(player.getUniqueId())) return;
+        if (!tagged.isEmpty()) return;
 
-        if (lastChange - miniGameTime >= breakFromGlowing) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 2 * 20, 255, false, false, true));
-        }
-    }
-
-    private void setRandomTag() {
         List<Player> players = getPlayersInMiniGame();
-        if (players.isEmpty()) return;
-        Collections.shuffle(players);
-        tag = players.getFirst();
+        if (players.size() <= 2) {
+            scheduleStopMiniGameAndSendReason("Koniec minigry! Brak zwycięzcy. Jedyny berek wyszedł z minigry, a zostało za mało graczy, żeby wylosować nowego.", "&dKoniec minigry", "");
+            return;
+        }
+
+        tagRandomPlayer(players);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    private void tagRandomPlayer(@NotNull List<Player> players) {
+        if (players.isEmpty()) return;
+        int i = Utils.getRandomNumber(0, players.size() - 1);
+
+        Player player = players.get(i);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, totalMiniGameTime * 20, 255, false, false, true));
+        sendMessage("Gracz " + player.getName() + " został wylosowany na pierwszego berka!");
+        tagged.add(player.getUniqueId());
+    }
+
+    @Override
+    protected void changePlayerStatusAfterDeath(@NotNull Player player) {}
+
+    @EventHandler (ignoreCancelled = true)
     public void onPlayerDropItem(@NotNull PlayerDropItemEvent event) {
         if (!isInMiniGame(event.getPlayer())) return;
         event.setCancelled(true);
@@ -140,7 +156,6 @@ public class TagMiniGame extends MiniGame {
 
     @EventHandler (ignoreCancelled = true)
     public void onEntityDamageByBlock(@NotNull EntityDamageByBlockEvent event) {
-        if (event.getCause() != EntityDamageEvent.DamageCause.FIRE && event.getCause() != EntityDamageEvent.DamageCause.FIRE_TICK) return;
         if (!(event.getEntity() instanceof Player player)) return;
         if (!isInMiniGame(player)) return;
         event.setCancelled(true);
@@ -150,9 +165,31 @@ public class TagMiniGame extends MiniGame {
     public void onEntityDamageByEntity(@NotNull EntityDamageByEntityEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
         if (!isInMiniGame(player)) return;
-        if (event.getDamager().getType() != EntityType.PLAYER) return;
+        if (!(event.getDamager() instanceof Player damager)) return;
+        if (!isInMiniGame(damager)) return;
 
-        //todo: zmień berka
+        event.setCancelled(true);
+
+        if (!tagged.contains(damager.getUniqueId())) return;
+        if (tagged.contains(player.getUniqueId())) return;
+
+        player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, totalMiniGameTime * 20, 255, false, false, true));
+        sendMessage("Gracz " + player.getName() + " dołącza do drużyny berków!");
+        tagged.add(player.getUniqueId());
+
+        List<Player> players = getPlayersInMiniGame();
+        if (tagged.size() >= players.size() - 1) {
+            Player winner = players.stream()
+                    .filter(p -> !tagged.contains(p.getUniqueId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (winner != null) {
+                endGameWithWinner(winner);
+            } else {
+                scheduleStopMiniGameAndSendReason("Koniec minigry! Napotkano błąd przy wyłanianiu zwycięzcy.", "&dKoniec minigry", "");
+            }
+        }
     }
 
     @EventHandler (ignoreCancelled = true)
@@ -162,7 +199,7 @@ public class TagMiniGame extends MiniGame {
         event.setCancelled(true);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler (ignoreCancelled = true)
     public void onFoodLevelChange(@NotNull FoodLevelChangeEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
         if (!isInMiniGame(player)) return;

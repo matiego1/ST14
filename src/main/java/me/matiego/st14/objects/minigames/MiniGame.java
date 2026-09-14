@@ -271,7 +271,7 @@ public abstract class MiniGame implements Listener {
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="minigame start logic">
-    public  void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException {
+    public void startMiniGame(@NotNull Set<Player> players, @NotNull Player sender) throws MiniGameException {
         if (isMiniGameStarted()) throw new MiniGameException("minigame is already started");
 
         clearExistingData();

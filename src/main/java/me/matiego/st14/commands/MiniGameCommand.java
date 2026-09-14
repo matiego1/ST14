@@ -141,20 +141,21 @@ public class MiniGameCommand implements CommandHandler.Minecraft, CommandHandler
 
         List<ActionButton> actions = new ArrayList<>();
         for (MiniGameType type : MiniGameType.values()) {
-            Component tooltip;
+            Component tooltip, label;
             if (type.isMiniGameEnabled()) {
                 tooltip = Utils.getComponentByString(
                         "&aKliknij, aby rozpocząć!\n" +
                         "&eCzas minigry: &d" + Utils.parseMillisToString(type.getGameTimeInSeconds() * 1000L, false)
                 );
+                label = type.getIcon().append(Utils.getComponentByString(" " + type.getName()));
             } else {
                 tooltip = Utils.getComponentByString(
                         "&cTa minigra jest wyłączona :(\n" +
                         "&eCzas minigry: &d" + Utils.parseMillisToString(type.getGameTimeInSeconds() * 1000L, false)
                 );
+                label = type.getIcon().append(Utils.getComponentByString("&7 " + type.getName()));
             }
 
-            Component label = type.getIcon().append(Utils.getComponentByString("&f " + type.getName()));
             actions.add(ActionButton.create(
                     label,
                     tooltip,
