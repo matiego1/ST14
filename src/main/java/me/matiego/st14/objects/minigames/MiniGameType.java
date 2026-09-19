@@ -31,12 +31,13 @@ public enum MiniGameType {
     RANDOM_ITEMS(RandomItemsMiniGame.class, "Losowe itemy", Material.BEDROCK, 15),
     MANHUNT(ManhuntMiniGame.class, "Manhunt", Material.DIAMOND_SWORD, 15),
 
-    ITEMS_RACE(ItemsRaceMiniGame.class, "Items race", Material.SHULKER_BOX, 20),
     SKYWARS(SkywarsMiniGame.class, "Skywars", Material.ENDER_EYE, 20),
     PARKOUR(ParkourMiniGame.class, "Parkour", Material.POTION, 20),
     BLOCKED_IN_COMBAT(null, "Blocked in combat", Material.STONE, 20),
     UHC(UHCMiniGame.class, "UHC", Material.GOLDEN_APPLE, 20),
     DEATH_SWAP(DeathSwapMiniGame.class, "Death Swap", Material.ENDER_PEARL, 20),
+
+    ITEMS_RACE(ItemsRaceMiniGame.class, "Items race", Material.SHULKER_BOX, 25),
     ;
 
     private final Class<? extends MiniGame> handler;
